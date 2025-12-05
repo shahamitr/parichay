@@ -1,0 +1,805 @@
+// OneTouch BizCard Database Schema
+// This schema defines the data models for the multi-tenant microsite platform
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication and role management
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole @default(BRANCH_ADMIN)
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Password reset
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+
+  // SMS notifications
+  phone            String?
+  smsEnabled       Boolean   @default(false)
+
+  // Multi-Factor Authentication
+  mfaEnabled       Boolean   @default(false)
+  mfaSecret        String?
+  backupCodes      Json?     // Array of hashed backup codes
+
+  // Industry Category
+  industryCategory String?   // Industry category ID for personalized experience
+
+  // Relationships
+  brandId   String?
+  brand     Brand?   @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  branches  Branch[] @relation("BranchAdmins")
+  onboardedBranches Branch[] @relation("OnboardedBranches")
+  notifications Notification[]
+  tenantId  String?
+  tenant    Tenant?  @relation("TenantUsers", fields: [tenantId], references: [id], onDelete: SetNull)
+  tenantInvitations TenantInvitation[] @relation("TenantInvitations")
+
+  @@map("users")
+}
+
+// Brand model for multi-tenant organization
+model Brand {
+  id           String  @id @default(cuid())
+  name         String
+  slug         String  @unique
+  logo         String?
+  tagline      String?
+  customDomain String? @unique
+  sslEnabled   Boolean @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Brand theming
+  colorTheme Json // {primary: string, secondary: string, accent: string}
+  customization Json? // BrandCustomization structure for advanced theming
+
+  // Verification
+  isVerified        Boolean   @default(false)
+  verifiedAt        DateTime?
+  verificationBadge String?   // 'verified', 'premium', 'trusted'
+
+  // Relationships
+  ownerId        String
+  subscriptionId String?      @unique
+  users          User[]
+  branches       Branch[]
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  qrCodes        QRCode[]
+  analytics      AnalyticsEvent[]
+  shortLinks     ShortLink[]
+  reviews        Review[]
+  videoTestimonials VideoTestimonial[]
+  socialProofBadges SocialProofBadge[]
+  portfolioItems PortfolioItem[]
+  offers         Offer[]
+  tenantId       String?
+  tenant         Tenant?  @relation("TenantBrands", fields: [tenantId], references: [id], onDelete: SetNull)
+  tenantClient   TenantClient? @relation("TenantClientBrand")
+
+  @@map("brands")
+}
+
+// Branch model for individual locations/divisions
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Address information
+  address Json // {street: string, city: string, state: string, zipCode: string, country: string}
+
+  // Contact information
+  contact Json // {phone: string, whatsapp?: string, email: string}
+
+  // Social media links
+  socialMedia Json? // {facebook?: string, instagram?: string, linkedin?: string, twitter?: string}
+
+  // Business hours
+  businessHours Json? // {[day]: {open: string, close: string, closed: boolean}}
+
+  // Microsite configuration
+  micrositeConfig Json // MicrositeConfig structure
+
+  // Notification preferences
+  notificationPreferences Json? // {email: boolean, whatsapp: boolean, sms: boolean, inApp: boolean}
+
+  // Onboarding tracking
+  onboardedBy String? // User ID of the executive who onboarded this branch
+  onboardedAt DateTime? // When the branch was onboarded
+
+  // Privacy settings
+  visibility     String?   @default("public") // public, private, unlisted
+  accessPassword String?   // Hashed password for private branches
+  accessToken    String?   @unique // Token for private link access
+  tokenExpiresAt DateTime? // Token expiration date
+
+  // Verification
+  isVerified        Boolean   @default(false)
+  verifiedAt        DateTime?
+  verifiedBy        String?
+  verificationNotes String?   @db.Text
+  completionScore   Int       @default(0)
+
+  // Relationships
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  admins  User[] @relation("BranchAdmins")
+  leads   Lead[]
+  qrCodes QRCode[]
+  analytics AnalyticsEvent[]
+  shortLinks ShortLink[]
+  onboardingExecutive User? @relation("OnboardedBranches", fields: [onboardedBy], references: [id], onDelete: SetNull)
+  reviews        Review[]
+  videoTestimonials VideoTestimonial[]
+  socialProofBadges SocialProofBadge[]
+  portfolioItems PortfolioItem[]
+  offers         Offer[]
+  voiceIntro     VoiceIntro?
+  whatsappCatalogue WhatsAppCatalogue?
+
+  @@unique([brandId, slug])
+  @@map("branches")
+}
+
+// Subscription plans and management
+model SubscriptionPlan {
+  id       String @id @default(cuid())
+  name     String
+  price    Float
+  duration SubscriptionDuration
+  features Json   // {maxBranches: number, customDomain: boolean, analytics: boolean, etc.}
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  subscriptions Subscription[]
+
+  @@map("subscription_plans")
+}
+
+// Active subscriptions
+model Subscription {
+  id                     String             @id @default(cuid())
+  status                 SubscriptionStatus @default(ACTIVE)
+  startDate              DateTime
+  endDate                DateTime
+  autoRenew              Boolean            @default(true)
+  licenseKey             String             @unique
+  paymentGateway         PaymentGateway
+  externalSubscriptionId String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  // Relationships
+  planId   String
+  plan     SubscriptionPlan @relation(fields: [planId], references: [id])
+  brand    Brand?
+  payments Payment[]
+  invoices Invoice[]
+
+  @@map("subscriptions")
+}
+
+// Payment records
+model Payment {
+  id                String        @id @default(cuid())
+  amount            Float
+  currency          String        @default("INR")
+  status            PaymentStatus @default(PENDING)
+  paymentGateway    PaymentGateway
+  externalPaymentId String?
+  metadata          Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relationships
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  invoice        Invoice?
+
+  @@map("payments")
+}
+
+// Invoice generation
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  amount        Float
+  currency      String        @default("INR")
+  status        InvoiceStatus @default(DRAFT)
+  dueDate       DateTime
+  paidAt        DateTime?
+  pdfUrl        String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relationships
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  paymentId      String?      @unique
+  payment        Payment?     @relation(fields: [paymentId], references: [id])
+
+  @@map("invoices")
+}
+
+// Lead capture and management
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  message   String?
+  source    String   // 'qr_code', 'direct_visit', 'social_share'
+  status    String   @default("NEW") // NEW, CONTACTED, CONVERTED, ARCHIVED
+  metadata  Json?    // Additional form fields
+  createdAt DateTime @default(now())
+
+  // Relationships
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@map("leads")
+}
+
+// QR Code generation and tracking
+model QRCode {
+  id        String   @id @default(cuid())
+  url       String
+  qrData    String   // Base64 encoded QR code
+  format    String   @default("PNG") // PNG, SVG, PDF
+  scanCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  branchId String?
+  brandId  String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  brand    Brand?  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@map("qr_codes")
+}
+
+// Analytics and tracking
+model AnalyticsEvent {
+  id        String            @id @default(cuid())
+  eventType AnalyticsEventType
+  metadata  Json?             // Event-specific data
+  userAgent String?
+  ipAddress String?
+  location  Json?             // {country: string, city: string}
+  createdAt DateTime          @default(now())
+
+  // Relationships
+  branchId String?
+  brandId  String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  brand    Brand?  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@map("analytics_events")
+}
+
+// In-app notifications
+model Notification {
+  id        String             @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean            @default(false)
+  metadata  Json?              // Additional notification data
+  createdAt DateTime           @default(now())
+
+  // Relationships
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// Enums
+enum UserRole {
+  SUPER_ADMIN
+  BRAND_MANAGER
+  BRANCH_ADMIN
+  EXECUTIVE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+  CANCELLED
+}
+
+enum SubscriptionDuration {
+  MONTHLY
+  YEARLY
+}
+
+enum PaymentGateway {
+  STRIPE
+  RAZORPAY
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum AnalyticsEventType {
+  PAGE_VIEW
+  CLICK
+  QR_SCAN
+  LEAD_SUBMIT
+  VCARD_DOWNLOAD
+  SHORT_LINK_CLICK
+  QR_DOWNLOAD
+}
+
+enum NotificationType {
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  SUBSCRIPTION_RENEWAL
+  SUBSCRIPTION_EXPIRING
+  LICENSE_EXPIRING
+  NEW_LEAD
+  SYSTEM_ALERT
+}
+
+enum BranchVisibility {
+  public
+  private
+  unlisted
+}
+
+// Short Links for URL shortening
+model ShortLink {
+  id         String    @id
+  code       String    @unique
+  targetUrl  String    @db.Text
+  clicks     Int       @default(0)
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+
+  // Relationships
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  brandId  String?
+  brand    Brand?  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@map("short_links")
+}
+
+// Public Reviews for branches
+model Review {
+  id          String   @id @default(cuid())
+  rating      Int      // 1-5 stars
+  title       String?
+  comment     String   @db.Text
+  reviewerName String
+  reviewerEmail String?
+  reviewerAvatar String?
+  isVerified  Boolean  @default(false)
+  isPublished Boolean  @default(false)
+  source      String?  // 'google', 'facebook', 'direct', 'imported'
+  sourceUrl   String?  // Link to original review
+  helpfulCount Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  brandId  String
+  brand    Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([brandId])
+  @@index([isPublished])
+  @@map("reviews")
+}
+
+// Video Testimonials
+model VideoTestimonial {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  videoUrl    String   // YouTube, Vimeo, or direct video URL
+  thumbnailUrl String?
+  customerName String
+  customerTitle String? // e.g., "CEO at Company"
+  customerAvatar String?
+  duration    Int?     // Duration in seconds
+  isPublished Boolean  @default(false)
+  viewCount   Int      @default(0)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  brandId  String
+  brand    Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([brandId])
+  @@index([isPublished])
+  @@map("video_testimonials")
+}
+
+// Social Proof Badges
+model SocialProofBadge {
+  id          String   @id @default(cuid())
+  type        BadgeType
+  title       String
+  description String?
+  icon        String?  // Icon name or URL
+  color       String?  // Badge color
+  isActive    Boolean  @default(true)
+  displayOrder Int     @default(0)
+  expiresAt   DateTime?
+  metadata    Json?    // Additional badge data
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  brandId  String
+  brand    Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([brandId])
+  @@index([isActive])
+  @@map("social_proof_badges")
+}
+
+enum BadgeType {
+  TOP_SELLER
+  VERIFIED
+  TRUSTED
+  AWARD_WINNER
+  CERTIFIED
+  YEARS_IN_BUSINESS
+  CUSTOMER_FAVORITE
+  BEST_RATED
+  FEATURED
+  PREMIUM
+}
+
+// Portfolio Items for Portfolio Builder
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  category    String?
+  imageUrl    String?
+  videoUrl    String?
+  projectUrl  String?  // Link to live project
+  clientName  String?
+  completedAt DateTime?
+  tags        Json?    // Array of tags
+  order       Int      @default(0)
+  isPublished Boolean  @default(true)
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  brandId  String
+  brand    Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([brandId])
+  @@index([isPublished])
+  @@map("portfolio_items")
+}
+
+// Offers and Discounts
+model Offer {
+  id          String    @id @default(cuid())
+  title       String
+  description String?   @db.Text
+  code        String?   // Discount code
+  discountType DiscountType @default(PERCENTAGE)
+  discountValue Float
+  minPurchase Float?
+  maxDiscount Float?
+  imageUrl    String?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean   @default(true)
+  usageLimit  Int?
+  usageCount  Int       @default(0)
+  terms       String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relationships
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  brandId  String
+  brand    Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
+  @@index([brandId])
+  @@index([isActive])
+  @@index([endDate])
+  @@map("offers")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  BUY_ONE_GET_ONE
+  FREE_SHIPPING
+}
+
+// Voice Intro for profiles
+model VoiceIntro {
+  id          String   @id @default(cuid())
+  audioUrl    String
+  duration    Int      // Duration in seconds
+  transcript  String?  @db.Text
+  isActive    Boolean  @default(true)
+  playCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  branchId String   @unique
+  branch   Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@map("voice_intros")
+}
+
+// WhatsApp Catalogue Sync
+model WhatsAppCatalogue {
+  id              String   @id @default(cuid())
+  catalogueId     String?  // WhatsApp Business Catalogue ID
+  phoneNumber     String
+  businessName    String
+  lastSyncedAt    DateTime?
+  syncStatus      SyncStatus @default(PENDING)
+  syncError       String?
+  autoSync        Boolean  @default(false)
+  syncFrequency   String?  // 'daily', 'weekly', 'manual'
+  itemCount       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  branchId String   @unique
+  branch   Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  items    WhatsAppCatalogueItem[]
+
+  @@map("whatsapp_catalogues")
+}
+
+model WhatsAppCatalogueItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  price       Float
+  currency    String   @default("INR")
+  imageUrl    String?
+  availability String  @default("in_stock")
+  retailerId  String?  // External product ID
+  url         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  catalogueId String
+  catalogue   WhatsAppCatalogue @relation(fields: [catalogueId], references: [id], onDelete: Cascade)
+
+  @@index([catalogueId])
+  @@map("whatsapp_catalogue_items")
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCING
+  SYNCED
+  FAILED
+}
+
+// Industry Categories for personalized experiences
+model IndustryCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String   @db.Text
+  icon        String
+  enabled     Boolean  @default(true)
+  features    Json     // Array of strings
+  benefits    Json     // Array of strings
+  useCases    Json     // Array of strings
+  colorScheme Json     // {primary: string, secondary: string, accent: string}
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("industry_categories")
+}
+
+
+// White-Label Multi-Tenant Support
+model Tenant {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  domain         String?  @unique
+  customDomain   String?  @unique
+
+  // Branding
+  logo           String?
+  favicon        String?
+  primaryColor   String   @default("#3B82F6")
+  secondaryColor String   @default("#10B981")
+  accentColor    String   @default("#8B5CF6")
+
+  // White-label settings
+  brandName      String
+  tagline        String?
+  supportEmail   String
+  supportPhone   String?
+  website        String?
+  showPoweredBy  Boolean  @default(true)
+
+  // Billing
+  plan           String   @default("AGENCY_STARTER")
+  clientLimit    Int      @default(10)
+  pricePerClient Decimal  @default(10.00) @db.Decimal(10,2)
+  billingEmail   String?
+
+  // Status
+  isActive       Boolean  @default(true)
+  isTrial        Boolean  @default(false)
+  trialEndsAt    DateTime?
+
+  // Metadata
+  settings       Json?
+  metadata       Json?
+
+  // Timestamps
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  users          User[]   @relation("TenantUsers")
+  brands         Brand[]  @relation("TenantBrands")
+  invitations    TenantInvitation[]
+  billings       TenantBilling[]
+  clients        TenantClient[]
+
+  @@map("tenants")
+}
+
+model TenantInvitation {
+  id         String   @id @default(cuid())
+  email      String
+  role       String   @default("CLIENT")
+  status     String   @default("PENDING")
+  token      String   @unique
+  expiresAt  DateTime
+
+  // Relations
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invitedBy  String
+  inviter    User     @relation("TenantInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt  DateTime @default(now())
+  acceptedAt DateTime?
+
+  @@index([tenantId])
+  @@index([token])
+  @@map("tenant_invitations")
+}
+
+model TenantBilling {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Billing period
+  periodStart   DateTime
+  periodEnd     DateTime
+
+  // Usage
+  clientCount   Int      @default(0)
+  activeClients Int      @default(0)
+
+  // Amounts
+  subtotal      Decimal  @default(0) @db.Decimal(10,2)
+  tax           Decimal  @default(0) @db.Decimal(10,2)
+  total         Decimal  @default(0) @db.Decimal(10,2)
+
+  // Status
+  status        String   @default("PENDING")
+  paidAt        DateTime?
+
+  // Payment
+  paymentMethod String?
+  transactionId String?
+
+  // Metadata
+  metadata      Json?
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([periodStart])
+  @@map("tenant_billings")
+}
+
+model TenantClient {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  brandId      String   @unique
+  brand        Brand    @relation("TenantClientBrand", fields: [brandId], references: [id], onDelete: Cascade)
+
+  // Client info
+  clientName   String
+  clientEmail  String?
+  clientPhone  String?
+
+  // Status
+  status       String   @default("ACTIVE")
+  isActive     Boolean  @default(true)
+
+  // Billing
+  monthlyFee   Decimal? @db.Decimal(10,2)
+  lastBilledAt DateTime?
+
+  // Metadata
+  notes        String?  @db.Text
+  metadata     Json?
+
+  // Timestamps
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([tenantId, brandId])
+  @@index([tenantId])
+  @@index([brandId])
+  @@map("tenant_clients")
+}

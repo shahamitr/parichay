@@ -1,0 +1,311 @@
+{
+  "templateId": "modern-business",
+  "sections": {
+    "hero": {
+      "enabled": true,
+      "title": "Welcome to Innovation Hub",
+      "subtitle": "Where Technology Meets Excellence",
+      "backgroundType": "video",
+      "backgroundVideo": "https://cdn.example.com/videos/hero-background.mp4",
+      "backgroundImage": "https://cdn.example.com/images/hero-fallback.jpg",
+      "animationEnabled": true
+    },
+    "about": {
+      "enabled": true,
+      "content": "We are a leading provider of innovative solutions, dedicated to transforming businesses through cutting-edge technology and exceptional service. Our team of experts brings years of experience and passion to every project."
+    },
+    "services": {
+      "enabled": true,
+      "items": [
+        {
+          "id": "service-1",
+          "name": "Web Development",
+          "description": "Custom web applications built with modern technologies. We create responsive, scalable, and user-friendly websites that drive results.",
+          "image": "https://cdn.example.com/images/web-dev.jpg",
+          "price": 50000,
+          "category": "development",
+          "availability": "available",
+          "features": [
+            "Responsive Design",
+            "SEO Optimized",
+            "Fast Loading Speed",
+            "Cross-browser Compatible",
+            "Mobile-first Approach"
+          ]
+        },
+        {
+          "id": "service-2",
+          "name": "Mobile App Development",
+          "description": "Native and cross-platform mobile applications for iOS and Android. Transform your ideas into powerful mobile experiences.",
+          "image": "https://cdn.example.com/images/mobile-dev.jpg",
+          "price": 75000,
+          "category": "development",
+          "availability": "available",
+          "features": [
+            "iOS & Android Support",
+            "Native Performance",
+            "Offline Functionality",
+            "Push Notifications",
+            "App Store Optimization"
+          ]
+        },
+        {
+          "id": "service-3",
+          "name": "UI/UX Design",
+          "description": "Beautiful and intuitive user interfaces that enhance user experience. We design with your users in mind.",
+          "image": "https://cdn.example.com/images/ui-ux.jpg",
+          "price": 35000,
+          "category": "design",
+          "availability": "limited",
+          "features": [
+            "User Research",
+            "Wireframing & Prototyping",
+            "Visual Design",
+            "Usability Testing",
+            "Design Systems"
+          ]
+        },
+        {
+          "id": "service-4",
+          "name": "Digital Marketing",
+          "description": "Comprehensive digital marketing strategies to grow your online presence and reach your target audience effectively.",
+          "image": "https://cdn.example.com/images/marketing.jpg",
+          "price": 25000,
+          "category": "marketing",
+          "availability": "available",
+          "features": [
+            "SEO & SEM",
+            "Social Media Marketing",
+            "Content Marketing",
+            "Email Campaigns",
+            "Analytics & Reporting"
+          ]
+        },
+        {
+          "id": "service-5",
+          "name": "Cloud Solutions",
+          "description": "Scalable cloud infrastructure and migration services. Move your business to the cloud with confidence.",
+          "image": "https://cdn.example.com/images/cloud.jpg",
+          "price": 60000,
+          "category": "infrastructure",
+          "availability": "available",
+          "features": [
+            "AWS/Azure/GCP",
+            "Cloud Migration",
+            "DevOps Implementation",
+            "Auto-scaling",
+            "24/7 Monitoring"
+          ]
+        },
+        {
+          "id": "service-6",
+          "name": "Cybersecurity Audit",
+          "description": "Comprehensive security assessment and penetration testing to protect your digital assets.",
+          "image": "https://cdn.example.com/images/security.jpg",
+          "price": 45000,
+          "category": "security",
+          "availability": "out_of_stock",
+          "features": [
+            "Vulnerability Assessment",
+            "Penetration Testing",
+            "Security Compliance",
+            "Risk Analysis",
+            "Remediation Plan"
+          ]
+        },
+        {
+          "id": "service-7",
+          "name": "Business Consulting",
+          "description": "Strategic business consulting to help you make informed decisions and achieve your business goals.",
+          "image": "https://cdn.example.com/images/consulting.jpg",
+          "price": 40000,
+          "category": "consulting",
+          "availability": "available",
+          "features": [
+            "Business Strategy",
+            "Process Optimization",
+            "Market Analysis",
+            "Growth Planning",
+            "Change Management"
+          ]
+        },
+        {
+          "id": "service-8",
+          "name": "Data Analytics",
+          "description": "Turn your data into actionable insights with advanced analytics and visualization tools.",
+          "image": "https://cdn.example.com/images/analytics.jpg",
+          "price": 55000,
+          "category": "analytics",
+          "availability": "limited",
+          "features": [
+            "Data Visualization",
+            "Predictive Analytics",
+            "Business Intelligence",
+            "Custom Dashboards",
+            "Real-time Reporting"
+          ]
+        }
+      ]
+    },
+    "gallery": {
+      "enabled": true,
+      "images": [
+        "https://cdn.example.com/gallery/image1.jpg",
+        "https://cdn.example.com/gallery/image2.jpg",
+        "https://cdn.example.com/gallery/image3.jpg",
+        "https://cdn.example.com/gallery/image4.jpg",
+        "https://cdn.example.com/gallery/image5.jpg",
+        "https://cdn.example.com/gallery/image6.jpg"
+      ]
+    },
+    "videos": {
+      "enabled": true,
+      "videos": [
+        "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        "https://www.youtube.com/embed/example2"
+      ]
+    },
+    "contact": {
+      "enabled": true,
+      "showMap": true,
+      "leadForm": {
+        "enabled": true,
+        "fields": ["name", "email", "phone", "company", "message"]
+      },
+      "appointmentBooking": {
+        "enabled": true,
+        "provider": "custom",
+        "availableSlots": [
+          {
+            "day": "monday",
+            "slots": [
+              "09:00 AM",
+              "09:30 AM",
+              "10:00 AM",
+              "10:30 AM",
+              "11:00 AM",
+              "11:30 AM",
+              "02:00 PM",
+              "02:30 PM",
+              "03:00 PM",
+              "03:30 PM",
+              "04:00 PM",
+              "04:30 PM"
+            ]
+          },
+          {
+            "day": "tuesday",
+            "slots": [
+              "09:00 AM",
+              "09:30 AM",
+              "10:00 AM",
+              "10:30 AM",
+              "11:00 AM",
+              "11:30 AM",
+              "02:00 PM",
+              "02:30 PM",
+              "03:00 PM",
+              "03:30 PM",
+              "04:00 PM",
+              "04:30 PM"
+            ]
+          },
+          {
+            "day": "wednesday",
+            "slots": [
+              "09:00 AM",
+              "09:30 AM",
+              "10:00 AM",
+              "10:30 AM",
+              "11:00 AM",
+              "11:30 AM",
+              "02:00 PM",
+              "02:30 PM",
+              "03:00 PM",
+              "03:30 PM",
+              "04:00 PM",
+              "04:30 PM"
+            ]
+          },
+          {
+            "day": "thursday",
+            "slots": [
+              "09:00 AM",
+              "09:30 AM",
+              "10:00 AM",
+              "10:30 AM",
+              "11:00 AM",
+              "11:30 AM",
+              "02:00 PM",
+              "02:30 PM",
+              "03:00 PM",
+              "03:30 PM",
+              "04:00 PM",
+              "04:30 PM"
+            ]
+          },
+          {
+            "day": "friday",
+            "slots": [
+              "09:00 AM",
+              "09:30 AM",
+              "10:00 AM",
+              "10:30 AM",
+              "11:00 AM",
+              "11:30 AM",
+              "02:00 PM",
+              "02:30 PM",
+              "03:00 PM"
+            ]
+          },
+          {
+            "day": "saturday",
+            "slots": [
+              "10:00 AM",
+              "11:00 AM",
+              "12:00 PM"
+            ]
+          }
+        ]
+      },
+      "liveChatEnabled": true,
+      "liveChatProvider": "tawk",
+      "liveChatConfig": {
+        "widgetId": "your-tawk-widget-id-here"
+      }
+    },
+    "feedback": {
+      "enabled": true
+    },
+    "payment": {
+      "enabled": true,
+      "upiId": "business@upi",
+      "qrCode": "https://cdn.example.com/qr-code.png",
+      "bankDetails": {
+        "accountName": "Business Name",
+        "accountNumber": "1234567890",
+        "ifscCode": "BANK0001234",
+        "bankName": "Example Bank",
+        "branch": "Main Branch"
+      },
+      "acceptedMethods": ["UPI", "Bank Transfer", "Credit Card", "Debit Card"]
+    }
+  },
+  "seoSettings": {
+    "title": "Innovation Hub - Leading Technology Solutions Provider",
+    "description": "Transform your business with our cutting-edge technology solutions. We offer web development, mobile apps, UI/UX design, digital marketing, and more.",
+    "keywords": [
+      "web development",
+      "mobile app development",
+      "UI/UX design",
+      "digital marketing",
+      "cloud solutions",
+      "cybersecurity",
+      "business consulting",
+      "data analytics",
+      "technology solutions",
+      "software development"
+    ],
+    "ogImage": "https://cdn.example.com/og-image.jpg"
+  }
+}

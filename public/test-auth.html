@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Test</title>
+</head>
+<body>
+    <h1>Authentication Test</h1>
+    <div id="results"></div>
+
+    <script>
+        async function testAuth() {
+            const results = document.getElementById('results');
+
+            // Step 1: Login
+            results.innerHTML += '<h2>Step 1: Login</h2>';
+            const loginResponse = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email: 'admin@zintro.com',
+                    password: 'Demo@123'
+                })
+            });
+
+            const loginData = await loginResponse.json();
+            results.innerHTML += `<p>Login Status: ${loginResponse.status}</p>`;
+            results.innerHTML += `<p>Login Response: ${JSON.stringify(loginData, null, 2)}</p>`;
+
+            // Check cookies
+            results.innerHTML += `<p>Document Cookies: ${document.cookie}</p>`;
+
+            // Step 2: Test /api/auth/me
+            results.innerHTML += '<h2>Step 2: Test /api/auth/me</h2>';
+            const meResponse = await fetch('/api/auth/me', {
+                credentials: 'include'
+            });
+
+            const meData = await meResponse.json();
+            results.innerHTML += `<p>Me Status: ${meResponse.status}</p>`;
+            results.innerHTML += `<p>Me Response: ${JSON.stringify(meData, null, 2)}</p>`;
+
+            // Check cookies again
+            results.innerHTML += `<p>Document Cookies: ${document.cookie}</p>`;
+        }
+
+        testAuth();
+    </script>
+</body>
+</html>
