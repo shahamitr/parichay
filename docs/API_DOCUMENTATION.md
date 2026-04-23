@@ -1,94 +1,93 @@
-# OneTouch BizCard - API Documentation
+# Parichay API Documentation
 
 ## Overview
 
-This document provides comprehensive API documentation for OneTouch BizCard platform. All API endpoints follow RESTful conventions and return JSON responses.
+The Parichay API is a comprehensive REST API that powers the digital business card and microsite platform. It provides endpoints for authentication, brand management, lead capture, analytics, and more.
 
-## Base URL
+## 🚀 Quick Start
 
-```
-Production: https://onetouchbizcard.in/api
-Staging: https://staging.onetouchbizcard.in/api
-Development: http://localhost:3000/api
-```
+### 1. Access the Interactive Documentation
 
-## Authentication
+Visit the Swagger UI for interactive API testing:
+- **Development**: http://localhost:3000/api-doc
+- **Production**: https://your-domain.com/api-doc
 
-### JWT Authentication
+### 2. Authentication
 
-Most API endpoints require authentication using JWT tokens.
+Most endpoints require authentication. Get your JWT token by logging in:
 
-**Request Header:**
-```
-Authorization: Bearer <jwt_token>
-```
-
-**Token Expiration:** 24 hours
-
-### Obtaining a Token
-
-**Endpoint:** `POST /api/auth/login`
-
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "your-email@example.com",
+    "password": "your-password"
+  }'
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "user_123",
-    "email": "user@example.com",
-    "role": "brand_manager"
-  }
-}
+Use the returned `accessToken` in subsequent requests:
+
+```bash
+curl -X GET http://localhost:3000/api/brands \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
----
+### 3. Test the API
 
-## API Endpoints
+Run the comprehensive test suite:
 
-### Health Check
+```bash
+# Test against development server
+npm run test:api:dev
 
-#### GET /api/health
+# Test against production server
+npm run test:api:prod
 
-Check system health status.
-
-**Authentication:** Not required
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "timestamp": "2024-01-01T00:00:00.000Z",
-  "database": "connected",
-  "redis": "connected",
-  "version": "1.0.0"
-}
+# Custom API endpoint
+API_BASE_URL=https://your-api.com/api npm run test:api
 ```
 
----
+## 📚 API Reference
+
+### Base URLs
+
+- **Development**: `http://localhost:3000/api`
+- **Production**: `https://api.parichay.com`
 
 ### Authentication
 
-#### POST /api/auth/register
+The API uses JWT (JSON Web Tokens) for authentication. Include the token in the Authorization header:
 
-Register a new user account.
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+```
 
-**Request Body:**
+### Content Type
+
+All requests should use JSON:
+
+```
+Content-Type: application/json
+```
+
+### Rate Limiting
+
+- **Authenticated requests**: 1000 requests per hour
+- **Public endpoints**: 100 requests per hour
+- **File uploads**: 50 requests per hour
+
+## 🔐 Authentication Endpoints
+
+### POST /auth/login
+
+Authenticate user and receive JWT token.
+
+**Request:**
 ```json
 {
   "email": "user@example.com",
-  "password": "SecurePass123!",
-  "firstName": "John",
-  "lastName": "Doe",
-  "brandName": "My Business"
+  "password": "securepassword123",
+  "mfaToken": "123456" // Optional, required if MFA is enabled
 }
 ```
 
@@ -96,760 +95,454 @@ Register a new user account.
 ```json
 {
   "success": true,
-  "message": "Registration successful",
-  "userId": "user_123",
-  "brandId": "brand_456"
-}
-```
-
-#### POST /api/auth/login
-
-Authenticate user and obtain JWT token.
-
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "SecurePass123!"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
-    "id": "user_123",
+    "id": "123e4567-e89b-12d3-a456-426614174000",
     "email": "user@example.com",
     "firstName": "John",
     "lastName": "Doe",
-    "role": "brand_manager"
-  }
+    "role": "BRAND_MANAGER"
+  },
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-#### POST /api/auth/logout
+### POST /auth/register
 
-Invalidate current session.
+Register a new user account.
 
-**Authentication:** Required
-
-**Response:**
+**Request:**
 ```json
 {
-  "success": true,
-  "message": "Logged out successfully"
+  "email": "newuser@example.com",
+  "password": "securepassword123",
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "role": "BUSINESS_OWNER"
 }
 ```
 
-#### POST /api/auth/forgot-password
+### GET /auth/me
 
-Request password reset email.
+Get current authenticated user information.
 
-**Request Body:**
-```json
-{
-  "email": "user@example.com"
-}
+**Headers:**
 ```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Password reset email sent"
-}
-```
-
-#### POST /api/auth/reset-password
-
-Reset password using token from email.
-
-**Request Body:**
-```json
-{
-  "token": "reset_token_from_email",
-  "newPassword": "NewSecurePass123!"
-}
+Authorization: Bearer YOUR_JWT_TOKEN
 ```
 
 **Response:**
 ```json
 {
-  "success": true,
-  "message": "Password reset successful"
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "email": "user@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "role": "BRAND_MANAGER",
+  "brandId": "456e7890-e89b-12d3-a456-426614174001"
 }
 ```
 
----
+## 🏢 Brand Management Endpoints
 
-### Brands
+### GET /brands
 
-#### GET /api/brands
+List brands (all for Super Admin, user's brand for others).
 
-Get all brands (filtered by user role).
-
-**Authentication:** Required
-
-**Query Parameters:**
-- `page` (optional): Page number (default: 1)
-- `limit` (optional): Items per page (default: 10)
-- `search` (optional): Search by brand name
+**Headers:**
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+```
 
 **Response:**
 ```json
 {
-  "success": true,
-  "data": [
+  "brands": [
     {
-      "id": "brand_123",
-      "name": "My Business",
-      "slug": "my-business",
-      "logo": "https://cdn.onetouchbizcard.in/logos/brand_123.png",
-      "tagline": "Your trusted partner",
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "name": "Acme Corporation",
+      "slug": "acme-corporation",
+      "tagline": "Innovation at its best",
       "colorTheme": {
-        "primary": "#FF6600",
-        "secondary": "#333333",
-        "accent": "#FFCC00"
+        "primary": "#3B82F6",
+        "secondary": "#1E40AF",
+        "accent": "#F59E0B"
       },
-      "customDomain": "mybusiness.com",
-      "createdAt": "2024-01-01T00:00:00.000Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 1,
-    "totalPages": 1
-  }
-}
-```
-
-#### GET /api/brands/:id
-
-Get brand details by ID.
-
-**Authentication:** Required
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "id": "brand_123",
-    "name": "My Business",
-    "slug": "my-business",
-    "logo": "https://cdn.onetouchbizcard.in/logos/brand_123.png",
-    "tagline": "Your trusted partner",
-    "colorTheme": {
-      "primary": "#FF6600",
-      "secondary": "#333333",
-      "accent": "#FFCC00"
-    },
-    "customDomain": "mybusiness.com",
-    "branches": [
-      {
-        "id": "branch_456",
-        "name": "Main Office",
-        "slug": "main-office"
+      "stats": {
+        "views": 1250,
+        "leads": 45
+      },
+      "subscription": {
+        "status": "ACTIVE",
+        "plan": {
+          "name": "Professional"
+        }
       }
-    ],
-    "subscription": {
-      "plan": "professional",
-      "status": "active",
-      "expiresAt": "2025-01-01T00:00:00.000Z"
     }
-  }
+  ]
 }
 ```
 
-#### POST /api/brands
+### POST /brands
 
 Create a new brand.
 
-**Authentication:** Required (Super Admin only)
+**Headers:**
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+```
 
-**Request Body:**
+**Request:**
 ```json
 {
-  "name": "New Business",
-  "slug": "new-business",
+  "name": "Acme Corporation",
   "tagline": "Innovation at its best",
+  "description": "Leading technology company",
+  "website": "https://acme.com",
   "colorTheme": {
-    "primary": "#0066CC",
-    "secondary": "#333333",
-    "accent": "#00CC66"
+    "primary": "#3B82F6",
+    "secondary": "#1E40AF",
+    "accent": "#F59E0B"
+  },
+  "initialBranch": {
+    "name": "Main Office",
+    "address": "123 Business St, City, State 12345",
+    "phone": "+1-555-0123",
+    "email": "contact@acme.com"
   }
 }
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Brand created successfully",
-  "data": {
-    "id": "brand_789",
-    "name": "New Business",
-    "slug": "new-business"
-  }
-}
+## 🏪 Branch Management Endpoints
+
+### GET /branches
+
+List branches for a brand.
+
+**Headers:**
 ```
-
-#### PUT /api/brands/:id
-
-Update brand information.
-
-**Authentication:** Required (Brand Manager or Super Admin)
-
-**Request Body:**
-```json
-{
-  "name": "Updated Business Name",
-  "tagline": "New tagline",
-  "colorTheme": {
-    "primary": "#FF0000",
-    "secondary": "#000000",
-    "accent": "#FFFF00"
-  }
-}
+Authorization: Bearer YOUR_JWT_TOKEN
 ```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Brand updated successfully",
-  "data": {
-    "id": "brand_123",
-    "name": "Updated Business Name"
-  }
-}
-```
-
-#### DELETE /api/brands/:id
-
-Delete a brand (soft delete).
-
-**Authentication:** Required (Super Admin only)
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Brand deleted successfully"
-}
-```
-
-#### POST /api/brands/:id/logo
-
-Upload brand logo.
-
-**Authentication:** Required (Brand Manager or Super Admin)
-
-**Request:** Multipart form data
-- `logo`: Image file (PNG, JPG, max 5MB)
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Logo uploaded successfully",
-  "logoUrl": "https://cdn.onetouchbizcard.in/logos/brand_123.png"
-}
-```
-
----
-
-### Branches
-
-#### GET /api/branches
-
-Get all branches (filtered by user role).
-
-**Authentication:** Required
 
 **Query Parameters:**
-- `brandId` (optional): Filter by brand ID
-- `page` (optional): Page number
-- `limit` (optional): Items per page
+- `brandId` (required): Brand ID to filter branches
 
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "branch_456",
-      "name": "Main Office",
-      "slug": "main-office",
-      "brandId": "brand_123",
-      "address": {
-        "street": "123 Main St",
-        "city": "Mumbai",
-        "state": "Maharashtra",
-        "zipCode": "400001",
-        "country": "India"
-      },
-      "contact": {
-        "phone": "+91-9876543210",
-        "whatsapp": "+91-9876543210",
-        "email": "contact@mybusiness.com"
-      },
-      "micrositeUrl": "https://onetouchbizcard.in/my-business/main-office"
-    }
-  ]
-}
+**Example:**
+```bash
+curl -X GET "http://localhost:3000/api/branches?brandId=123e4567-e89b-12d3-a456-426614174000" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-#### POST /api/branches
+### POST /branches
 
 Create a new branch.
 
-**Authentication:** Required (Brand Manager or Super Admin)
+**Headers:**
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+```
 
-**Request Body:**
+**Request:**
 ```json
 {
-  "brandId": "brand_123",
-  "name": "New Branch",
-  "slug": "new-branch",
+  "name": "Downtown Branch",
+  "slug": "downtown-branch",
+  "brandId": "123e4567-e89b-12d3-a456-426614174000",
   "address": {
-    "street": "456 Park Ave",
-    "city": "Delhi",
-    "state": "Delhi",
-    "zipCode": "110001",
-    "country": "India"
+    "street": "456 Main St",
+    "city": "Downtown",
+    "state": "CA",
+    "zipCode": "90210",
+    "country": "USA"
   },
   "contact": {
-    "phone": "+91-9876543210",
-    "email": "newbranch@mybusiness.com"
+    "phone": "+1-555-0456",
+    "email": "downtown@acme.com"
   }
 }
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Branch created successfully",
-  "data": {
-    "id": "branch_789",
-    "micrositeUrl": "https://onetouchbizcard.in/my-business/new-branch"
-  }
-}
+## 👥 Lead Management Endpoints
+
+### GET /leads
+
+List leads with filtering and pagination.
+
+**Headers:**
 ```
-
----
-
-### Microsites
-
-#### GET /api/microsites/:brandSlug/:branchSlug
-
-Get microsite configuration and content.
-
-**Authentication:** Not required (public endpoint)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "brand": {
-      "name": "My Business",
-      "logo": "https://cdn.onetouchbizcard.in/logos/brand_123.png",
-      "colorTheme": {
-        "primary": "#FF6600",
-        "secondary": "#333333"
-      }
-    },
-    "branch": {
-      "name": "Main Office",
-      "address": "123 Main St, Mumbai",
-      "contact": {
-        "phone": "+91-9876543210",
-        "email": "contact@mybusiness.com"
-      }
-    },
-    "config": {
-      "sections": {
-        "hero": {
-          "enabled": true,
-          "title": "Welcome to My Business",
-          "subtitle": "Your trusted partner"
-        },
-        "services": {
-          "enabled": true,
-          "items": [...]
-        }
-      }
-    }
-  }
-}
+Authorization: Bearer YOUR_JWT_TOKEN
 ```
-
-#### PUT /api/microsites/:id/config
-
-Update microsite configuration.
-
-**Authentication:** Required (Branch Admin or higher)
-
-**Request Body:**
-```json
-{
-  "sections": {
-    "hero": {
-      "enabled": true,
-      "title": "Updated Title",
-      "backgroundImage": "https://..."
-    },
-    "services": {
-      "enabled": true,
-      "items": [
-        {
-          "name": "Service 1",
-          "description": "Description",
-          "price": 999
-        }
-      ]
-    }
-  }
-}
-```
-
----
-
-### QR Codes
-
-#### GET /api/qr-codes/:branchId
-
-Get QR code for a branch.
-
-**Authentication:** Required
 
 **Query Parameters:**
-- `format` (optional): png, svg, pdf (default: png)
-- `size` (optional): 200-1000 (default: 500)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "qrCodeUrl": "https://cdn.onetouchbizcard.in/qr/branch_456.png",
-    "downloadUrl": "https://onetouchbizcard.in/api/qr-codes/branch_456/download"
-  }
-}
-```
-
-#### GET /api/qr-codes/:branchId/analytics
-
-Get QR code scan analytics.
-
-**Authentication:** Required
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "totalScans": 1234,
-    "scansThisMonth": 156,
-    "scansByLocation": [
-      {"country": "India", "count": 800},
-      {"country": "USA", "count": 234}
-    ],
-    "recentScans": [
-      {
-        "timestamp": "2024-01-01T12:00:00.000Z",
-        "location": "Mumbai, India"
-      }
-    ]
-  }
-}
-```
-
----
-
-### Analytics
-
-#### GET /api/analytics/overview
-
-Get analytics overview for user's brands/branches.
-
-**Authentication:** Required
-
-**Query Parameters:**
-- `startDate` (optional): ISO date string
-- `endDate` (optional): ISO date string
-- `brandId` (optional): Filter by brand
 - `branchId` (optional): Filter by branch
+- `status` (optional): Filter by lead status (NEW, CONTACTED, QUALIFIED, CONVERTED, LOST)
+- `page` (optional): Page number for pagination
+- `limit` (optional): Number of items per page (max 100)
 
-**Response:**
+**Example:**
+```bash
+curl -X GET "http://localhost:3000/api/leads?branchId=123&status=NEW&page=1&limit=20" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### POST /leads
+
+Create a new lead.
+
+**Headers:**
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**Request:**
 ```json
 {
-  "success": true,
-  "data": {
-    "pageViews": 5432,
-    "uniqueVisitors": 3210,
-    "qrScans": 1234,
-    "leads": 89,
-    "conversionRate": 2.77,
-    "topPages": [
-      {
-        "url": "/my-business/main-office",
-        "views": 2345
-      }
-    ]
-  }
+  "branchId": "123e4567-e89b-12d3-a456-426614174000",
+  "name": "John Customer",
+  "email": "john@example.com",
+  "phone": "+1-555-0789",
+  "source": "QR_CODE",
+  "notes": "Interested in premium services"
 }
 ```
 
----
+## 📊 Analytics Endpoints
 
-### Subscriptions
+### GET /analytics
 
-#### GET /api/subscriptions/plans
+Get analytics data for branches.
 
-Get available subscription plans.
+**Headers:**
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+```
 
-**Authentication:** Not required
+**Query Parameters:**
+- `branchId` (optional): Filter by specific branch
+- `period` (optional): Time period (7d, 30d, 90d, 1y)
+- `startDate` (optional): Start date for custom period (YYYY-MM-DD)
+- `endDate` (optional): End date for custom period (YYYY-MM-DD)
 
 **Response:**
 ```json
 {
-  "success": true,
+  "views": 1250,
+  "leads": 45,
+  "conversions": 12,
+  "qrScans": 89,
+  "period": "30d",
   "data": [
     {
-      "id": "plan_basic",
-      "name": "Basic",
-      "price": 999,
-      "duration": "monthly",
-      "features": {
-        "maxBranches": 3,
-        "customDomain": false,
-        "analytics": true,
-        "qrCodes": true
-      }
+      "date": "2024-01-01",
+      "views": 42,
+      "leads": 3
     },
     {
-      "id": "plan_professional",
-      "name": "Professional",
-      "price": 2999,
-      "duration": "monthly",
-      "features": {
-        "maxBranches": 10,
-        "customDomain": true,
-        "analytics": true,
-        "qrCodes": true
-      }
+      "date": "2024-01-02",
+      "views": 38,
+      "leads": 2
     }
   ]
 }
 ```
 
-#### POST /api/subscriptions/checkout
+## 📱 QR Code Endpoints
 
-Create checkout session for subscription.
+### GET /qrcodes
 
-**Authentication:** Required
+List QR codes for a branch.
 
-**Request Body:**
-```json
-{
-  "planId": "plan_professional",
-  "gateway": "stripe"
-}
+**Headers:**
 ```
-
-**Response:**
-```json
-{
-  "success": true,
-  "checkoutUrl": "https://checkout.stripe.com/...",
-  "sessionId": "cs_test_..."
-}
+Authorization: Bearer YOUR_JWT_TOKEN
 ```
-
----
-
-### Payments
-
-#### POST /api/payments/webhook/stripe
-
-Stripe webhook endpoint (internal use).
-
-**Authentication:** Webhook signature verification
-
-#### POST /api/payments/webhook/razorpay
-
-Razorpay webhook endpoint (internal use).
-
-**Authentication:** Webhook signature verification
-
----
-
-## Error Responses
-
-All error responses follow this format:
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "Human-readable error message",
-    "details": {}
-  }
-}
-```
-
-### Common Error Codes
-
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `UNAUTHORIZED` | 401 | Missing or invalid authentication token |
-| `FORBIDDEN` | 403 | Insufficient permissions |
-| `NOT_FOUND` | 404 | Resource not found |
-| `VALIDATION_ERROR` | 400 | Invalid request data |
-| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests |
-| `INTERNAL_ERROR` | 500 | Server error |
-
----
-
-## Rate Limiting
-
-API requests are rate-limited to prevent abuse:
-
-- **Authenticated requests:** 100 requests per 15 minutes
-- **Unauthenticated requests:** 20 requests per 15 minutes
-
-**Rate Limit Headers:**
-```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1640995200
-```
-
----
-
-## Pagination
-
-List endpoints support pagination:
 
 **Query Parameters:**
-- `page`: Page number (default: 1)
-- `limit`: Items per page (default: 10, max: 100)
+- `branchId` (required): Branch ID to filter QR codes
+
+### POST /qrcodes
+
+Generate a new QR code.
+
+**Headers:**
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+**Request:**
+```json
+{
+  "branchId": "123e4567-e89b-12d3-a456-426614174000",
+  "type": "MICROSITE",
+  "customization": {
+    "size": 300,
+    "color": "#000000",
+    "backgroundColor": "#FFFFFF"
+  }
+}
+```
 
 **Response:**
 ```json
 {
-  "data": [...],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 100,
-    "totalPages": 10,
-    "hasNext": true,
-    "hasPrev": false
+  "id": "qr123e4567-e89b-12d3-a456-426614174000",
+  "branchId": "123e4567-e89b-12d3-a456-426614174000",
+  "type": "MICROSITE",
+  "url": "https://parichay.com/acme-corporation/main-office",
+  "qrCodeUrl": "https://cdn.parichay.com/qr/qr123e4567.png",
+  "scanCount": 0,
+  "isActive": true,
+  "createdAt": "2024-01-15T10:30:00Z"
+}
+```
+
+## 🏥 Health Check Endpoints
+
+### GET /health
+
+Check system health status.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "services": {
+    "database": "up",
+    "redis": "up",
+    "storage": "up"
   }
 }
 ```
 
----
+## 🔧 Error Handling
 
-## Webhooks
+All API endpoints return consistent error responses:
 
-OneTouch BizCard can send webhooks for various events.
-
-### Webhook Events
-
-- `lead.created`: New lead submitted
-- `subscription.created`: New subscription
-- `subscription.renewed`: Subscription renewed
-- `subscription.expired`: Subscription expired
-- `payment.succeeded`: Payment successful
-- `payment.failed`: Payment failed
-
-### Webhook Payload
+### Error Response Format
 
 ```json
 {
-  "event": "lead.created",
-  "timestamp": "2024-01-01T00:00:00.000Z",
-  "data": {
-    "leadId": "lead_123",
-    "branchId": "branch_456",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "phone": "+91-9876543210"
+  "error": "Error message",
+  "code": "ERROR_CODE",
+  "details": {}
+}
+```
+
+### HTTP Status Codes
+
+- **200**: Success
+- **201**: Created
+- **400**: Bad Request (validation errors)
+- **401**: Unauthorized (authentication required)
+- **403**: Forbidden (insufficient permissions)
+- **404**: Not Found
+- **409**: Conflict (duplicate resource)
+- **429**: Rate Limited
+- **500**: Internal Server Error
+- **503**: Service Unavailable
+
+### Common Error Examples
+
+**Validation Error (400):**
+```json
+{
+  "error": "Validation failed",
+  "code": "VALIDATION_ERROR",
+  "details": {
+    "email": "Invalid email format",
+    "password": "Password must be at least 8 characters"
   }
 }
 ```
 
----
-
-## SDK Examples
-
-### JavaScript/TypeScript
-
-```typescript
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'https://onetouchbizcard.in/api',
-  headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  },
-});
-
-// Get brands
-const brands = await api.get('/brands');
-
-// Create branch
-const branch = await api.post('/branches', {
-  brandId: 'brand_123',
-  name: 'New Branch',
-  slug: 'new-branch',
-});
+**Authentication Error (401):**
+```json
+{
+  "error": "Invalid credentials",
+  "code": "UNAUTHORIZED"
+}
 ```
 
-### Python
-
-```python
-import requests
-
-API_BASE = 'https://onetouchbizcard.in/api'
-headers = {
-    'Authorization': f'Bearer {token}',
-    'Content-Type': 'application/json',
+**Rate Limit Error (429):**
+```json
+{
+  "error": "Rate limit exceeded",
+  "code": "RATE_LIMIT_EXCEEDED"
 }
-
-# Get brands
-response = requests.get(f'{API_BASE}/brands', headers=headers)
-brands = response.json()
-
-# Create branch
-branch_data = {
-    'brandId': 'brand_123',
-    'name': 'New Branch',
-    'slug': 'new-branch',
-}
-response = requests.post(f'{API_BASE}/branches', json=branch_data, headers=headers)
 ```
 
+## 🧪 Testing
+
+### Automated Testing
+
+Run the comprehensive API test suite:
+
+```bash
+# Test development environment
+npm run test:api:dev
+
+# Test production environment
+npm run test:api:prod
+
+# Test custom environment
+API_BASE_URL=https://staging.parichay.com/api npm run test:api
+```
+
+### Manual Testing with cURL
+
+**Login and get token:**
+```bash
+TOKEN=$(curl -s -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"testpassword123"}' \
+  | jq -r '.accessToken')
+```
+
+**Use token for authenticated requests:**
+```bash
+curl -X GET http://localhost:3000/api/brands \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Testing with Postman
+
+1. Import the OpenAPI specification from `/api/docs`
+2. Set up environment variables for base URL and token
+3. Use the pre-request scripts to handle authentication
+
+## 📖 Additional Resources
+
+### Interactive Documentation
+
+- **Swagger UI**: http://localhost:3000/api-doc
+- **OpenAPI Spec**: http://localhost:3000/api/docs
+
+### Code Examples
+
+Check the `test-api-comprehensive.js` file for complete examples of:
+- Authentication flow
+- CRUD operations
+- Error handling
+- Rate limiting tests
+
+### Support
+
+- **Email**: support@parichay.com
+- **Documentation**: https://docs.parichay.com
+- **GitHub Issues**: https://github.com/parichay/api/issues
+
+## 🔄 Changelog
+
+### Version 1.0.0
+- Initial API release
+- Authentication with JWT
+- Brand and branch management
+- Lead capture and management
+- QR code generation
+- Analytics and reporting
+- Comprehensive documentation
+- Interactive testing interface
+
 ---
 
-## Support
-
-For API support:
-- Email: api-support@onetouchbizcard.in
-- Documentation: https://docs.onetouchbizcard.in
-- Status: https://status.onetouchbizcard.in
-
----
-
-**API Version**: 1.0
-**Last Updated**: [Date]
+*Last updated: January 28, 2026*

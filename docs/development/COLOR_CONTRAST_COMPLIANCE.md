@@ -1,6 +1,6 @@
 # Color Contrast Compliance Report
 
-This document verifies that all color combinations used in the OneTouch BizCard microsite meet WCAG AA accessibility standards.
+This document verifies that all color combinations used in the Parichay microsite meet WCAG AA accessibility standards.
 
 ## WCAG Standards
 

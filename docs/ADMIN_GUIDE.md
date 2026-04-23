@@ -1,8 +1,8 @@
-# OneTouch BizCard Admin Guide
+# Parichay Admin Guide
 
 ## Overview
 
-This guide is for administrators and support staff who manage the OneTouch BizCard platform. It covers user management, subscription management, troubleshooting, and system maintenance.
+This guide is for administrators and support staff who manage the Parichay platform. It covers user management, subscription management, troubleshooting, and system maintenance.
 
 ## Table of Contents
 

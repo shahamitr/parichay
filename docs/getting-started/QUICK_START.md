@@ -1,12 +1,11 @@
-# OneTouch BizCard - Quick Start Guide
+# 🚀 Quick Start Guide
 
 ## Prerequisites Checklist
 
 Before running the app, ensure you have:
 
 - [ ] Node.js (v18 or higher) installed
-- [ ] PostgreSQL database installed and running
-- [ ] Redis installed and running (optional, for caching)
+- [ ] Database (PostgreSQL or MySQL) installed and running
 - [ ] Git installed
 
 ## Step-by-Step Setup
@@ -14,59 +13,81 @@ Before running the app, ensure you have:
 ### 1. Install Dependencies
 
 ```bash
-cd onetouch-bizcard
+cd parichay
 npm install
 ```
 
-### 2. Set Up PostgreSQL Database
+### 2. Choose Your Database
 
-#### Option A: Using XAMPP (if you have it)
-1. Start XAMPP Control Panel
-2. Start PostgreSQL service
-3. Open pgAdmin or use command line
+#### Option A: PostgreSQL (Recommended)
 
-#### Option B: Using PostgreSQL directly
-1. Start PostgreSQL service:
-   ```bash
-   # Windows (if installed as service)
-   net start postgresql-x64-14
+1. **Install PostgreSQL**
+   - Download from: https://www.postgresql.org/download/
+   - Run installer and remember the password
+   - Keep default port: 5432
 
-   # Or check services.msc and start PostgreSQL
-   ```
-
-2. Create the database:
+2. **Create Database**
    ```bash
    # Connect to PostgreSQL
    psql -U postgres
 
    # Create database
-   CREATE DATABASE onetouch_bizcard;
+   CREATE DATABASE parichay;
 
    # Create user (optional)
-   CREATE USER onetouch_user WITH PASSWORD 'your_password';
-   GRANT ALL PRIVILEGES ON DATABASE onetouch_bizcard TO onetouch_user;
+   CREATE USER parichay_user WITH PASSWORD 'your_password';
+   GRANT ALL PRIVILEGES ON DATABASE parichay TO parichay_user;
 
    # Exit
    \q
    ```
 
+3. **Update .env**
+   ```env
+   DATABASE_URL="postgresql://postgres:your_password@localhost:5432/parichay"
+   ```
+
+#### Option B: MySQL (Good for XAMPP users)
+
+1. **Start MySQL in XAMPP**
+   - Open XAMPP Control Panel
+   - Click "Start" next to MySQL
+   - Wait for it to turn green
+
+2. **Create Database**
+   - Click "Admin" next to MySQL (opens phpMyAdmin)
+   - Click "New" in left sidebar
+   - Database name: `parichay`
+   - Click "Create"
+
+3. **Update Prisma Schema**
+   - Open `prisma/schema.prisma`
+   - Change `provider = "postgresql"` to `provider = "mysql"`
+
+4. **Update .env**
+   ```env
+   DATABASE_URL="mysql://root@localhost:3306/parichay"
+   ```
+
 ### 3. Configure Environment Variables
 
-Update your `.env` file with correct database credentials:
+Update your `.env` file:
 
 ```env
-# Database
-DATABASE_URL="postgresql://postgres:your_password@localhost:5432/onetouch_bizcard"
+# Database (choose one)
+DATABASE_URL="postgresql://postgres:password@localhost:5432/parichay"
+# OR
+DATABASE_URL="mysql://root@localhost:3306/parichay"
 
-# JWT
-JWT_SECRET="your-jwt-secret-key-change-this-in-production"
+# Authentication
+NEXTAUTH_SECRET="your-super-secret-jwt-key-change-this"
+NEXTAUTH_URL="http://localhost:3000"
 
 # Application
 NODE_ENV="development"
-NEXTAUTH_URL="http://localhost:3000"
 APP_URL="http://localhost:3000"
 
-# Optional: Email Service (for testing)
+# Optional: Email Service
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT="587"
 SMTP_USER="your-email@gmail.com"
@@ -90,32 +111,23 @@ REDIS_URL="redis://localhost:6379"
 AWS_ACCESS_KEY_ID="your-aws-access-key"
 AWS_SECRET_ACCESS_KEY="your-aws-secret-key"
 AWS_REGION="us-east-1"
-AWS_S3_BUCKET="onetouch-bizcard-assets"
+AWS_S3_BUCKET="parichay-assets"
 ```
 
-### 4. Generate Prisma Client
+### 4. Set Up Database
 
 ```bash
+# Generate Prisma client
 npm run prisma:generate
-```
 
-### 5. Run Database Migrations
-
-```bash
+# Run migrations
 npm run prisma:migrate
-```
 
-If you get an error about the database not being accessible, make sure PostgreSQL is running.
-
-### 6. (Optional) Seed the Database
-
-```bash
+# (Optional) Seed with sample data
 npm run prisma:seed
 ```
 
-This will create sample data for testing.
-
-### 7. Start the Development Server
+### 5. Start the Development Server
 
 ```bash
 npm run dev
@@ -123,18 +135,57 @@ npm run dev
 
 The app should now be running at: **http://localhost:3000**
 
+## Setup Checklist
+
+Use this checklist to verify your setup:
+
+### Database Setup
+- [ ] Database service is running
+- [ ] Database `parichay` exists
+- [ ] DATABASE_URL in .env is correct
+- [ ] Prisma client generated
+- [ ] Migrations completed
+
+### Application Setup
+- [ ] Dependencies installed (`npm install`)
+- [ ] Environment variables configured
+- [ ] Development server starts without errors
+- [ ] Can access http://localhost:3000
+- [ ] Landing page loads correctly
+
+### Optional Services
+- [ ] Email service configured (if needed)
+- [ ] SMS service configured (if needed)
+- [ ] Payment gateways configured (if needed)
+- [ ] File storage configured (if needed)
+
+## First Time Access
+
+After starting the app:
+
+1. Go to http://localhost:3000
+2. You should see the Parichay landing page
+3. Register a new account or use seeded data
+4. Default admin credentials (if seeded):
+   - Email: admin@example.com
+   - Password: Check the seed script for password
+
 ## Troubleshooting
 
 ### Issue: "Can't reach database server"
 
 **Solution:**
-1. Check if PostgreSQL is running:
-   - Windows: Open Services (services.msc) and look for PostgreSQL
-   - Or check Task Manager → Services tab
+1. Check if database service is running:
+   - PostgreSQL: Check Services (services.msc) for PostgreSQL
+   - MySQL: Check XAMPP Control Panel
 2. Verify database credentials in `.env`
 3. Test connection:
    ```bash
+   # PostgreSQL
    psql -U postgres -h localhost -p 5432
+
+   # MySQL
+   mysql -u root -p -h localhost -P 3306
    ```
 
 ### Issue: "Port 3000 is already in use"
@@ -169,8 +220,13 @@ npm install
    ```
 2. Or manually drop and recreate:
    ```sql
-   DROP DATABASE onetouch_bizcard;
-   CREATE DATABASE onetouch_bizcard;
+   -- PostgreSQL
+   DROP DATABASE parichay;
+   CREATE DATABASE parichay;
+
+   -- MySQL
+   DROP DATABASE parichay;
+   CREATE DATABASE parichay CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
 3. Then run migrations again:
    ```bash
@@ -183,16 +239,15 @@ npm install
 Redis is optional. If you don't have it installed:
 1. Comment out Redis-related code, or
 2. Install Redis:
-   - Windows: Use WSL or download from https://github.com/microsoftarchive/redis/releases
-   - Or use Docker: `docker run -d -p 6379:6379 redis`
+   - Windows: Use WSL or Docker: `docker run -d -p 6379:6379 redis`
 
 ## Minimal Setup (Without Optional Services)
 
 If you want to run the app with minimal configuration:
 
 1. **Required:**
-   - PostgreSQL database
-   - Basic `.env` with DATABASE_URL and JWT_SECRET
+   - Database (PostgreSQL or MySQL)
+   - Basic `.env` with DATABASE_URL and NEXTAUTH_SECRET
 
 2. **Optional (can skip for now):**
    - Email service (SMTP)
@@ -238,18 +293,8 @@ npm run lint
 
 - **Next.js App**: http://localhost:3000
 - **PostgreSQL**: localhost:5432
+- **MySQL**: localhost:3306
 - **Redis**: localhost:6379
-
-## First Time Access
-
-After starting the app:
-
-1. Go to http://localhost:3000
-2. You should see the landing page
-3. Register a new account or use seeded data (if you ran seed script)
-4. Default admin credentials (if seeded):
-   - Email: admin@example.com
-   - Password: Check the seed script for password
 
 ## Next Steps
 
@@ -264,9 +309,9 @@ After starting the app:
 ## Need Help?
 
 - Check the main README.md for detailed documentation
-- Review `docs/` folder for feature-specific guides
-- Check `SMS_SETUP_GUIDE.md` for SMS configuration
-- Review `docs/SMS_NOTIFICATIONS.md` for SMS features
+- Review `/docs` folder for feature-specific guides
+- Check installation guide for detailed setup
+- Review deployment guide for production setup
 
 ---
 

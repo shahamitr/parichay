@@ -1,6 +1,6 @@
 # Accessibility Quick Reference Guide
 
-Quick reference for developers working on the OneTouch BizCard microsite.
+Quick reference for developers working on the Parichay microsite.
 
 ## Quick Checks Before Committing
 

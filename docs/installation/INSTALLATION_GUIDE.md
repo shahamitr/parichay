@@ -1,4 +1,4 @@
-# 🚀 Parichay.io - Complete Installation Guide
+# 🚀 Complete Installation Guide
 
 ## Quick Installation
 
@@ -39,77 +39,76 @@ psql -d parichay -f prisma/migrations/add_social_premium_features/migration.sql
 psql -d parichay -f prisma/migrations/add_performance_indexes.sql
 ```
 
-## Database Migrations Included
+## Database Setup Options
 
-### 1. White-Label Multi-Tenant Support
-**File**: `prisma/migrations/add_white_label_support.sql`
+### Option A: PostgreSQL (Recommended for Production)
 
-Creates:
-- `Tenant` table - Agency management
-- `TenantClient` table - Client relationships
-- `TenantBilling` table - Monthly billing
-- `TenantInvitation` table - Client invitations
-- Adds `tenantId` to User and Brand tables
+#### Install PostgreSQL
+```bash
+# Windows: Download from postgresql.org
+# Mac: brew install postgresql
+# Linux: sudo apt-get install postgresql
+```
 
-### 2. Multi-Factor Authentication
-**File**: `prisma/migrations/add_mfa_fields.sql`
+#### Create Database
+```sql
+CREATE DATABASE parichay;
+CREATE USER parichay_user WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE parichay TO parichay_user;
+```
 
-Adds to User table:
-- `mfaEnabled` - MFA status
-- `mfaSecret` - TOTP secret
-- `backupCodes` - Recovery codes
+#### Environment Variables
+```env
+DATABASE_URL="postgresql://parichay_user:your_password@localhost:5432/parichay"
+```
 
-### 3. Verification System
-**File**: `prisma/migrations/add_verification_system/migration.sql`
+### Option B: MySQL (Good for Development with XAMPP)
 
-Adds to Branch table:
-- `isVerified` - Verification status
-- `verifiedAt` - Verification timestamp
-- `completionScore` - Profile completion
+#### Using XAMPP
+1. Open XAMPP Control Panel
+2. Start MySQL service
+3. Click "Admin" to open phpMyAdmin
+4. Create database: `onetouch_bizcard`
 
-Adds to Brand table:
-- `isVerified` - Brand verification
-- `verificationBadge` - Badge type
+#### Update Prisma Schema
+Edit `prisma/schema.prisma`:
+```prisma
+datasource db {
+  provider = "mysql"  // Change from "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
 
-### 4. Short Links & Privacy
-**File**: `prisma/migrations/add_shortlinks_and_privacy/migration.sql`
+#### Environment Variables
+```env
+# For XAMPP (default no password)
+DATABASE_URL="mysql://root@localhost:3306/onetouch_bizcard"
 
-Creates:
-- `ShortLink` table - URL shortener
+# Or with password
+DATABASE_URL="mysql://root:your_password@localhost:3306/onetouch_bizcard"
+```
 
-Adds to Branch table:
-- `visibility` - Public/private/unlisted
-- `accessPassword` - Password protection
-- `accessToken` - Token-based access
+#### Command Line Setup
+```bash
+# Navigate to XAMPP MySQL bin
+cd D:\xampp\mysql\bin
 
-### 5. Social & Premium Features
-**File**: `prisma/migrations/add_social_premium_features/migration.sql`
+# Connect to MySQL
+.\mysql.exe -u root -p
 
-Creates:
-- `VideoTestimonial` - Video testimonials
-- `SocialProofBadge` - Trust badges
-- `PortfolioItem` - Portfolio showcase
-- `Offer` - Promotions and offers
-- `VoiceIntro` - Voice introductions
-- `WhatsAppCatalogue` - WhatsApp integration
-- `WhatsAppCatalogueItem` - Catalogue items
-
-### 6. Performance Indexes
-**File**: `prisma/migrations/add_performance_indexes.sql`
-
-Adds indexes for:
-- Brand, Branch, User tables
-- Subscription, Payment tables
-- Lead, Analytics tables
-- QR Code, Notification tables
+# Create database
+CREATE DATABASE onetouch_bizcard CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
 ## Environment Variables
 
 Create a `.env` file with:
 
 ```env
-# Database
+# Database (choose one)
 DATABASE_URL="postgresql://user:password@localhost:5432/parichay"
+# OR
+DATABASE_URL="mysql://root@localhost:3306/onetouch_bizcard"
 
 # Authentication
 NEXTAUTH_SECRET="your-secret-key-here"
@@ -132,71 +131,72 @@ AWS_REGION="us-east-1"
 AWS_S3_BUCKET="parichay-uploads"
 ```
 
+## Database Migrations Included
+
+### 1. White-Label Multi-Tenant Support
+Creates:
+- `Tenant` table - Agency management
+- `TenantClient` table - Client relationships
+- `TenantBilling` table - Monthly billing
+- `TenantInvitation` table - Client invitations
+
+### 2. Multi-Factor Authentication
+Adds to User table:
+- `mfaEnabled` - MFA status
+- `mfaSecret` - TOTP secret
+- `backupCodes` - Recovery codes
+
+### 3. Verification System
+Adds verification status and completion scoring
+
+### 4. Short Links & Privacy
+Creates URL shortener and privacy controls
+
+### 5. Social & Premium Features
+Creates video testimonials, social proof badges, portfolio items
+
+### 6. Performance Indexes
+Optimizes database queries with proper indexing
+
 ## Post-Installation Steps
 
 ### 1. Create Admin User
-
 ```bash
-node onetouch-bizcard/create-admin.js
+node scripts/create-admin.js
 ```
 
 ### 2. Seed Demo Data (Optional)
-
 ```bash
-psql -d parichay -f onetouch-bizcard/insert-demo-data.sql
+npm run prisma:seed
 ```
 
 ### 3. Start Development Server
-
 ```bash
 npm run dev
 ```
 
 Visit: http://localhost:3000
 
-### 4. Create Your First Agency
-
-1. Sign up at `/signup`
-2. Go to `/agency/onboarding`
-3. Complete the 4-step wizard
-4. Start adding clients!
-
-## Verification
-
-### Check Database Tables
-
-```sql
--- List all tables
-\dt
-
--- Check tenant table
-SELECT * FROM "Tenant";
-
--- Check if indexes exist
-\di
-```
-
-### Test API Endpoints
-
-```bash
-# Test tenant API
-curl http://localhost:3000/api/tenant/current
-
-# Test agency dashboard
-curl http://localhost:3000/api/agency/dashboard \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
 ## Troubleshooting
 
 ### Database Connection Issues
 
+**PostgreSQL:**
 ```bash
-# Test PostgreSQL connection
+# Test connection
 psql -U postgres -d parichay -c "SELECT version();"
 
 # Check if database exists
 psql -U postgres -l | grep parichay
+```
+
+**MySQL:**
+```bash
+# Test connection
+mysql -u root -p -e "SHOW DATABASES;"
+
+# Check if database exists
+mysql -u root -p -e "SHOW DATABASES;" | grep onetouch_bizcard
 ```
 
 ### Migration Errors
@@ -208,20 +208,35 @@ If you encounter errors:
 npx prisma migrate reset
 
 # Or manually drop and recreate
+# PostgreSQL:
 psql -U postgres -c "DROP DATABASE parichay;"
 psql -U postgres -c "CREATE DATABASE parichay;"
+
+# MySQL:
+mysql -u root -p -e "DROP DATABASE onetouch_bizcard;"
+mysql -u root -p -e "CREATE DATABASE onetouch_bizcard;"
 
 # Then run migrations again
 npx prisma db push
 ```
 
-### Permission Issues
+### Port Issues
 
-```sql
--- Grant permissions to user
-GRANT ALL PRIVILEGES ON DATABASE parichay TO your_user;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO your_user;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO your_user;
+**Issue: "Port 3000 is already in use"**
+```bash
+# Windows - Kill process using port 3000
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
+
+# Or use different port
+npm run dev -- -p 3001
+```
+
+### Module Not Found Errors
+```bash
+# Clear and reinstall
+rm -rf node_modules package-lock.json
+npm install
 ```
 
 ## Migration Order
@@ -254,33 +269,64 @@ After installation, you'll have:
 ✅ WhatsApp catalogue integration
 ✅ Performance-optimized queries
 
+## Quick Commands Reference
+
+```bash
+# Install dependencies
+npm install
+
+# Generate Prisma client
+npm run prisma:generate
+
+# Run migrations
+npm run prisma:migrate
+
+# Seed database
+npm run prisma:seed
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Run tests
+npm test
+
+# Lint code
+npm run lint
+```
+
+## Default Ports
+
+- **Next.js App**: http://localhost:3000
+- **PostgreSQL**: localhost:5432
+- **MySQL**: localhost:3306
+- **Redis**: localhost:6379
+
 ## Next Steps
 
 1. **Read Documentation**
-   - `WHITE_LABEL_IMPLEMENTATION_SUMMARY.md`
-   - `AGENCY_PORTAL_COMPLETE.md`
-   - `AGENCY_QUICK_REFERENCE.md`
+   - Check `/docs` folder for feature guides
+   - Review API documentation
+   - Test all features
 
-2. **Test Features**
-   - Create an agency
-   - Add clients
-   - Customize branding
-   - View billing
-
-3. **Deploy to Production**
+2. **Deploy to Production**
    - Set up production database
    - Configure environment variables
-   - Deploy to Vercel/AWS/etc.
+   - Deploy to Vercel/Railway/Render
 
 ## Support
 
 For issues or questions:
 - Check documentation in `/docs`
-- Review `AGENCY_QUICK_REFERENCE.md`
 - Contact: support@parichay.io
 
 ---
 
 **Installation complete! 🎉**
 
-Your Parichay white-label platform is ready to use.
+Your Parichay platform is ready to use.
