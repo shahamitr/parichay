@@ -9,14 +9,14 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
 const trackEventSchema = z.object({
-  eventType: z.string(),
+  eventType: z.string().default('PAGE_VIEW'),
   eventData: z.record(z.any()).optional(),
   elementId: z.string().optional(),
   elementType: z.string().optional(),
   elementText: z.string().optional(),
-  pageUrl: z.string(),
+  pageUrl: z.string().optional().default('/'),
   referrer: z.string().optional(),
-  sessionId: z.string(),
+  sessionId: z.string().optional().default(() => `session_${Date.now()}`),
   deviceInfo: z.object({
     userAgent: z.string(),
     platform: z.string(),
@@ -37,7 +37,7 @@ const trackEventSchema = z.object({
     scrollY: z.number(),
     scrollDepth: z.number(),
   }).optional(),
-  timestamp: z.string(),
+  timestamp: z.string().optional().default(() => new Date().toISOString()),
 });
 
 export async function POST(request: NextRequest) {
@@ -45,9 +45,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = trackEventSchema.parse(body);
 
-    // Extract brand and branch from URL
-    const url = new URL(validatedData.pageUrl);
-    const pathParts = url.pathname.split('/').filter(Boolean);
+    // Extract brand and branch from URL (handle relative URLs)
+    let pathParts: string[] = [];
+    try {
+      const pageUrl = validatedData.pageUrl || '/';
+      // If it's an absolute URL, parse it; otherwise treat as path
+      if (pageUrl.startsWith('http://') || pageUrl.startsWith('https://')) {
+        const url = new URL(pageUrl);
+        pathParts = url.pathname.split('/').filter(Boolean) || [];
+      } else {
+        pathParts = pageUrl.split('/').filter(Boolean) || [];
+      }
+    } catch {
+      // Invalid URL, skip brand/branch extraction
+      pathParts = [];
+    }
 
     let brandSlug: string | undefined;
     let branchSlug: string | undefined;
@@ -82,21 +94,21 @@ export async function POST(request: NextRequest) {
 
     // Get IP address
     const ip = request.headers.get('x-forwarded-for') ||
-               request.headers.get('x-real-ip') ||
-               'unknown';
+      request.headers.get('x-real-ip') ||
+      'unknown';
 
     // Create analytics event
     await prisma.analyticsEvent.create({
       data: {
-        eventType: validatedData.eventType,
+        eventType: validatedData.eventType as any, // Cast to any to avoid type issues with older client
         brandId,
         branchId,
-        sessionId: validatedData.sessionId,
         ipAddress: ip,
         userAgent: validatedData.deviceInfo?.userAgent,
-        referrer: validatedData.referrer,
         metadata: {
           ...validatedData.eventData,
+          sessionId: validatedData.sessionId, // Moved inside metadata
+          referrer: validatedData.referrer,
           elementId: validatedData.elementId,
           elementType: validatedData.elementType,
           elementText: validatedData.elementText,
@@ -109,13 +121,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Analytics tracking error:', error);
+    // Only log non-validation errors to reduce noise
+    if (!(error instanceof z.ZodError)) {
+      console.error('Analytics tracking error:', error);
+    }
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid tracking data', details: error.errors },
-        { status: 400 }
-      );
+      // Silently accept invalid tracking data with 200 to prevent client retries
+      return NextResponse.json({ success: false, reason: 'validation' });
     }
 
     return NextResponse.json(

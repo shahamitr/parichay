@@ -3,7 +3,9 @@
 
 import { useEffect, useMemo } from 'react';
 import { MicrositeData, SectionOrderItem, SectionId } from '@/types/microsite';
-// Core Sections
+import dynamic from 'next/dynamic';
+
+// Core Sections (Static)
 import ProfileSection from './sections/ProfileSection';
 import AboutSection from './sections/AboutSection';
 import ServicesSection from './sections/ServicesSection';
@@ -12,16 +14,25 @@ import ContactSection from './sections/ContactSection';
 import PaymentSection from './sections/PaymentSection';
 import TrustIndicatorsSection from './sections/TrustIndicatorsSection';
 import EnhancedFeedbackSection from './sections/EnhancedFeedbackSection';
-// Optional Sections
-import VideosSection from './sections/VideosSection';
-import ImpactSection from './sections/ImpactSection';
-import TestimonialsSection from './sections/TestimonialsSection';
-import CTASection from './sections/CTASection';
-import PortfolioSection from './sections/PortfolioSection';
-import OffersSection from './sections/OffersSection';
-import AboutFounderSection from './sections/AboutFounderSection';
-import BusinessHoursSection from './sections/BusinessHoursSection';
-import VoiceIntro from './VoiceIntro';
+
+// Optional Sections (Dynamic)
+const VideosSection = dynamic(() => import('./sections/VideosSection'), { ssr: true });
+const ImpactSection = dynamic(() => import('./sections/ImpactSection'), { ssr: true });
+const TestimonialsSection = dynamic(() => import('./sections/TestimonialsSection'), { ssr: true });
+const CTASection = dynamic(() => import('./sections/CTASection'), { ssr: true });
+const PortfolioSection = dynamic(() => import('./sections/PortfolioSection'), { ssr: true });
+const OffersSection = dynamic(() => import('./sections/OffersSection'), { ssr: true });
+const AboutFounderSection = dynamic(() => import('./sections/AboutFounderSection'), { ssr: true });
+const BusinessHoursSection = dynamic(() => import('./sections/BusinessHoursSection'), { ssr: true });
+const BookingSection = dynamic(() => import('./sections/BookingSection'), { ssr: true });
+const FAQSection = dynamic(() => import('./sections/FAQSection'), { ssr: true });
+const TeamSection = dynamic(() => import('./sections/TeamSection'), { ssr: true });
+const LocationSection = dynamic(() => import('./sections/LocationSection'), { ssr: true });
+const VideoTestimonialsSection = dynamic(() => import('./sections/VideoTestimonialsSection'), { ssr: true });
+const WhatsAppCatalogueSection = dynamic(() => import('./sections/WhatsAppCatalogueSection'), { ssr: true });
+const SocialProofBadgesDisplay = dynamic(() => import('./sections/SocialProofBadgesDisplay'), { ssr: true });
+const VideoTestimonialsDisplay = dynamic(() => import('./sections/VideoTestimonialsDisplay'), { ssr: true });
+const VoiceIntroDisplay = dynamic(() => import('./VoiceIntroDisplay'), { ssr: true });
 import ThemeToggle from './ThemeToggle';
 import MicrositeFooter from './MicrositeFooter';
 import FixedBottomBar from './FixedBottomBar';
@@ -30,6 +41,16 @@ import AriaLiveRegion from '@/components/ui/AriaLiveRegion';
 import KeyboardShortcutsHelp from '@/components/ui/KeyboardShortcutsHelp';
 import SectionSeparator from '@/components/ui/SectionSeparator';
 import { initializeKeyboardNavigation } from '@/lib/keyboard-navigation';
+import { initializeHeatmapTracking } from '@/lib/analytics/heatmap-tracker';
+import ModernBusinessTemplate from './templates/ModernBusinessTemplate';
+import CreativePortfolioTemplate from './templates/CreativePortfolioTemplate';
+import MinimalElegantTemplate from './templates/MinimalElegantTemplate';
+// Festival theming
+import { FestivalBanner, FestivalEffects } from './festival';
+import { isBrandFestivalActive, FestivalSettings } from '@/lib/festival-themes';
+// Layout system
+import { LayoutProvider } from '@/lib/layout-context';
+import { getLayoutById } from '@/data/layout-options';
 
 // Default section order
 const DEFAULT_SECTION_ORDER: SectionOrderItem[] = [
@@ -38,6 +59,7 @@ const DEFAULT_SECTION_ORDER: SectionOrderItem[] = [
   { id: 'services', enabled: true },
   { id: 'gallery', enabled: true },
   { id: 'contact', enabled: true },
+  { id: 'location', enabled: false },
   { id: 'trustIndicators', enabled: false },
   { id: 'payment', enabled: true },
   { id: 'feedback', enabled: true },
@@ -49,6 +71,14 @@ const DEFAULT_SECTION_ORDER: SectionOrderItem[] = [
   { id: 'offers', enabled: false },
   { id: 'cta', enabled: false },
   { id: 'businessHours', enabled: true },
+  { id: 'faq', enabled: false },
+  { id: 'team', enabled: false },
+  { id: 'booking', enabled: false },
+  // Premium Features (DB-backed)
+  { id: 'videoTestimonials', enabled: false },
+  { id: 'voiceIntro', enabled: false },
+  { id: 'whatsappCatalogue', enabled: false },
+  { id: 'socialProofBadges', enabled: false },
 ];
 
 interface MicrositeRendererProps {
@@ -76,6 +106,10 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
     return config.sectionOrder || DEFAULT_SECTION_ORDER;
   }, [config.sectionOrder]);
 
+  // Festival theming
+  const festivalSettings = brand.festivalSettings as FestivalSettings | null;
+  const isFestivalActive = isBrandFestivalActive(festivalSettings);
+
   // Check if a section is enabled
   const isSectionEnabled = (sectionId: SectionId): boolean => {
     const section = sectionOrder.find(s => s.id === sectionId);
@@ -92,6 +126,13 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
     const cleanup = initializeKeyboardNavigation();
     return cleanup;
   }, []);
+
+  // Initialize heatmap tracking
+  useEffect(() => {
+    if (branch.id && brand.id) {
+      initializeHeatmapTracking(branch.id, brand.id);
+    }
+  }, [branch.id, brand.id]);
 
   const trackPageView = async () => {
     try {
@@ -127,10 +168,35 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
     }
   }, [brand.colorTheme]);
 
-  return (
-    <div className="microsite-container bg-white">
+  const renderWithTemplate = (content: React.ReactNode) => {
+    // Sync layout with Admin setting (brand.layoutId) taking precedence
+    const templateId = (brand as any).layoutId || config.templateId || 'modern-business';
+
+    switch (templateId) {
+      case 'creative-portfolio':
+        return <CreativePortfolioTemplate data={data}>{content}</CreativePortfolioTemplate>;
+      case 'minimal-elegant':
+        return <MinimalElegantTemplate data={data}>{content}</MinimalElegantTemplate>;
+      default:
+        return <ModernBusinessTemplate data={data}>{content}</ModernBusinessTemplate>;
+    }
+  };
+
+  const mainContent = (
+    // Mobile-app style layout container
+    <div className="microsite-container bg-white max-w-[480px] mx-auto min-h-screen shadow-2xl relative">
       {/* ARIA Live Regions for dynamic content announcements */}
       <AriaLiveRegion />
+
+      {/* Festival Theming - Effects (particles, confetti, etc.) */}
+      {isFestivalActive && festivalSettings?.showEffects && (
+        <FestivalEffects settings={festivalSettings} />
+      )}
+
+      {/* Festival Theming - Banner (based on position) */}
+      {isFestivalActive && festivalSettings && (
+        <FestivalBanner settings={festivalSettings} brandName={brand.name} />
+      )}
 
       {/* Skip to main content link for keyboard navigation */}
       <a
@@ -151,7 +217,8 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
       />
 
       {/* Custom CSS for brand theming */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .microsite-container {
           --brand-primary: ${(brand.colorTheme as any)?.primary || '#3B82F6'};
           --brand-secondary: ${(brand.colorTheme as any)?.secondary || '#1F2937'};
@@ -195,7 +262,7 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
               return (
                 <div key="about">
                   {showSeparator && <SectionSeparator variant="gradient" />}
-                  <section id="about" aria-labelledby="about-heading">
+                  <section id="about" aria-labelledby="about-heading" className={config.templateId === 'creative-portfolio' ? 'creative-section' : config.templateId === 'minimal-elegant' ? 'zen-section' : 'section-container'}>
                     <AboutSection
                       config={config.sections.about || { enabled: true, content: '' }}
                       brand={brand}
@@ -209,7 +276,7 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
               return (
                 <div key="services">
                   {showSeparator && <SectionSeparator variant="gradient" />}
-                  <section id="services" aria-labelledby="services-heading">
+                  <section id="services" aria-labelledby="services-heading" className={config.templateId === 'creative-portfolio' ? 'creative-section' : config.templateId === 'minimal-elegant' ? 'zen-section' : 'section-container'}>
                     <ServicesSection
                       config={config.sections.services || { enabled: true, items: [] }}
                       brand={brand}
@@ -248,6 +315,22 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
                       }}
                       brand={brand}
                       branch={branch}
+                    />
+                  </section>
+                </div>
+              );
+
+            case 'location':
+              if (!branch.address) return null;
+              return (
+                <div key="location">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="location" aria-labelledby="location-heading">
+                    <LocationSection
+                      brand={brand}
+                      branch={branch}
+                      showBusinessHours={true}
+                      showContactInfo={true}
                     />
                   </section>
                 </div>
@@ -399,6 +482,82 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
                 </div>
               );
 
+            case 'booking':
+              if (!config.sections.booking?.enabled) return null;
+              return (
+                <div key="booking">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="booking" aria-labelledby="booking-heading">
+                    <BookingSection
+                      branch={branch}
+                      brand={brand}
+                      config={config.sections.booking}
+                    />
+                  </section>
+                </div>
+              );
+
+            case 'faq':
+              if (!config.sections.faq) return null;
+              return (
+                <div key="faq">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="faq" aria-labelledby="faq-heading">
+                    <FAQSection
+                      config={config.sections.faq}
+                      brand={brand}
+                      branch={branch}
+                    />
+                  </section>
+                </div>
+              );
+
+            case 'team':
+              if (!config.sections.team) return null;
+              return (
+                <div key="team">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="team" aria-labelledby="team-heading">
+                    <TeamSection
+                      config={config.sections.team}
+                      brand={brand}
+                      branch={branch}
+                    />
+                  </section>
+                </div>
+              );
+
+            // Premium Features (DB-backed)
+            case 'videoTestimonials':
+              return (
+                <div key="videoTestimonials">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="video-testimonials" aria-labelledby="video-testimonials-heading">
+                    <VideoTestimonialsDisplay branchId={branch.id} />
+                  </section>
+                </div>
+              );
+
+            case 'whatsappCatalogue':
+              return (
+                <div key="whatsappCatalogue">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="whatsapp-catalogue" aria-labelledby="whatsapp-catalogue-heading">
+                    <WhatsAppCatalogueSection branchId={branch.id} />
+                  </section>
+                </div>
+              );
+
+            case 'socialProofBadges':
+              return (
+                <div key="socialProofBadges">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="social-proof-badges" aria-labelledby="social-proof-badges-heading">
+                    <SocialProofBadgesDisplay branchId={branch.id} position="inline" />
+                  </section>
+                </div>
+              );
+
             default:
               return null;
           }
@@ -408,13 +567,14 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
         <MicrositeFooter brand={brand} branch={branch} />
       </main>
 
-      {/* Voice Intro - Premium Feature */}
-      {config.voiceIntro?.enabled && (
-        <VoiceIntro
-          config={config.voiceIntro}
-          branchId={branch.id}
-          brandId={brand.id}
-        />
+      {/* Social Proof Badges - Floating position (shown if socialProofBadges section is enabled) */}
+      {isSectionEnabled('socialProofBadges') && (
+        <SocialProofBadgesDisplay branchId={branch.id} position="floating" />
+      )}
+
+      {/* Voice Intro - Premium Feature (DB-backed, shown if voiceIntro section is enabled) */}
+      {isSectionEnabled('voiceIntro') && (
+        <VoiceIntroDisplay branchId={branch.id} brandId={brand.id} />
       )}
 
       {/* Theme Toggle - Premium Feature */}
@@ -428,5 +588,14 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
       {/* Keyboard Shortcuts Help */}
       <KeyboardShortcutsHelp />
     </div>
+  );
+
+  // Get layout ID from brand or config
+  const layoutId = (brand as any).layoutId || config.templateId || 'modern-business';
+
+  return (
+    <LayoutProvider layoutId={layoutId}>
+      {renderWithTemplate(mainContent)}
+    </LayoutProvider>
   );
 }

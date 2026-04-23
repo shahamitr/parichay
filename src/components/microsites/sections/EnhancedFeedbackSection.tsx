@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Star, Camera, X, ChevronDown, ChevronUp, ThumbsUp, Quote } from 'lucide-react';
+import MathCaptcha from '@/components/ui/MathCaptcha';
 
 interface FeedbackItem {
   id: string;
@@ -193,6 +194,7 @@ export default function EnhancedFeedbackSection({
   const [photo, setPhoto] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaValid, setCaptchaValid] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [reviews, setReviews] = useState<FeedbackItem[]>(existingReviews);
@@ -488,10 +490,13 @@ export default function EnhancedFeedbackSection({
                 />
               </div>
 
+              {/* Captcha */}
+              <MathCaptcha onVerify={setCaptchaValid} />
+
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading || rating === 0}
+                disabled={loading || rating === 0 || !captchaValid}
                 className="w-full py-4 rounded-xl text-white font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 style={{ backgroundColor: primaryColor }}
               >

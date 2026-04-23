@@ -16,6 +16,7 @@ export type SectionId =
   | 'priceList'
   | 'gallery'
   | 'contact'
+  | 'location'
   | 'payment'
   | 'feedback'
   | 'trustIndicators'
@@ -28,7 +29,16 @@ export type SectionId =
   | 'cta'
   | 'businessHours'
   | 'faq'
-  | 'team';
+  | 'team'
+  | 'booking'
+  | 'localSEO'
+  | 'messaging'
+  | 'reviewResponse'
+  // Premium Features (DB-backed, not part of section order)
+  | 'videoTestimonials'
+  | 'voiceIntro'
+  | 'whatsappCatalogue'
+  | 'socialProofBadges';
 
 // Section order item
 export interface SectionOrderItem {
@@ -62,6 +72,16 @@ export interface MicrositeConfig {
     // Premium Features
     portfolio?: PortfolioSection;
     offers?: OffersSection;
+    // Booking System
+    booking?: BookingSection;
+    // FAQ Section
+    faq?: FAQSection;
+    // Team Section
+    team?: TeamSection;
+    // New Advanced Features
+    localSEO?: LocalSEOSection;
+    messaging?: MessagingSection;
+    reviewResponse?: ReviewResponseSection;
   };
   seoSettings: SEOSettings;
   // Premium Theme Settings
@@ -153,6 +173,13 @@ export interface PaymentSection {
 export interface ContactSection {
   enabled: boolean;
   showMap: boolean;
+  mapConfig?: {
+    showDirectionsButton?: boolean;
+    showCopyButton?: boolean;
+    height?: string;
+    showBusinessHours?: boolean;
+    showContactInfo?: boolean;
+  };
   leadForm: LeadFormConfig;
   appointmentBooking?: AppointmentBookingConfig;
   liveChatEnabled?: boolean;
@@ -389,6 +416,57 @@ export interface Offer {
   featured: boolean;
 }
 
+// ============================================
+// BOOKING SYSTEM
+// ============================================
+
+export interface BookingSection {
+  enabled: boolean;
+  title?: string;
+  subtitle?: string;
+}
+
+// FAQ Section
+export interface FAQSection {
+  enabled: boolean;
+  title?: string;
+  subtitle?: string;
+  items: FAQItem[];
+  categories?: string[];
+  showSearch?: boolean;
+}
+
+export interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+  category?: string;
+}
+
+// Team Section
+export interface TeamSection {
+  enabled: boolean;
+  title?: string;
+  subtitle?: string;
+  members: TeamMember[];
+  layout?: 'grid' | 'list';
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  bio?: string;
+  photo?: string;
+  email?: string;
+  phone?: string;
+  social?: {
+    linkedin?: string;
+    twitter?: string;
+    facebook?: string;
+  };
+}
+
 export interface SEOSettings {
   title: string;
   description: string;
@@ -458,4 +536,118 @@ export interface ConfigUpdateResponse {
   success: boolean;
   config?: MicrositeConfig;
   error?: string;
+}
+
+// ============================================
+// NEW ADVANCED FEATURES
+// ============================================
+
+export interface LocalSEOSection {
+  enabled: boolean;
+  businessName: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  businessType: string;
+  keywords: string[];
+  googleMyBusinessUrl?: string;
+  mapProvider: 'google' | 'openstreetmap';
+  showMap: boolean;
+  schema: {
+    enabled: boolean;
+    businessType: string;
+    priceRange: string;
+    paymentAccepted: string[];
+  };
+}
+
+export interface MessagingSection {
+  enabled: boolean;
+  channels: {
+    whatsapp: {
+      enabled: boolean;
+      number: string;
+      welcomeMessage: string;
+      businessHours: boolean;
+    };
+    email: {
+      enabled: boolean;
+      address: string;
+      autoReply: boolean;
+      autoReplyMessage: string;
+    };
+    phone: {
+      enabled: boolean;
+      number: string;
+      displayFormat: string;
+    };
+    livechat: {
+      enabled: boolean;
+      welcomeMessage: string;
+      offlineMessage: string;
+      position: 'bottom-right' | 'bottom-left';
+    };
+  };
+  businessHours: {
+    enabled: boolean;
+    timezone: string;
+    schedule: {
+      [key: string]: {
+        open: string;
+        close: string;
+        closed: boolean;
+      };
+    };
+  };
+  autoResponses: {
+    enabled: boolean;
+    responses: Array<{
+      trigger: string;
+      response: string;
+      active: boolean;
+    }>;
+  };
+}
+
+export interface ReviewResponseSection {
+  enabled: boolean;
+  autoResponse: {
+    enabled: boolean;
+    positiveTemplate: string;
+    negativeTemplate: string;
+    neutralTemplate: string;
+  };
+  reviewSources: {
+    google: { enabled: boolean; businessId?: string };
+    facebook: { enabled: boolean; pageId?: string };
+    yelp: { enabled: boolean; businessId?: string };
+    justdial: { enabled: boolean; businessId?: string };
+    internal: { enabled: boolean };
+  };
+  responseTemplates: Array<{
+    id: string;
+    name: string;
+    template: string;
+    category: 'positive' | 'negative' | 'neutral';
+    active: boolean;
+  }>;
+  notifications: {
+    enabled: boolean;
+    email: boolean;
+    whatsapp: boolean;
+    threshold: number;
+  };
+  publicDisplay: {
+    enabled: boolean;
+    showResponses: boolean;
+    moderateBeforePublish: boolean;
+  };
 }

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/jwt';
-import prisma from '@/lib/prisma';
+import { verifyToken } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { industryCategories } from '@/data/categories';
 
 export async function POST(request: NextRequest) {

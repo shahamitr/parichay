@@ -35,13 +35,13 @@ export default function RichTextEditor({
   };
 
   return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden">
+    <div className="border border-neutral-300 dark:border-neutral-700 rounded-lg overflow-hidden">
       {/* Toolbar */}
-      <div className="bg-gray-50 border-b border-gray-300 p-2 flex flex-wrap gap-1">
+      <div className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-300 dark:border-neutral-700 p-2 flex flex-wrap gap-1">
         <button
           type="button"
           onClick={() => execCommand('bold')}
-          className="p-2 hover:bg-gray-200 rounded"
+          className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded"
           title="Bold"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -52,7 +52,7 @@ export default function RichTextEditor({
         <button
           type="button"
           onClick={() => execCommand('italic')}
-          className="p-2 hover:bg-gray-200 rounded"
+          className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded"
           title="Italic"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -63,7 +63,7 @@ export default function RichTextEditor({
         <button
           type="button"
           onClick={() => execCommand('underline')}
-          className="p-2 hover:bg-gray-200 rounded"
+          className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded"
           title="Underline"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -71,12 +71,12 @@ export default function RichTextEditor({
           </svg>
         </button>
 
-        <div className="w-px bg-gray-300 mx-1" />
+        <div className="w-px bg-neutral-300 dark:bg-neutral-700 mx-1" />
 
         <button
           type="button"
           onClick={() => execCommand('insertUnorderedList')}
-          className="p-2 hover:bg-gray-200 rounded"
+          className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded"
           title="Bullet List"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -87,7 +87,7 @@ export default function RichTextEditor({
         <button
           type="button"
           onClick={() => execCommand('insertOrderedList')}
-          className="p-2 hover:bg-gray-200 rounded"
+          className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded"
           title="Numbered List"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -95,12 +95,12 @@ export default function RichTextEditor({
           </svg>
         </button>
 
-        <div className="w-px bg-gray-300 mx-1" />
+        <div className="w-px bg-neutral-300 dark:bg-neutral-700 mx-1" />
 
         <button
           type="button"
           onClick={() => execCommand('formatBlock', '<h2>')}
-          className="px-2 py-1 hover:bg-gray-200 rounded text-sm font-medium"
+          className="px-2 py-1 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded text-sm font-medium"
           title="Heading"
         >
           H2
@@ -109,7 +109,7 @@ export default function RichTextEditor({
         <button
           type="button"
           onClick={() => execCommand('formatBlock', '<h3>')}
-          className="px-2 py-1 hover:bg-gray-200 rounded text-sm font-medium"
+          className="px-2 py-1 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded text-sm font-medium"
           title="Subheading"
         >
           H3
@@ -118,18 +118,18 @@ export default function RichTextEditor({
         <button
           type="button"
           onClick={() => execCommand('formatBlock', '<p>')}
-          className="px-2 py-1 hover:bg-gray-200 rounded text-sm"
+          className="px-2 py-1 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded text-sm"
           title="Paragraph"
         >
           P
         </button>
 
-        <div className="w-px bg-gray-300 mx-1" />
+        <div className="w-px bg-neutral-300 dark:bg-neutral-700 mx-1" />
 
         <button
           type="button"
           onClick={() => execCommand('removeFormat')}
-          className="p-2 hover:bg-gray-200 rounded text-xs"
+          className="p-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded text-xs"
           title="Clear Formatting"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -143,12 +143,12 @@ export default function RichTextEditor({
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        className="p-4 focus:outline-none prose prose-sm max-w-none"
+        className="p-4 focus:outline-none prose prose-sm max-w-none dark:prose-invert"
         style={{ minHeight }}
         data-placeholder={placeholder}
       />
 
-      <style dangerouslySetInnerHTML={{ __html: `[contenteditable]:empty:before { content: attr(data-placeholder); color: #9ca3af; }` }} />
+      <style dangerouslySetInnerHTML={{ __html: `[contenteditable]:empty:before { content: attr(data-placeholder); color: #9ca3af; } .dark [contenteditable]:empty:before { color: #6b7280; }` }} />
     </div>
   );
 }

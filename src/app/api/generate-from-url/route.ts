@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import logger from '@/lib/logger';
 
 /**
  * DYNAMIC MOCK AI SERVICE
@@ -7,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 const dynamicAiScraperService = {
   generateProfile: async (url: string) => {
-    console.log(`AI Service: Dynamically generating profile for ${url}`);
+    logger.info({ url }, 'AI Service: Generating profile');
     await new Promise(resolve => setTimeout(resolve, 2500)); // Simulate API latency
 
     // Extract a "name" from the URL to make the response dynamic
@@ -90,13 +91,13 @@ export async function POST(req: NextRequest) {
 
     // In a real implementation, you would send this prompt to the Gemini API.
     // For this demo, we use our mock service.
-    console.log("Generated AI Prompt:", prompt);
+    logger.debug({ prompt }, 'Generated AI Prompt');
     const profileData = await dynamicAiScraperService.generateProfile(url);
 
     return NextResponse.json(profileData);
 
   } catch (error) {
-    console.error('AI profile generation failed:', error);
+    logger.error({ error }, 'AI profile generation failed');
     return NextResponse.json({ error: 'Failed to generate profile from URL.' }, { status: 500 });
   }
 }

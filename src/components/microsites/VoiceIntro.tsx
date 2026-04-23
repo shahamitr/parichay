@@ -46,7 +46,7 @@ export default function VoiceIntro({ config, branchId, brandId }: VoiceIntroProp
 
   const togglePlay = () => {
     if (audioRef.current) {
-      if (isPlaying != null) {
+      if (isPlaying) {
         audioRef.current.pause();
       } else {
         audioRef.current.play();

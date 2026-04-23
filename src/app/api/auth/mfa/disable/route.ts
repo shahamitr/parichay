@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { MFAService } from '@/lib/mfa';
 import { AuthService } from '@/lib/auth';
 import { verifyToken } from '@/lib/auth-utils';
+import logger from '@/lib/logger';
 import { z } from 'zod';
 
 const disableMFASchema = z.object({
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
       mfaEnabled: false,
     });
   } catch (error) {
-    console.error('MFA disable error:', error);
+    logger.error({ error }, 'MFA disable error');
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

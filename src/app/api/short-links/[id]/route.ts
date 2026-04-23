@@ -33,7 +33,7 @@ export async function DELETE(
     if (user.role !== 'SUPER_ADMIN') {
       const hasAccess =
         (shortLink.brandId && user.brandId === shortLink.brandId) ||
-        (shortLink.branchId && user.branches.some((b: any) => b.id === shortLink.branchId));
+        (shortLink.branchId && user.branches?.some((b: any) => b.id === shortLink.branchId));
 
       if (!hasAccess) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

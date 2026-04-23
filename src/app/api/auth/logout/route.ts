@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import logger from '@/lib/logger';
 
 export async function POST() {
   try {
-    console.log('🚪 Logout requested');
+    logger.info('Logout requested');
 
     const response = NextResponse.json({
       success: true,
@@ -13,11 +14,11 @@ export async function POST() {
     response.cookies.delete('accessToken');
     response.cookies.delete('refreshToken');
 
-    console.log('✅ Cookies cleared');
+    logger.debug('Cookies cleared');
 
     return response;
   } catch (error) {
-    console.error('❌ Logout error:', error);
+    logger.error({ error }, 'Logout error');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

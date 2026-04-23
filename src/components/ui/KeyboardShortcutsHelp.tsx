@@ -4,17 +4,29 @@
 import { useState, useEffect } from 'react';
 import { getKeyboardShortcutsHelp } from '@/lib/keyboard-navigation';
 import { Card, CardHeader, CardTitle, CardContent } from './Card';
+import { shortcutCategories } from '@/hooks/useKeyboardShortcuts';
 
 /**
  * KeyboardShortcutsHelp Component
  *
  * Displays a modal with keyboard shortcuts information.
- * Can be triggered by pressing '?' key.
+ * Can be triggered by pressing '?' key or controlled externally.
  *
  * Requirements: 10.4 - Keyboard navigation support
  */
-export default function KeyboardShortcutsHelp() {
-  const [isOpen, setIsOpen] = useState(false);
+interface KeyboardShortcutsHelpProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function KeyboardShortcutsHelp({ isOpen: controlledOpen, onClose }: KeyboardShortcutsHelpProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Support both controlled and uncontrolled modes
+  const isControlled = controlledOpen !== undefined;
+  const isOpen = isControlled ? controlledOpen : internalOpen;
+  const setIsOpen = isControlled ? (val: boolean) => !val && onClose?.() : setInternalOpen;
+
   const shortcuts = getKeyboardShortcutsHelp();
 
   useEffect(() => {

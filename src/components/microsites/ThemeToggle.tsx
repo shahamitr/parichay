@@ -95,11 +95,11 @@ export default function ThemeToggle({ settings, onThemeChange }: ThemeToggleProp
   return (
     <button
       onClick={cycleTheme}
-      className="fixed top-4 right-4 z-50 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:scale-105 transition-transform"
+      className="fixed top-4 right-4 z-50 p-3 rounded-full bg-white dark:bg-neutral-800 shadow-lg border border-neutral-200 dark:border-neutral-700 hover:scale-105 transition-transform"
       title={labels[theme]}
       aria-label={`Current theme: ${labels[theme]}. Click to change.`}
     >
-      <span className="text-gray-700 dark:text-gray-200">
+      <span className="text-neutral-700 dark:text-neutral-200">
         {icons[theme]}
       </span>
     </button>

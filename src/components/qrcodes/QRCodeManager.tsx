@@ -125,10 +125,10 @@ export default function QRCodeManager({ branchId, brandId }: QRCodeManagerProps)
     }
   };
 
-  if (loading != null) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-gray-600">Loading QR codes...</div>
+        <div className="text-neutral-600 dark:text-neutral-400">Loading QR codes...</div>
       </div>
     );
   }
@@ -141,7 +141,7 @@ export default function QRCodeManager({ branchId, brandId }: QRCodeManagerProps)
           <select
             value={selectedFormat}
             onChange={(e) => setSelectedFormat(e.target.value as 'png' | 'svg')}
-            className="px-3 py-2 border border-gray-300 rounded-md"
+            className="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
           >
             <option value="png">PNG</option>
             <option value="svg">SVG</option>
@@ -149,7 +149,7 @@ export default function QRCodeManager({ branchId, brandId }: QRCodeManagerProps)
           <button
             onClick={generateQRCode}
             disabled={generating}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-md hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50"
           >
             {generating ? 'Generating...' : 'Generate QR Code'}
           </button>
@@ -157,15 +157,15 @@ export default function QRCodeManager({ branchId, brandId }: QRCodeManagerProps)
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+        <div className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-md text-error-700 dark:text-error-400">
           {error}
         </div>
       )}
 
       {qrCodes.length === 0 ? (
-        <div className="text-center p-8 bg-gray-50 rounded-lg">
-          <p className="text-gray-600">No QR codes generated yet.</p>
-          <p className="text-sm text-gray-500 mt-2">
+        <div className="text-center p-8 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+          <p className="text-neutral-600 dark:text-neutral-400">No QR codes generated yet.</p>
+          <p className="text-sm text-neutral-500 dark:text-neutral-500 mt-2">
             Click &quot;Generate QR Code&quot; to create one.
           </p>
         </div>
@@ -174,9 +174,9 @@ export default function QRCodeManager({ branchId, brandId }: QRCodeManagerProps)
           {qrCodes.map((qrCode) => (
             <div
               key={qrCode.id}
-              className="border border-gray-200 rounded-lg p-4 space-y-4"
+              className="border border-neutral-200 dark:border-neutral-700 rounded-lg p-4 space-y-4 bg-white dark:bg-neutral-800"
             >
-              <div className="flex items-center justify-center bg-white p-4 rounded">
+              <div className="flex items-center justify-center bg-white dark:bg-neutral-900 p-4 rounded">
                 <img
                   src={qrCode.qrData}
                   alt="QR Code"
@@ -185,17 +185,17 @@ export default function QRCodeManager({ branchId, brandId }: QRCodeManagerProps)
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm">
+                <div className="text-sm text-neutral-900 dark:text-neutral-100">
                   <span className="font-semibold">Entity:</span>{' '}
                   {qrCode.branch?.name || qrCode.brand?.name}
                 </div>
-                <div className="text-sm">
+                <div className="text-sm text-neutral-900 dark:text-neutral-100">
                   <span className="font-semibold">Format:</span> {qrCode.format}
                 </div>
-                <div className="text-sm">
+                <div className="text-sm text-neutral-900 dark:text-neutral-100">
                   <span className="font-semibold">Scans:</span> {qrCode.scanCount}
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-neutral-500 dark:text-neutral-500">
                   Created: {new Date(qrCode.createdAt).toLocaleDateString()}
                 </div>
               </div>
@@ -203,19 +203,19 @@ export default function QRCodeManager({ branchId, brandId }: QRCodeManagerProps)
               <div className="flex gap-2">
                 <button
                   onClick={() => downloadQRCode(qrCode.id, 'png')}
-                  className="flex-1 px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                  className="flex-1 px-3 py-2 bg-success-600 dark:bg-success-500 text-white text-sm rounded hover:bg-success-700 dark:hover:bg-success-600"
                 >
                   PNG
                 </button>
                 <button
                   onClick={() => downloadQRCode(qrCode.id, 'svg')}
-                  className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  className="flex-1 px-3 py-2 bg-primary-600 dark:bg-primary-500 text-white text-sm rounded hover:bg-primary-700 dark:hover:bg-primary-600"
                 >
                   SVG
                 </button>
                 <button
                   onClick={() => deleteQRCode(qrCode.id)}
-                  className="px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                  className="px-3 py-2 bg-error-600 dark:bg-error-500 text-white text-sm rounded hover:bg-error-700 dark:hover:bg-error-600"
                 >
                   Delete
                 </button>

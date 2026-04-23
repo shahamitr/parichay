@@ -31,7 +31,7 @@ export default function ProgressRing({
   const offset = circumference - (animatedProgress / 100) * circumference;
 
   useEffect(() => {
-    if (animated != null) {
+    if (animated) {
       const timer = setTimeout(() => {
         setAnimatedProgress(progress);
       }, 100);

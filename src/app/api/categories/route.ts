@@ -1,28 +1,69 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { getAuthenticatedUser } from '@/lib/auth-utils';
+import { industryCategories } from '@/data/categories';
 
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
-
-const prisma = new PrismaClient();
-
+/**
+ * GET - Fetch all categories (public)
+ * Returns database categories or falls back to static data
+ */
 export async function GET() {
   try {
-    const categories = await prisma.industryCategory.findMany({
+    // Try database first
+    const dbCategories = await prisma.industryCategory.findMany({
+      where: { enabled: true },
       orderBy: { name: 'asc' },
     });
-    return NextResponse.json({ success: true, data: categories });
+
+    // If we have database categories, return them
+    if (dbCategories.length > 0) {
+      return NextResponse.json({
+        success: true,
+        data: dbCategories,
+        source: 'database',
+      });
+    }
+
+    // Fall back to static data (for initial setup or development)
+    return NextResponse.json({
+      success: true,
+      data: industryCategories.filter(c => c.enabled),
+      source: 'static',
+    });
   } catch (error) {
     console.error('Error fetching categories:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch categories' },
-      { status: 500 }
-    );
+    // In case of database error, return static data
+    return NextResponse.json({
+      success: true,
+      data: industryCategories.filter(c => c.enabled),
+      source: 'static-fallback',
+    });
   }
 }
 
-export async function POST(request: Request) {
+/**
+ * POST - Create a new category (admin only)
+ */
+export async function POST(request: NextRequest) {
   try {
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden - Super Admin access required' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
-    const { name, slug, description, icon, features, benefits, useCases, colorScheme } = body;
+    const { name, slug, description, icon, enabled, features, benefits, useCases, colorScheme } = body;
 
     // Basic validation
     if (!name || !slug) {
@@ -32,12 +73,25 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check for duplicate slug
+    const existingCategory = await prisma.industryCategory.findUnique({
+      where: { slug },
+    });
+
+    if (existingCategory) {
+      return NextResponse.json(
+        { success: false, error: 'A category with this slug already exists' },
+        { status: 409 }
+      );
+    }
+
     const category = await prisma.industryCategory.create({
       data: {
         name,
         slug,
         description: description || '',
         icon: icon || 'briefcase',
+        enabled: enabled !== undefined ? enabled : true,
         features: features || [],
         benefits: benefits || [],
         useCases: useCases || [],

@@ -83,7 +83,7 @@ export default function AnimatedStatCard({
   const TrendIcon = calculatedTrend === 'up' ? TrendingUp : calculatedTrend === 'down' ? TrendingDown : Minus;
   const trendColor = calculatedTrend === 'up' ? 'text-green-600 dark:text-green-400' : calculatedTrend === 'down' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400';
 
-  if (loading != null) {
+  if (loading) {
     return (
       <GlassCard hover gradient>
         <div className="p-6 animate-pulse">

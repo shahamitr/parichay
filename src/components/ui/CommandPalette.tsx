@@ -33,7 +33,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       title: 'Dashboard',
       description: 'Go to dashboard home',
       icon: <BarChart className="w-4 h-4" />,
-      action: () => router.push('/dashboard'),
+      action: () => router.push('/admin'),
       category: 'Navigation',
       keywords: ['home', 'overview'],
     },
@@ -42,7 +42,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       title: 'Brands',
       description: 'Manage your brands',
       icon: <Hash className="w-4 h-4" />,
-      action: () => router.push('/dashboard/brands'),
+      action: () => router.push('/admin/brands'),
       category: 'Navigation',
       keywords: ['brand', 'company'],
     },
@@ -51,7 +51,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       title: 'Branches',
       description: 'Manage branch locations',
       icon: <FileText className="w-4 h-4" />,
-      action: () => router.push('/dashboard/branches'),
+      action: () => router.push('/admin/branches'),
       category: 'Navigation',
       keywords: ['location', 'office'],
     },
@@ -60,7 +60,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       title: 'Users',
       description: 'Manage users',
       icon: <Users className="w-4 h-4" />,
-      action: () => router.push('/dashboard/users'),
+      action: () => router.push('/admin/users'),
       category: 'Navigation',
       keywords: ['team', 'members'],
     },
@@ -69,7 +69,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       title: 'Settings',
       description: 'Configure your account',
       icon: <Settings className="w-4 h-4" />,
-      action: () => router.push('/dashboard/settings'),
+      action: () => router.push('/admin/settings'),
       category: 'Navigation',
       keywords: ['preferences', 'config'],
     },
@@ -78,7 +78,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       title: 'Analytics',
       description: 'View analytics and reports',
       icon: <BarChart className="w-4 h-4" />,
-      action: () => router.push('/dashboard/analytics'),
+      action: () => router.push('/admin/analytics'),
       category: 'Navigation',
       keywords: ['stats', 'reports', 'data'],
     },
@@ -139,9 +139,9 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose, filteredCommands, selectedIndex]);
 
-  // Reset on open/close
+  // Reset on open
   useEffect(() => {
-    if (isOpen != null) {
+    if (isOpen) {
       setSearch('');
       setSelectedIndex(0);
     }

@@ -37,7 +37,7 @@ export default function AssignExecutiveModal({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen != null) {
+    if (isOpen) {
       fetchExecutives();
     }
   }, [isOpen]);

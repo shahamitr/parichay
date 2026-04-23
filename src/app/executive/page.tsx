@@ -14,7 +14,7 @@ export default async function ExecutiveDashboard() {
   const payload = JWTService.verifyToken(accessToken);
 
   if (!payload || payload.role !== 'EXECUTIVE') {
-    redirect('/dashboard');
+    redirect('/admin');
   }
 
   return <ExecutivePortal />;

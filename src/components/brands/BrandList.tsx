@@ -140,15 +140,15 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+      <div className="bg-white dark:bg-neutral-800 shadow rounded-lg p-6">
         <div className="animate-pulse space-y-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="border dark:border-gray-700 rounded-lg p-4">
+            <div key={i} className="border dark:border-neutral-700 rounded-lg p-4">
               <div className="flex items-center space-x-4">
-                <div className="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                <div className="h-12 w-12 bg-neutral-200 dark:bg-neutral-700 rounded-full"></div>
                 <div className="flex-1">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-2"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-1/4 mb-2"></div>
+                  <div className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded w-1/2"></div>
                 </div>
               </div>
             </div>
@@ -160,12 +160,12 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
 
   if (error) {
     return (
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+      <div className="bg-white dark:bg-neutral-800 shadow rounded-lg p-6">
         <div className="text-center">
-          <div className="text-red-600 dark:text-red-400 mb-4">Error: {error}</div>
+          <div className="text-error-600 dark:text-error-400 mb-4">Error: {error}</div>
           <button
             onClick={fetchBrands}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            className="bg-primary-600 dark:bg-primary-500 text-white px-4 py-2 rounded-md hover:bg-primary-700 dark:hover:bg-primary-600"
           >
             Retry
           </button>
@@ -176,14 +176,14 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
 
   if (brands.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-12 text-center">
-        <div className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500">
+      <div className="bg-white dark:bg-neutral-800 shadow rounded-lg p-12 text-center">
+        <div className="mx-auto h-12 w-12 text-neutral-400 dark:text-neutral-500">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
         </div>
-        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No brands</h3>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <h3 className="mt-2 text-sm font-medium text-neutral-900 dark:text-white">No brands</h3>
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
           Get started by creating your first brand.
         </p>
       </div>
@@ -191,15 +191,15 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+    <div className="bg-white dark:bg-neutral-800 shadow rounded-lg">
+      <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+        <h3 className="text-lg font-medium text-neutral-900 dark:text-white">
           Brands ({brands.length})
         </h3>
       </div>
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
         {brands.map((brand) => (
-          <div key={brand.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+          <div key={brand.id} className="p-6 hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 {/* Brand Logo/Avatar */}
@@ -207,29 +207,29 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
 
                 {/* Brand Info */}
                 <div>
-                  <h4 className="text-lg font-medium text-gray-900 dark:text-white">
+                  <h4 className="text-lg font-medium text-neutral-900 dark:text-white">
                     {brand.name}
                   </h4>
                   {brand.tagline && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{brand.tagline}</p>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">{brand.tagline}</p>
                   )}
                   <div className="flex items-center space-x-4 mt-1">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
                       {brand._count.branches} branches
                     </span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
                       Created {formatDate(brand.createdAt)}
                     </span>
                     {brand.customDomain && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300">
                         Custom Domain
                       </span>
                     )}
                   </div>
                   {/* Brand URL */}
                   <div className="flex items-center space-x-2 mt-2">
-                    <span className="text-xs text-gray-400 dark:text-gray-500">URL:</span>
-                    <code className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
+                    <span className="text-xs text-neutral-400 dark:text-neutral-500">URL:</span>
+                    <code className="text-xs text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 px-2 py-1 rounded">
                       {getBrandUrl(brand)}
                     </code>
                   </div>
@@ -240,8 +240,8 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
               <div className="flex items-center space-x-2">
                 {brand.subscription && (
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${brand.subscription.status === 'ACTIVE'
-                    ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                    : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                    ? 'bg-success-100 dark:bg-success-900/30 text-success-800 dark:text-success-300'
+                    : 'bg-error-100 dark:bg-error-900/30 text-error-800 dark:text-error-300'
                     }`}>
                     {brand.subscription.plan.name}
                   </span>
@@ -249,8 +249,8 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
 
                 {/* Manage Content Button */}
                 <button
-                  onClick={() => router.push(`/dashboard/brands/${brand.id}`)}
-                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 dark:hover:bg-blue-500"
+                  onClick={() => router.push(`/admin/microsite/${brand.id}`)}
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 rounded-md hover:bg-primary-700 dark:hover:bg-primary-600"
                   title="Manage Microsite Content"
                 >
                   <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -261,7 +261,7 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
 
                 <button
                   onClick={() => handlePreview(brand)}
-                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-200 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-600"
                   title="Preview Brand"
                 >
                   <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -273,7 +273,7 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
 
                 <button
                   onClick={() => handleCopyLink(brand)}
-                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-200 bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-600"
                   title="Copy Link"
                 >
                   <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -284,7 +284,7 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
 
                 <button
                   onClick={() => onEditBrand(brand)}
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium px-3 py-1.5"
+                  className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-sm font-medium px-3 py-1.5"
                 >
                   Edit
                 </button>
@@ -292,7 +292,7 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
                 {user?.role === 'SUPER_ADMIN' && (
                   <button
                     onClick={() => handleDeleteBrand(brand.id)}
-                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm font-medium px-3 py-1.5"
+                    className="text-error-600 dark:text-error-400 hover:text-error-700 dark:hover:text-error-300 text-sm font-medium px-3 py-1.5"
                   >
                     Delete
                   </button>
@@ -302,20 +302,20 @@ export default function BrandList({ onEditBrand }: BrandListProps) {
 
             {/* Color Theme Preview */}
             <div className="mt-4 flex items-center space-x-2">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Theme:</span>
+              <span className="text-sm text-neutral-500 dark:text-neutral-400">Theme:</span>
               <div className="flex space-x-1">
                 <div
-                  className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
+                  className="w-4 h-4 rounded-full border border-neutral-300 dark:border-neutral-600"
                   style={{ backgroundColor: brand.colorTheme.primary }}
                   title="Primary Color"
                 />
                 <div
-                  className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
+                  className="w-4 h-4 rounded-full border border-neutral-300 dark:border-neutral-600"
                   style={{ backgroundColor: brand.colorTheme.secondary }}
                   title="Secondary Color"
                 />
                 <div
-                  className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
+                  className="w-4 h-4 rounded-full border border-neutral-300 dark:border-neutral-600"
                   style={{ backgroundColor: brand.colorTheme.accent }}
                   title="Accent Color"
                 />

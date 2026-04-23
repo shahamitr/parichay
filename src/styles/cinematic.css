@@ -1,0 +1,47 @@
+/* Cinematic effects for Hollywood Armageddon aesthetic */
+
+@keyframes ember-rise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-200px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+.ember-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.ember {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fb923c;
+  border-radius: 50%;
+  box-shadow: 0 0 4px #fb923c;
+  opacity: 0;
+  animation: ember-rise linear infinite;
+}
+
+/* Generate multiple embers with different delays and positions */
+.ember:nth-child(1) { left: 10%; bottom: -10px; animation-duration: 4s; animation-delay: 0s; }
+.ember:nth-child(2) { left: 20%; bottom: -10px; animation-duration: 6s; animation-delay: 1s; }
+.ember:nth-child(3) { left: 35%; bottom: -10px; animation-duration: 5s; animation-delay: 2s; }
+.ember:nth-child(4) { left: 50%; bottom: -10px; animation-duration: 7s; animation-delay: 0.5s; }
+.ember:nth-child(5) { left: 65%; bottom: -10px; animation-duration: 4.5s; animation-delay: 1.5s; }
+.ember:nth-child(6) { left: 80%; bottom: -10px; animation-duration: 6.5s; animation-delay: 2.5s; }
+.ember:nth-child(7) { left: 15%; bottom: -10px; animation-duration: 5.5s; animation-delay: 3s; }
+.ember:nth-child(8) { left: 45%; bottom: -10px; animation-duration: 4.2s; animation-delay: 0.2s; }
+.ember:nth-child(9) { left: 75%; bottom: -10px; animation-duration: 5.8s; animation-delay: 1.2s; }
+.ember:nth-child(10) { left: 95%; bottom: -10px; animation-duration: 6.2s; animation-delay: 0.8s; }
+.ember:nth-child(11) { left: 5%; bottom: -10px; animation-duration: 4.8s; animation-delay: 2.2s; }
+.ember:nth-child(12) { left: 55%; bottom: -10px; animation-duration: 5.2s; animation-delay: 1.8s; }

@@ -68,11 +68,11 @@ export default function CTASection({ config, brand, branch }: CTASectionProps) {
   return (
     <section
       ref={containerRef}
-      className="relative min-h-[400px] overflow-hidden border-b border-gray-200"
+      className="relative min-h-[400px] overflow-hidden border-b border-neutral-200 dark:border-neutral-800"
     >
       {/* Background */}
       {config.backgroundType === 'gradient' ? (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-purple-600 to-accent-600">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-600 dark:from-primary-700 via-accent-600 dark:via-accent-700 to-accent-600 dark:to-accent-800">
           {/* Animated gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-pulse"></div>
         </div>
@@ -85,7 +85,7 @@ export default function CTASection({ config, brand, branch }: CTASectionProps) {
             }}
           />
           {/* Dark overlay for better text contrast */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 via-purple-900/80 to-accent-900/80"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 dark:from-primary-950/90 via-accent-900/80 dark:via-accent-950/90 to-accent-900/80 dark:to-accent-950/90"></div>
         </>
       )}
 
@@ -141,12 +141,12 @@ export default function CTASection({ config, brand, branch }: CTASectionProps) {
           </motion.div>
 
           {/* Title */}
-          <h2 className="text-hero font-bold text-white leading-tight drop-shadow-lg">
+          <h2 className="text-hero font-bold text-white dark:text-neutral-100 leading-tight drop-shadow-lg">
             {config.title}
           </h2>
 
           {/* Subtitle */}
-          <p className="text-h3 font-medium text-white/90 leading-relaxed max-w-2xl mx-auto drop-shadow-md">
+          <p className="text-h3 font-medium text-white/90 dark:text-neutral-200/90 leading-relaxed max-w-2xl mx-auto drop-shadow-md">
             {config.subtitle}
           </p>
 
@@ -159,7 +159,7 @@ export default function CTASection({ config, brand, branch }: CTASectionProps) {
           >
             <motion.button
               onClick={handleCTAClick}
-              className="group inline-flex items-center gap-3 px-8 py-4 bg-white text-primary-600 rounded-xl font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300"
+              className="group inline-flex items-center gap-3 px-8 py-4 bg-white dark:bg-neutral-100 text-primary-600 dark:text-primary-700 rounded-xl font-bold text-lg shadow-2xl hover:shadow-3xl transition-all duration-300"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -175,13 +175,13 @@ export default function CTASection({ config, brand, branch }: CTASectionProps) {
 
           {/* Trust Badge */}
           <motion.div
-            className="pt-6 flex items-center justify-center gap-2 text-white/80 text-sm"
+            className="pt-6 flex items-center justify-center gap-2 text-white/80 dark:text-neutral-200/80 text-sm"
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : { opacity: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
             <svg
-              className="w-5 h-5 text-green-400"
+              className="w-5 h-5 text-success-400"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -191,7 +191,7 @@ export default function CTASection({ config, brand, branch }: CTASectionProps) {
                 clipRule="evenodd"
               />
             </svg>
-            <span>Trusted by thousands of customers</span>
+            <span>Trusted by our customers</span>
           </motion.div>
         </motion.div>
       </div>

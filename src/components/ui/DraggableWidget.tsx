@@ -67,7 +67,7 @@ tion = { x: 0, y: 0 },
   // Handle mouse move
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging != null) {
+      if (isDragging) {
         const newPosition = {
           x: e.clientX - dragStart.x,
           y: e.clientY - dragStart.y,
@@ -76,7 +76,7 @@ tion = { x: 0, y: 0 },
         onPositionChange?.(newPosition);
       }
 
-      if (isResizing != null) {
+      if (isResizing) {
         const newSize = {
           width: Math.max(200, resizeStart.width + (e.clientX - resizeStart.x)),
           height: Math.max(150, resizeStart.height + (e.clientY - resizeStart.y)),

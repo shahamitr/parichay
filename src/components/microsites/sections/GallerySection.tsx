@@ -58,15 +58,15 @@ export default function GallerySection({ config, brand, branch }: GallerySection
 
   if (!config.images || config.images.length === 0) {
     return (
-      <section ref={sectionRef} className="py-20 px-6 bg-white">
+      <section ref={sectionRef} className="py-20 px-6 bg-white dark:bg-neutral-900">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Gallery</h2>
+          <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">Gallery</h2>
           <div className="w-20 h-1 mx-auto rounded-full mb-8" style={{ backgroundColor: primaryColor }} />
           <div className="py-12">
-            <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <ImageIcon className="w-10 h-10 text-gray-400" />
+            <div className="w-20 h-20 bg-neutral-100 dark:bg-neutral-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <ImageIcon className="w-10 h-10 text-neutral-400 dark:text-neutral-500" />
             </div>
-            <p className="text-gray-500">Gallery coming soon</p>
+            <p className="text-neutral-500 dark:text-neutral-400">Gallery coming soon</p>
           </div>
         </div>
       </section>
@@ -75,14 +75,14 @@ export default function GallerySection({ config, brand, branch }: GallerySection
 
 
   return (
-    <section ref={sectionRef} className="py-20 bg-gray-900 overflow-hidden">
+    <section ref={sectionRef} className="py-20 bg-neutral-900 dark:bg-neutral-950 overflow-hidden">
       {/* Section Header */}
       <div className={`text-center mb-12 px-6 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-        <h2 id="gallery-heading" className="text-3xl sm:text-4xl font-bold text-white mb-4">
+        <h2 id="gallery-heading" className="text-3xl sm:text-4xl font-bold text-white dark:text-neutral-50 mb-4">
           Our Gallery
         </h2>
         <div className="w-20 h-1 mx-auto rounded-full mb-4" style={{ backgroundColor: primaryColor }} />
-        <p className="text-gray-400 max-w-md mx-auto">
+        <p className="text-neutral-400 dark:text-neutral-500 max-w-md mx-auto">
           Take a look at our work and facilities
         </p>
       </div>
@@ -98,8 +98,8 @@ export default function GallerySection({ config, brand, branch }: GallerySection
               }`}
             >
               <img
-                src={image}
-                alt={`Gallery ${index + 1}`}
+                src={typeof image === 'string' ? image : image.url}
+                alt={typeof image === 'string' ? `Gallery ${index + 1}` : image.alt || `Gallery ${index + 1}`}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -131,8 +131,8 @@ export default function GallerySection({ config, brand, branch }: GallerySection
             >
               <div className="relative overflow-hidden rounded-2xl">
                 <img
-                  src={image}
-                  alt={`Gallery ${index + 1}`}
+                  src={typeof image === 'string' ? image : image.url}
+                  alt={typeof image === 'string' ? `Gallery ${index + 1}` : image.alt || `Gallery ${index + 1}`}
                   className="w-full object-cover transition-transform duration-500 group-hover:scale-110"
                   style={{ aspectRatio: index % 3 === 0 ? '3/4' : index % 2 === 0 ? '1/1' : '4/3' }}
                 />
@@ -179,8 +179,8 @@ export default function GallerySection({ config, brand, branch }: GallerySection
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={config.images[selectedIndex]}
-              alt={`Gallery ${selectedIndex + 1}`}
+              src={typeof config.images[selectedIndex] === 'string' ? config.images[selectedIndex] : config.images[selectedIndex].url}
+              alt={typeof config.images[selectedIndex] === 'string' ? `Gallery ${selectedIndex + 1}` : config.images[selectedIndex].alt || `Gallery ${selectedIndex + 1}`}
               className="max-w-full max-h-[85vh] object-contain rounded-lg"
             />
           </div>

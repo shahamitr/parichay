@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
+import { prisma } from '@/lib/prisma';
 import { JWTService } from '@/lib/jwt';
-
-const prisma = new PrismaClient();
 
 /**
  * POST /api/branches/[id]/assign-executive
@@ -152,8 +150,6 @@ export async function POST(
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -234,7 +230,5 @@ export async function DELETE(
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

@@ -5,11 +5,16 @@ import logger from './logger';
  * Redis client for caching
  */
 let redisClient: Redis | null = null;
+let redisWarningLogged = false;
 
 export function getRedisClient(): Redis | null {
   // Only initialize Redis if URL is provided
   if (!process.env.REDIS_URL) {
-    logger.warn('Redis URL not configured. Caching will be disabled.');
+    // Only log warning once to avoid console spam
+    if (!redisWarningLogged) {
+      logger.warn('Redis URL not configured. Caching will use in-memory fallback.');
+      redisWarningLogged = true;
+    }
     return null;
   }
 

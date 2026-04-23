@@ -52,13 +52,13 @@ export default function PortfolioSection({ config, brand, branch }: PortfolioSec
   };
 
   return (
-    <div className="py-12 px-4 bg-white">
+    <div className="py-12 px-4 bg-white dark:bg-neutral-900">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-10">
-          <h2 id="portfolio-heading" className="text-3xl font-bold text-gray-900 mb-3">
+          <h2 id="portfolio-heading" className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
             Our Portfolio
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
             Explore our work and see what we can do for you
           </p>
         </div>
@@ -72,8 +72,8 @@ export default function PortfolioSection({ config, brand, branch }: PortfolioSec
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   selectedCategory === category
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-primary-600 dark:bg-primary-500 text-white'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                 }`}
               >
                 {category === 'all' ? 'All' : category}

@@ -84,7 +84,7 @@ export default function OnboardingTour({
   }, [currentStep, isOpen, step]);
 
   const handleNext = () => {
-    if (isLastStep != null) {
+    if (isLastStep) {
       onComplete?.();
       onClose();
     } else {

@@ -36,7 +36,7 @@ export default function MicrositePreviewModal({
   const [previewUrl, setPreviewUrl] = useState('');
 
   useEffect(() => {
-    if (isOpen != null) {
+    if (isOpen) {
       generatePreviewUrl();
     }
   }, [isOpen, previewData, mode]);
@@ -69,7 +69,7 @@ export default function MicrositePreviewModal({
   };
 
   const openInNewTab = () => {
-    if (previewUrl != null) {
+    if (previewUrl) {
       window.open(previewUrl, '_blank');
     }
   };

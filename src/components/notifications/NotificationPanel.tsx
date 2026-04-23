@@ -99,13 +99,13 @@ export default function NotificationPanel({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-      <div className="p-4 border-b border-gray-200">
+    <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 overflow-hidden">
+      <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Notifications</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300"
             aria-label="Close"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -124,8 +124,8 @@ export default function NotificationPanel({
               onClick={() => setFilter('all')}
               className={`px-3 py-1 text-sm rounded-md ${
                 filter === 'all'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-100'
+                  : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-700'
               }`}
             >
               All
@@ -134,8 +134,8 @@ export default function NotificationPanel({
               onClick={() => setFilter('unread')}
               className={`px-3 py-1 text-sm rounded-md ${
                 filter === 'unread'
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-100'
+                  : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-700'
               }`}
             >
               Unread
@@ -145,7 +145,7 @@ export default function NotificationPanel({
           {notifications.some((n) => !n.isRead) && (
             <button
               onClick={handleMarkAllAsRead}
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
             >
               Mark all read
             </button>
@@ -155,15 +155,15 @@ export default function NotificationPanel({
 
       <div className="max-h-96 overflow-y-auto">
         {isLoading ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-neutral-500 dark:text-neutral-400">
             Loading notifications...
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-neutral-500 dark:text-neutral-400">
             No notifications
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
             {notifications.map((notification) => (
               <NotificationItem
                 key={notification.id}

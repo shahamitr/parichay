@@ -39,21 +39,21 @@ export default function MicrositeFooter({ brand, branch }: MicrositeFooterProps)
   );
 
   return (
-    <footer className="bg-gray-900 text-white py-12" role="contentinfo">
+    <footer className="bg-neutral-900 dark:bg-neutral-950 text-white py-12" role="contentinfo">
       <div className="max-w-4xl mx-auto px-6">
         {/* Brand Info */}
         <div className="text-center mb-8">
           <h3 className="text-2xl font-bold mb-2">{brand.name}</h3>
           {brand.tagline && (
-            <p className="text-gray-400 text-sm">{brand.tagline}</p>
+            <p className="text-neutral-400 dark:text-neutral-500 text-sm">{brand.tagline}</p>
           )}
-          <p className="text-gray-500 text-sm mt-2">{branch.name}</p>
+          <p className="text-neutral-500 dark:text-neutral-600 text-sm mt-2">{branch.name}</p>
         </div>
 
         {/* Contact Info */}
-        <div className="flex flex-wrap justify-center gap-6 mb-8 text-sm text-gray-400">
+        <div className="flex flex-wrap justify-center gap-6 mb-8 text-sm text-neutral-400 dark:text-neutral-500">
           {contact?.phone && (
-            <a href={`tel:${contact.phone}`} className="flex items-center gap-2 hover:text-white transition-colors">
+            <a href={`tel:${contact.phone}`} className="flex items-center gap-2 hover:text-white dark:hover:text-neutral-200 transition-colors">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
               </svg>
@@ -61,7 +61,7 @@ export default function MicrositeFooter({ brand, branch }: MicrositeFooterProps)
             </a>
           )}
           {contact?.email && (
-            <a href={`mailto:${contact.email}`} className="flex items-center gap-2 hover:text-white transition-colors">
+            <a href={`mailto:${contact.email}`} className="flex items-center gap-2 hover:text-white dark:hover:text-neutral-200 transition-colors">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                 <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
@@ -85,7 +85,7 @@ export default function MicrositeFooter({ brand, branch }: MicrositeFooterProps)
             {socialMedia?.facebook && (
               <button
                 onClick={() => handleSocialClick('facebook', socialMedia.facebook)}
-                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors"
+                className="w-10 h-10 rounded-full bg-neutral-800 dark:bg-neutral-900 flex items-center justify-center hover:bg-neutral-700 dark:hover:bg-neutral-800 transition-colors"
                 aria-label="Facebook"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -96,7 +96,7 @@ export default function MicrositeFooter({ brand, branch }: MicrositeFooterProps)
             {socialMedia?.instagram && (
               <button
                 onClick={() => handleSocialClick('instagram', socialMedia.instagram)}
-                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors"
+                className="w-10 h-10 rounded-full bg-neutral-800 dark:bg-neutral-900 flex items-center justify-center hover:bg-neutral-700 dark:hover:bg-neutral-800 transition-colors"
                 aria-label="Instagram"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -107,7 +107,7 @@ export default function MicrositeFooter({ brand, branch }: MicrositeFooterProps)
             {socialMedia?.linkedin && (
               <button
                 onClick={() => handleSocialClick('linkedin', socialMedia.linkedin)}
-                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors"
+                className="w-10 h-10 rounded-full bg-neutral-800 dark:bg-neutral-900 flex items-center justify-center hover:bg-neutral-700 dark:hover:bg-neutral-800 transition-colors"
                 aria-label="LinkedIn"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -118,7 +118,7 @@ export default function MicrositeFooter({ brand, branch }: MicrositeFooterProps)
             {socialMedia?.twitter && (
               <button
                 onClick={() => handleSocialClick('twitter', socialMedia.twitter)}
-                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors"
+                className="w-10 h-10 rounded-full bg-neutral-800 dark:bg-neutral-900 flex items-center justify-center hover:bg-neutral-700 dark:hover:bg-neutral-800 transition-colors"
                 aria-label="Twitter"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -129,7 +129,7 @@ export default function MicrositeFooter({ brand, branch }: MicrositeFooterProps)
             {socialMedia?.youtube && (
               <button
                 onClick={() => handleSocialClick('youtube', socialMedia.youtube)}
-                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors"
+                className="w-10 h-10 rounded-full bg-neutral-800 dark:bg-neutral-900 flex items-center justify-center hover:bg-neutral-700 dark:hover:bg-neutral-800 transition-colors"
                 aria-label="YouTube"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -140,7 +140,7 @@ export default function MicrositeFooter({ brand, branch }: MicrositeFooterProps)
             {socialMedia?.whatsapp && (
               <button
                 onClick={() => handleSocialClick('whatsapp', `https://wa.me/${socialMedia.whatsapp.replace(/[^0-9]/g, '')}`)}
-                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-gray-700 transition-colors"
+                className="w-10 h-10 rounded-full bg-neutral-800 dark:bg-neutral-900 flex items-center justify-center hover:bg-neutral-700 dark:hover:bg-neutral-800 transition-colors"
                 aria-label="WhatsApp"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@ export default function MicrositeFooter({ brand, branch }: MicrositeFooterProps)
         )}
 
         {/* Copyright - Brand only, no platform branding */}
-        <div className="text-center text-sm text-gray-500 border-t border-gray-800 pt-6">
+        <div className="text-center text-sm text-neutral-500 dark:text-neutral-600 border-t border-neutral-800 dark:border-neutral-900 pt-6">
           © {currentYear} {brand.name}. All rights reserved.
         </div>
       </div>

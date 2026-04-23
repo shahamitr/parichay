@@ -5,11 +5,11 @@ import { Home, Building2, BarChart3, Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { icon: Home, label: 'Home', href: '/dashboard' },
-  { icon: Building2, label: 'Brands', href: '/dashboard/brands' },
-  { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
-  { icon: Users, label: 'Leads', href: '/dashboard/leads' },
-  { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
+  { icon: Home, label: 'Home', href: '/admin' },
+  { icon: Building2, label: 'Brands', href: '/admin/brands' },
+  { icon: BarChart3, label: 'Analytics', href: '/admin/analytics' },
+  { icon: Users, label: 'Leads', href: '/admin/leads' },
+  { icon: Settings, label: 'Settings', href: '/admin/settings' },
 ];
 
 export default function MobileBottomNav() {

@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { prisma } from './prisma';
 import { MicrositeData } from '@/types/microsite';
-import { withCache, CacheKeys, CacheTTL } from './cache';
+import { withCache } from './cache';
 
 /**
  * Fetch microsite data by brand and branch slugs (server-side)
@@ -12,7 +11,7 @@ export async function getMicrositeData(
 ): Promise<MicrositeData | null> {
   // Use cache with 5 minute TTL
   return withCache(
-    CacheKeys.MICROSITE(brandSlug, branchSlug),
+    `microsite-${brandSlug}-${branchSlug}`,
     async () => {
       try {
         const brand = await prisma.brand.findUnique({
@@ -58,6 +57,6 @@ export async function getMicrositeData(
         return null;
       }
     },
-    CacheTTL.MEDIUM
+    300 // 5 minutes TTL
   );
 }

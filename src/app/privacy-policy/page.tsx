@@ -1,13 +1,16 @@
 import { Metadata } from 'next';
+import CommonHeader from "@/components/layout/CommonHeader";
+import CommonFooter from "@/components/layout/CommonFooter";
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy - OneTouch BizCard',
-  description: 'Privacy Policy for OneTouch BizCard platform',
+  title: 'Privacy Policy - Parichay',
+  description: 'Privacy Policy for Parichay platform',
 };
 
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <CommonHeader />
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Privacy Policy</h1>
         <p className="text-sm text-gray-600 mb-8">Last Updated: {new Date().toLocaleDateString()}</p>
@@ -16,7 +19,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">1. Introduction</h2>
             <p>
-              Welcome to OneTouch BizCard. We respect your privacy and are committed to protecting your personal data.
+              Welcome to Parichay. We respect your privacy and are committed to protecting your personal data.
               This privacy policy explains how we collect, use, and safeguard your information when you use our platform.
             </p>
           </section>
@@ -66,7 +69,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3">6. Your Rights (GDPR Compliance)</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-3">6. Your Rights</h2>
             <p className="mb-2">You have the right to:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Access your personal data</li>

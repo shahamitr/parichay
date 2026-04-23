@@ -35,12 +35,12 @@ export async function createTenant(config: TenantConfig, ownerId: string) {
     },
   });
 
-  // Assign owner to tenant
+  // Assign owner to tenant (use BRAND_MANAGER as tenant admin role)
   await prisma.user.update({
     where: { id: ownerId },
     data: {
       tenantId: tenant.id,
-      role: 'TENANT_ADMIN',
+      role: 'BRAND_MANAGER',
     },
   });
 

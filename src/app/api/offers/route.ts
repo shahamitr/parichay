@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
     const branchId = searchParams.get('branchId');
     const brandId = searchParams.get('brandId');
     const activeOnly = searchParams.get('activeOnly') !== 'false';
+    const featured = searchParams.get('featured');
 
     if (!branchId && !brandId) {
       return NextResponse.json(
@@ -51,11 +52,12 @@ export async function GET(request: NextRequest) {
       where.startDate = { lte: now };
       where.endDate = { gte: now };
     }
+    if (featured === 'true') where.featured = true;
 
     const offers = await prisma.offer.findMany({
       where,
       orderBy: [
-        // { featured: 'desc' }, // TODO: Add featured field to Offer model
+        { featured: 'desc' },
         { endDate: 'asc' },
       ],
       include: {

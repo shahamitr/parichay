@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Star } from 'lucide-react';
+import MathCaptcha from '@/components/ui/MathCaptcha';
 
 interface FeedbackSectionProps {
   branchId: string;
@@ -16,6 +17,7 @@ export default function FeedbackSection({ branchId, brandId, brand }: FeedbackSe
   const [name, setName] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaValid, setCaptchaValid] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +49,7 @@ export default function FeedbackSection({ branchId, brandId, brand }: FeedbackSe
     }
   };
 
-  if (submitted != null) {
+  if (submitted) {
     return (
       <section className="relative min-h-full bg-white overflow-hidden flex items-center border-b border-gray-200">
         {/* Decorative Elements */}
@@ -152,10 +154,13 @@ export default function FeedbackSection({ branchId, brandId, brand }: FeedbackSe
             />
           </div>
 
+          {/* Security Captcha */}
+          <MathCaptcha onVerify={setCaptchaValid} />
+
           {/* Submit Button - Modern Professional Design */}
           <button
             type="submit"
-            disabled={loading || rating === 0}
+            disabled={loading || rating === 0 || !captchaValid}
             className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed disabled:transform-none"
           >
             {loading ? 'Submitting...' : 'Submit Feedback'}

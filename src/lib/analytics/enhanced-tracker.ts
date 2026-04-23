@@ -25,7 +25,7 @@ export interface DeviceInfo {
   screenHeight: number;
   viewportWidth: number;
   viewportHeight: number;
-Type: 'mobile' | 'tablet' | 'desktop';
+  deviceType: 'mobile' | 'tablet' | 'desktop';
   browser: string;
   browserVersion: string;
   os: string;

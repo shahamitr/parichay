@@ -220,9 +220,9 @@ export function createInvoiceData(
     dueDate: invoice.dueDate,
     paidAt: invoice.paidAt,
 
-    companyName: 'OneTouch BizCard',
+    companyName: 'Parichay',
     companyAddress: 'India',
-    companyEmail: 'billing@onetouchbizcard.in',
+    companyEmail: 'billing@parichay.com',
     companyPhone: '+91-XXXXXXXXXX',
     companyGST: 'XXXXXXXXXXXX',
 

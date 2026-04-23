@@ -1,55 +1,66 @@
-import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Noto_Sans_Devanagari } from "next/font/google";
-import { AuthProvider } from "@/lib/auth-context";
-import { ToastProvider } from "@/components/ui/Toast";
-import { I18nProvider } from "@/lib/i18n";
-import CookieConsent from "@/components/CookieConsent";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Inter, Noto_Sans_Devanagari, Noto_Sans_Gujarati } from 'next/font/google';
+import './globals.css';
+import { ToastContainer } from '@/components/ui/Toast';
+import { ClientLayoutWrappers } from '@/components/layout/ClientLayoutWrappers';
 
+
+// Latin/English font - Inter fallback
 const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
+// Hindi & Marathi (Devanagari script)
+const notoDevanagari = Noto_Sans_Devanagari({
+  subsets: ['devanagari'],
+  variable: '--font-devanagari',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
 });
 
-// Hindi font support
-const notoSansDevanagari = Noto_Sans_Devanagari({
-  variable: "--font-devanagari",
-  subsets: ["devanagari"],
-  weight: ["400", "500", "600", "700"],
+// Gujarati script
+const notoGujarati = Noto_Sans_Gujarati({
+  subsets: ['gujarati'],
+  variable: '--font-gujarati',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
 });
 
 export const metadata: Metadata = {
-  title: "Parichay - Dynamic Business Card Platform",
-  description: "Create professional digital business cards with custom domains, QR codes, and analytics",
+  title: 'Parichay | India\'s #1 Digital Business Card & Lead Gen Platform',
+  description: 'Transform every meeting into a lead. Create professional digital business cards, microsites, and catalogs in seconds. Smart, paperless, and outcome-driven.',
+  keywords: ['digital business card', 'microsite builder', 'lead generation', 'india business', 'parichay', 'digital profile'],
+  authors: [{ name: 'Parichay Team' }],
+  openGraph: {
+    title: 'Parichay | Smart Digital Introduction',
+    description: 'India\'s #1 Digital Business Card & Lead Gen Platform',
+    url: 'https://parichay.io',
+    siteName: 'Parichay',
+    locale: 'en_IN',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <head>
-        <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+        <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400&display=swap" rel="stylesheet" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
       </head>
-      <body
-        className={`${inter.variable} ${jetbrainsMono.variable} ${notoSansDevanagari.variable} antialiased`}
-      >
-        <AuthProvider>
-          <ToastProvider>
-            <I18nProvider>
-              {children}
-              <CookieConsent />
-            </I18nProvider>
-          </ToastProvider>
-        </AuthProvider>
+      <body className={`${inter.variable} ${notoDevanagari.variable} ${notoGujarati.variable} font-sans`}>
+        <ClientLayoutWrappers>
+          {children}
+        </ClientLayoutWrappers>
+        <ToastContainer />
       </body>
+
     </html>
   );
 }

@@ -43,24 +43,21 @@ export async function GET(request: NextRequest) {
     if (branchId) where.branchId = branchId;
     if (brandId) where.brandId = brandId;
     if (category) where.category = category;
-    // if (featured === 'true') where.featured = true; // TODO: Add featured field to PortfolioItem model
+    if (featured === 'true') where.featured = true;
 
-    const [items, categories] = await Promise.all([
-      prisma.portfolioItem.findMany({
-        where,
-        orderBy: [
-          // { featured: 'desc' }, // TODO: Add featured field
-          { order: 'asc' }, // Use order field instead
-          { createdAt: 'desc' },
-        ],
-        take: limit,
-        include: {
-          branch: {
-            select: { id: true, name: true, slug: true },
-          },
+    const items = await prisma.portfolioItem.findMany({
+      where,
+      orderBy: [
+        { order: 'asc' },
+        { createdAt: 'desc' },
+      ],
+      take: limit,
+      include: {
+        branch: {
+          select: { id: true, name: true, slug: true },
         },
-      }),
-    ]);
+      },
+    });
 
     // Get categories - fetch and aggregate in JavaScript
     const allItems = await prisma.portfolioItem.findMany({

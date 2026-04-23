@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.APP_URL || 'https://onetouchbizcard.in';
+  const baseUrl = process.env.APP_URL || 'https://parichay.com';
 
   try {
     // Fetch all active branches with their brands

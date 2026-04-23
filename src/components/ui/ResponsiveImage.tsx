@@ -140,7 +140,7 @@ export default function ResponsiveImage({
   };
 
   // Error fallback
-  if (hasError != null) {
+  if (hasError) {
     return (
       <div
         className={`flex items-center justify-center bg-gray-100 ${className}`}

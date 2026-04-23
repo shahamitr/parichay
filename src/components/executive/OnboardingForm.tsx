@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Building2, MapPin, Phone, Mail, Globe, Save, CheckCircle, FileText, Download, Search } from 'lucide-react';
 import MicrositePreviewModal from '@/components/preview/MicrositePreviewModal';
 import GoogleBusinessImport from '@/components/import/GoogleBusinessImport';
+
 import FileUpload from '@/components/ui/FileUpload';
 import ColorThemePicker from '@/components/ui/ColorThemePicker';
 
@@ -377,6 +378,8 @@ export default function OnboardingForm({ executiveId, onSuccess }: OnboardingFor
             />
           </div>
         ) : (
+
+
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">

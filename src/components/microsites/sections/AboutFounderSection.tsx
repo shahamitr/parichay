@@ -37,7 +37,7 @@ export default function AboutFounderSection({ brand, branch, config }: AboutFoun
   const founderConfig = config || {
     name: 'John Doe',
     title: 'Founder & CEO',
-    bio: 'With over 15 years of experience in the industry, our founder has built this company from the ground up with a vision to deliver excellence and innovation to every customer.',
+    bio: 'With over many years of experience in the industry, our founder has built this company from the ground up with a vision to deliver excellence and innovation to every customer.',
     achievements: [
       'Industry Leader Award 2023',
       'Best Entrepreneur Under 40',
@@ -67,15 +67,15 @@ export default function AboutFounderSection({ brand, branch, config }: AboutFoun
   ].filter(link => link.href);
 
   return (
-    <section ref={sectionRef} className="py-20 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+    <section ref={sectionRef} className="py-20 bg-gradient-to-b from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-950 overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
         {/* Section Header */}
         <div className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
             Meet Our Founder
           </h2>
           <div className="w-20 h-1 mx-auto rounded-full mb-4" style={{ backgroundColor: primaryColor }} />
-          <p className="text-gray-500 max-w-md mx-auto">
+          <p className="text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
             The visionary behind our success story
           </p>
         </div>

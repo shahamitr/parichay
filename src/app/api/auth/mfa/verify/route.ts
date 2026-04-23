@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { MFAService } from '@/lib/mfa';
 import { verifyToken } from '@/lib/auth-utils';
+import logger from '@/lib/logger';
 import { z } from 'zod';
 
 const verifyMFASchema = z.object({
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
       mfaEnabled: true,
     });
   } catch (error) {
-    console.error('MFA verification error:', error);
+    logger.error({ error }, 'MFA verification error');
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

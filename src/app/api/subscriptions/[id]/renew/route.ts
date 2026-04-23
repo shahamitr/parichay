@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { handleApiError } from '@/lib/errors';
-import { verifyToken } from '@/lib/auth';
+import { verifyToken } from '@/lib/auth-utils';
 import { calculateEndDate } from '@/lib/subscription-utils';
 
 export async function POST(

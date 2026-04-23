@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth-utils';
 
 /**
- * GET /api/users/data-export - Export user data (GDPR compliance)
+ * GET /api/users/data-export - Export user data 
  */
 export async function GET(request: NextRequest) {
   try {

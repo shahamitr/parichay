@@ -77,7 +77,7 @@ export default function SMSTemplateManager() {
     }
   };
 
-  if (loading != null) {
+  if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="animate-pulse">

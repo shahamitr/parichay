@@ -48,17 +48,17 @@ export default function QRCodeAnalytics({ qrCodeId }: QRCodeAnalyticsProps) {
     }
   };
 
-  if (loading != null) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-gray-600">Loading analytics...</div>
+        <div className="text-neutral-600 dark:text-neutral-400">Loading analytics...</div>
       </div>
     );
   }
 
   if (error != null) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+      <div className="p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-md text-error-700 dark:text-error-400">
         {error}
       </div>
     );
@@ -66,65 +66,65 @@ export default function QRCodeAnalytics({ qrCodeId }: QRCodeAnalyticsProps) {
 
   if (!analytics) {
     return (
-      <div className="text-center p-8 bg-gray-50 rounded-lg">
-        <p className="text-gray-600">No analytics data available.</p>
+      <div className="text-center p-8 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+        <p className="text-neutral-600 dark:text-neutral-400">No analytics data available.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Scan Statistics</h3>
+      <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
+        <h3 className="text-lg font-semibold mb-4 text-neutral-900 dark:text-neutral-100">Scan Statistics</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <div className="text-3xl font-bold text-blue-600">
+          <div className="text-center p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+            <div className="text-3xl font-bold text-primary-600 dark:text-primary-400">
               {analytics.scanCount}
             </div>
-            <div className="text-sm text-gray-600 mt-1">Total Scans</div>
+            <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Total Scans</div>
           </div>
-          <div className="text-center p-4 bg-green-50 rounded-lg">
-            <div className="text-3xl font-bold text-green-600">
+          <div className="text-center p-4 bg-success-50 dark:bg-success-900/20 rounded-lg">
+            <div className="text-3xl font-bold text-success-600 dark:text-success-400">
               {analytics.recentScans.length}
             </div>
-            <div className="text-sm text-gray-600 mt-1">Recent Scans (7d)</div>
+            <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Recent Scans (7d)</div>
           </div>
-          <div className="text-center p-4 bg-purple-50 rounded-lg">
-            <div className="text-3xl font-bold text-purple-600">
+          <div className="text-center p-4 bg-accent-50 dark:bg-accent-900/20 rounded-lg">
+            <div className="text-3xl font-bold text-accent-600 dark:text-accent-400">
               {new Set(
                 analytics.recentScans
                   .map((s) => s.location?.country)
                   .filter(Boolean)
               ).size}
             </div>
-            <div className="text-sm text-gray-600 mt-1">Countries</div>
+            <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Countries</div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Recent Scans</h3>
+      <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-6">
+        <h3 className="text-lg font-semibold mb-4 text-neutral-900 dark:text-neutral-100">Recent Scans</h3>
         {analytics.recentScans.length === 0 ? (
-          <p className="text-gray-600 text-center py-4">No recent scans</p>
+          <p className="text-neutral-600 dark:text-neutral-400 text-center py-4">No recent scans</p>
         ) : (
           <div className="space-y-3">
             {analytics.recentScans.map((scan, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg"
               >
                 <div className="flex-1">
-                  <div className="text-sm font-medium">
+                  <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                     {scan.location?.city && scan.location?.country
                       ? `${scan.location.city}, ${scan.location.country}`
                       : scan.location?.country || 'Unknown Location'}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-neutral-500 dark:text-neutral-500 mt-1">
                     {new Date(scan.timestamp).toLocaleString()}
                   </div>
                 </div>
                 {scan.userAgent && (
-                  <div className="text-xs text-gray-500 max-w-xs truncate">
+                  <div className="text-xs text-neutral-500 dark:text-neutral-500 max-w-xs truncate">
                     {scan.userAgent}
                   </div>
                 )}

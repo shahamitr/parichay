@@ -52,28 +52,29 @@ export async function getAnalyticsSummary(
     where,
     select: {
       eventType: true,
-      sessionId: true,
       metadata: true,
       createdAt: true,
-      referrer: true,
       userAgent: true,
+      ipAddress: true,
     },
   });
 
   // Calculate metrics
   const pageViews = events.filter(e => e.eventType === 'PAGE_VIEW');
-  const uniqueSessions = new Set(events.map(e => e.sessionId)).size;
+  // Extract sessionId from metadata if available, otherwise use ipAddress as fallback
+  const uniqueSessions = new Set(events.map(e => (e.metadata as any)?.sessionId || e.ipAddress || 'unknown')).size;
 
-  // Average time on page
-  const timeEvents = events.filter(e => e.eventType === 'TIME_ON_PAGE');
-  const avgTime = timeEvents.length > 0
-    ? timeEvents.reduce((sum, e) => sum + ((e.metadata as any)?.seconds || 0), 0) / timeEvents.length
+  // Average time on page (from metadata of PAGE_VIEW events)
+  const pageViewsWithTime = events.filter(e => e.eventType === 'PAGE_VIEW' && (e.metadata as any)?.timeOnPage);
+  const avgTime = pageViewsWithTime.length > 0
+    ? pageViewsWithTime.reduce((sum, e) => sum + ((e.metadata as any)?.timeOnPage || 0), 0) / pageViewsWithTime.length
     : 0;
 
   // Bounce rate (sessions with only 1 page view)
   const sessionPageViews = new Map<string, number>();
   pageViews.forEach(e => {
-    sessionPageViews.set(e.sessionId, (sessionPageViews.get(e.sessionId) || 0) + 1);
+    const sessionId = (e.metadata as any)?.sessionId || e.ipAddress || 'unknown';
+    sessionPageViews.set(sessionId, (sessionPageViews.get(sessionId) || 0) + 1);
   });
   const bouncedSessions = Array.from(sessionPageViews.values()).filter(count => count === 1).length;
   const bounceRate = uniqueSessions > 0 ? (bouncedSessions / uniqueSessions) * 100 : 0;
@@ -89,12 +90,17 @@ export async function getAnalyticsSummary(
     .sort((a, b) => b.views - a.views)
     .slice(0, 10);
 
-  // Top referrers
+  // Top referrers (from metadata)
   const referrerCount = new Map<string, number>();
   events.forEach(e => {
-    if (e.referrer && e.referrer !== '') {
-      const domain = new URL(e.referrer).hostname;
-      referrerCount.set(domain, (referrerCount.get(domain) || 0) + 1);
+    const referrer = (e.metadata as any)?.referrer;
+    if (referrer && referrer !== '') {
+      try {
+        const domain = new URL(referrer).hostname;
+        referrerCount.set(domain, (referrerCount.get(domain) || 0) + 1);
+      } catch {
+        // Invalid URL, skip
+      }
     }
   });
   const topReferrers = Array.from(referrerCount.entries())
@@ -172,7 +178,8 @@ export async function getAnalyticsSummary(
     if (!dailyVisitors.has(date)) {
       dailyVisitors.set(date, new Set());
     }
-    dailyVisitors.get(date)!.add(e.sessionId);
+    const sessionId = (e.metadata as any)?.sessionId || e.ipAddress || 'unknown';
+    dailyVisitors.get(date)!.add(sessionId);
   });
 
   const dailyTraffic = Array.from(dailyViews.entries())
@@ -183,23 +190,23 @@ export async function getAnalyticsSummary(
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  // Conversion funnel
+  // Conversion funnel - using valid AnalyticsEventType values
   const funnelSteps = [
-    { step: 'Page View', eventType: 'PAGE_VIEW' },
-    { step: 'Scroll 50%', eventType: 'SCROLL_DEPTH' },
-    { step: 'Button Click', eventType: 'BUTTON_CLICK' },
-    { step: 'Form Submit', eventType: 'FORM_SUBMIT' },
+    { step: 'Page View', eventType: 'PAGE_VIEW' as const },
+    { step: 'Click', eventType: 'CLICK' as const },
+    { step: 'QR Scan', eventType: 'QR_SCAN' as const },
+    { step: 'Lead Submit', eventType: 'LEAD_SUBMIT' as const },
   ];
 
-  const conversionFunnel = funnelSteps.map((step, index) => {
-    const count = events.filter(e => {
-      if (step.eventType === 'SCROLL_DEPTH') {
-        return e.eventType === step.eventType && (e.metadata as any)?.depth >= 50;
-      }
-      return e.eventType === step.eventType;
-    }).length;
+  // First, compute all counts
+  const funnelCounts = funnelSteps.map(step =>
+    events.filter(e => e.eventType === step.eventType).length
+  );
 
-    const previousCount = index > 0 ? conversionFunnel[index - 1].count : count;
+  // Then build the conversion funnel with dropoff calculation
+  const conversionFunnel: Array<{ step: string; count: number; dropoff: number }> = funnelSteps.map((step, index) => {
+    const count = funnelCounts[index];
+    const previousCount = index > 0 ? funnelCounts[index - 1] : count;
     const dropoff = previousCount > 0 ? ((previousCount - count) / previousCount) * 100 : 0;
 
     return {
@@ -254,9 +261,9 @@ export async function getRealTimeAnalytics(brandId: string, branchId?: string) {
     where,
     select: {
       eventType: true,
-      sessionId: true,
       createdAt: true,
       metadata: true,
+      ipAddress: true,
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -264,7 +271,7 @@ export async function getRealTimeAnalytics(brandId: string, branchId?: string) {
   const activeVisitors = new Set(
     events
       .filter(e => new Date(e.createdAt) > new Date(Date.now() - 5 * 60 * 1000))
-      .map(e => e.sessionId)
+      .map(e => (e.metadata as any)?.sessionId || e.ipAddress || 'unknown')
   ).size;
 
   const recentEvents = events.slice(0, 20).map(e => ({

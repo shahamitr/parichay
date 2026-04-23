@@ -34,10 +34,12 @@ export { ColorThemePicker } from './ColorThemePicker';
 export { Drawer } from './Drawer';
 export { FileUpload } from './FileUpload';
 export { ImageUploadWithPreview } from './ImageUploadWithPreview';
-export { LoadingSkeleton } from './LoadingSkeleton';
+export * from './Loading';
 export { RichTextEditor } from './RichTextEditor';
-export { Toast } from './Toast';
-export { Arc } from './Arc';
+export * from './Toast';
+export { StatCard } from './StatCard';
+export { ProgressBar } from './ProgressBar';
+export { SectionHeader } from './SectionHeader';
 
 // Responsive Image Component
 export { default as ResponsiveImage } from './ResponsiveImage';

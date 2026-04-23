@@ -94,17 +94,17 @@ export default function AIAssistant() {
     <>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-40 p-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
+        className="fixed bottom-6 right-6 z-40 p-4 bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group"
       >
         <Sparkles className="w-6 h-6 group-hover:rotate-12 transition-transform" />
       </button>
 
       {isOpen && (
         <div className={cn(
-          'fixed bottom-24 right-6 z-50 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300',
+          'fixed bottom-24 right-6 z-50 bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden transition-all duration-300',
           isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
         )}>
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-600 to-purple-600">
+          <div className="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700 bg-gradient-to-r from-primary-600 to-accent-600">
             <div className="flex items-center gap-2 text-white">
               <Bot className="w-5 h-5" />
               <span className="font-semibold">AI Assistant</span>

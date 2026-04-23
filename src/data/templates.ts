@@ -32,7 +32,16 @@ export interface MicrositeTemplate {
   };
 }
 
+// Import industry-specific templates and next-level templates
+import { industryTemplates } from './industry-templates';
+import { allNextLevelTemplates } from './next-level-templates';
+
 export const micrositeTemplates: MicrositeTemplate[] = [
+  // Include industry-specific templates
+  ...industryTemplates,
+  // Include next-level templates
+  ...allNextLevelTemplates,
+
   // Business Owners Templates
   {
     id: 'business-professional',

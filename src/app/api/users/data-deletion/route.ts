@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth-utils';
 
 /**
- * POST /api/users/data-deletion - Request account and data deletion (GDPR compliance)
+ * POST /api/users/data-deletion - Request account and data deletion 
  */
 export async function POST(request: NextRequest) {
   try {

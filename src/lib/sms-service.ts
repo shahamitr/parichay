@@ -44,56 +44,56 @@ class SMSService {
     this.templates.set('payment_success', {
       type: 'payment_success',
       template: (params) =>
-        `OneTouch BizCard: Payment of ₹${params.amount} received successfully. Invoice: ${params.invoiceNumber}. Thank you!`,
+        `Parichay: Payment of ₹${params.amount} received successfully. Invoice: ${params.invoiceNumber}. Thank you!`,
     });
 
     // Payment Failed Template
     this.templates.set('payment_failed', {
       type: 'payment_failed',
       template: (params) =>
-        `OneTouch BizCard: Payment of ₹${params.amount} failed. ${params.reason || 'Please try again.'}`,
+        `Parichay: Payment of ₹${params.amount} failed. ${params.reason || 'Please try again.'}`,
     });
 
     // Subscription Renewal Template
     this.templates.set('subscription_renewal', {
       type: 'subscription_renewal',
       template: (params) =>
-        `OneTouch BizCard: Your ${params.planName} subscription expires in ${params.daysUntilExpiry} days. Renew now: ${params.renewUrl}`,
+        `Parichay: Your ${params.planName} subscription expires in ${params.daysUntilExpiry} days. Renew now: ${params.renewUrl}`,
     });
 
     // License Expiring Template
     this.templates.set('license_expiring', {
       type: 'license_expiring',
       template: (params) =>
-        `OneTouch BizCard: Your license expires in ${params.daysUntilExpiry} days. Renew to avoid service interruption: ${params.renewUrl}`,
+        `Parichay: Your license expires in ${params.daysUntilExpiry} days. Renew to avoid service interruption: ${params.renewUrl}`,
     });
 
     // New Lead Template
     this.templates.set('new_lead', {
       type: 'new_lead',
       template: (params) =>
-        `OneTouch BizCard: New lead from ${params.leadName} for ${params.branchName}. Contact: ${params.leadContact}`,
+        `Parichay: New lead from ${params.leadName} for ${params.branchName}. Contact: ${params.leadContact}`,
     });
 
     // System Alert Template
     this.templates.set('system_alert', {
       type: 'system_alert',
       template: (params) =>
-        `OneTouch BizCard Alert: ${params.message}`,
+        `Parichay Alert: ${params.message}`,
     });
 
     // Subscription Suspended Template
     this.templates.set('subscription_suspended', {
       type: 'subscription_suspended',
       template: (params) =>
-        `OneTouch BizCard: Your subscription has been suspended due to payment failure. Please update payment details.`,
+        `Parichay: Your subscription has been suspended due to payment failure. Please update payment details.`,
     });
 
     // Subscription Activated Template
     this.templates.set('subscription_activated', {
       type: 'subscription_activated',
       template: (params) =>
-        `OneTouch BizCard: Your ${params.planName} subscription is now active. Welcome!`,
+        `Parichay: Your ${params.planName} subscription is now active. Welcome!`,
     });
   }
 
@@ -191,7 +191,7 @@ class SMSService {
     return this.sendTemplatedSMS(phone, 'subscription_renewal', {
       planName,
       daysUntilExpiry,
-      renewUrl: `${process.env.APP_URL}/dashboard/subscription`,
+      renewUrl: `${process.env.APP_URL}/admin/subscription`,
     });
   }
 
@@ -201,7 +201,7 @@ class SMSService {
   ): Promise<boolean> {
     return this.sendTemplatedSMS(phone, 'license_expiring', {
       daysUntilExpiry,
-      renewUrl: `${process.env.APP_URL}/dashboard/subscription`,
+      renewUrl: `${process.env.APP_URL}/admin/subscription`,
     });
   }
 

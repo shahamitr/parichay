@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
+import { prisma } from '@/lib/prisma';
 import { JWTService } from '@/lib/jwt';
 
-const prisma = new PrismaClient();
+
 
 /**
  * GET /api/executives/stats
@@ -276,7 +276,7 @@ export async function GET(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
-  }
+  } 
 }
+
+

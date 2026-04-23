@@ -1,9 +1,25 @@
 'use client';
 
-import { useState } from 'react';
-import { Check, ArrowRight, ArrowLeft, Sparkles, Building2, MapPin, Palette, Rocket } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import {
+  Check,
+  ArrowRight,
+  ArrowLeft,
+  Sparkles,
+  Building2,
+  MapPin,
+  Palette,
+  Rocket,
+  Upload,
+  Share2,
+  Globe,
+  Settings,
+  Smartphone,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToastHelpers } from '@/components/ui/Toast';
+import { MICROSITE_TEMPLATES } from '@/lib/templates';
+import Image from 'next/image';
 
 interface QuickStartWizardProps {
   userRole: 'ADMIN' | 'EXECUTIVE' | 'CUSTOMER';
@@ -15,13 +31,16 @@ export default function QuickStartWizard({ userRole, onComplete }: QuickStartWiz
   const { success, error } = useToastHelpers();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     // Brand Info
     brandName: '',
     tagline: '',
     industry: '',
+    logo: '',
 
-    // Branch Info
+    // Contact Info
     branchName: '',
     phone: '',
     email: '',
@@ -33,6 +52,22 @@ export default function QuickStartWizard({ userRole, onComplete }: QuickStartWiz
       country: 'India',
     },
 
+    // Social Links
+    social: {
+      whatsapp: '',
+      instagram: '',
+      facebook: '',
+      linkedin: '',
+    },
+
+    // Marketing & SEO
+    marketing: {
+      seoTitle: '',
+      seoDescription: '',
+      ga4Id: '',
+      pixelId: '',
+    },
+
     // Theme
     primaryColor: '#3B82F6',
 
@@ -42,38 +77,49 @@ export default function QuickStartWizard({ userRole, onComplete }: QuickStartWiz
     enableLeadCapture: true,
   });
 
+  // Steps configuration
   const steps = [
-    {
-      id: 'welcome',
-      title: 'Welcome!',
-      description: 'Let\'s get your microsite up in 2 minutes',
-      icon: Sparkles,
-    },
-    {
-      id: 'brand',
-      title: 'Brand Details',
-      description: 'Tell us about your business',
-      icon: Building2,
-    },
-    {
-      id: 'branch',
-      title: 'Location Info',
-      description: 'Add your contact details',
-      icon: MapPin,
-    },
-    {
-      id: 'theme',
-      title: 'Choose Theme',
-      description: 'Pick your brand colors',
-      icon: Palette,
-    },
-    {
-      id: 'launch',
-      title: 'Launch!',
-      description: 'Your microsite is ready',
-      icon: Rocket,
-    },
+    { id: 'welcome', title: 'Welcome', icon: Sparkles },
+    { id: 'brand', title: 'Brand Identity', icon: Building2 },
+    { id: 'contact', title: 'Location', icon: MapPin },
+    { id: 'social', title: 'Social', icon: Share2 },
+    { id: 'marketing', title: 'Marketing', icon: Globe },
+    { id: 'theme', title: 'Design', icon: Palette },
+    { id: 'launch', title: 'Launch', icon: Rocket },
   ];
+
+  // Industry-based automation: Pre-fill content when industry changes
+  useEffect(() => {
+    if (formData.industry) {
+      const template = MICROSITE_TEMPLATES.find(t => t.category === formData.industry);
+      if (template && template.defaultConfig) {
+        setFormData(prev => ({
+          ...prev,
+          tagline: prev.tagline || template.defaultConfig.sections?.hero?.subtitle || '',
+          marketing: {
+            ...prev.marketing,
+            seoTitle: prev.marketing.seoTitle || template.defaultConfig.seoSettings?.title || prev.brandName,
+            seoDescription: prev.marketing.seoDescription || template.defaultConfig.seoSettings?.description || prev.tagline,
+          },
+          // Set primary color from template if not manually picked yet
+          primaryColor: prev.primaryColor === '#3B82F6' ? (template.id.includes('classic') ? '#3B82F6' : prev.primaryColor) : prev.primaryColor
+        }));
+      }
+    }
+  }, [formData.industry, formData.brandName]);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setLogoPreview(base64String);
+        setFormData({ ...formData, logo: base64String });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleNext = async () => {
     if (currentStep === steps.length - 1) {
@@ -92,44 +138,59 @@ export default function QuickStartWizard({ userRole, onComplete }: QuickStartWiz
   const handleComplete = async () => {
     setLoading(true);
     try {
-      // Create brand
+      // Find template for industry automation
+      const template = MICROSITE_TEMPLATES.find(t => t.category === formData.industry) || MICROSITE_TEMPLATES[0];
+
+      // Prepare API payload
+      const payload = {
+        name: formData.brandName,
+        tagline: formData.tagline,
+        logo: formData.logo,
+        colorTheme: {
+          primary: formData.primaryColor,
+          secondary: adjustColor(formData.primaryColor, -20),
+          accent: adjustColor(formData.primaryColor, 20),
+        },
+        initialBranch: {
+          name: formData.branchName,
+          phone: formData.phone,
+          email: formData.email,
+          address: formData.address,
+          socialMedia: formData.social,
+          micrositeConfig: {
+            templateId: template.id,
+            sections: template.defaultConfig.sections,
+            seoSettings: {
+              title: formData.marketing.seoTitle || formData.brandName,
+              description: formData.marketing.seoDescription || formData.tagline,
+              keywords: template.defaultConfig.seoSettings?.keywords || [],
+            },
+            // Marketing pixels integration
+            analyticsPixels: {
+              ga4: formData.marketing.ga4Id,
+              metaPixel: formData.marketing.pixelId,
+            }
+          }
+        },
+      };
+
       const brandResponse = await fetch('/api/brands', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.brandName,
-          tagline: formData.tagline,
-          colorTheme: {
-            primary: formData.primaryColor,
-            secondary: adjustColor(formData.primaryColor, -20),
-            accent: adjustColor(formData.primaryColor, 20),
-          },
-          initialBranch: {
-            name: formData.branchName,
-            phone: formData.phone,
-            email: formData.email,
-            address: formData.address,
-          },
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!brandResponse.ok) throw new Error('Failed to create brand');
 
-      const { brand } = await brandResponse.json();
-
-      success('🎉 Your microsite is live!');
-
-      // Mark onboarding as complete
+      success('🎉 Your brand & microsite are ready!');
       localStorage.setItem('onboarding-completed', 'true');
-
+      
+      await fetch('/api/user/onboarding', { method: 'POST' });
+      
       onComplete?.();
-
-      // Redirect to dashboard
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1500);
+      setTimeout(() => router.push('/admin'), 1500);
     } catch (err) {
-      error('Failed to create microsite. Please try again.');
+      error('Failed to create project. Please try again.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -146,19 +207,15 @@ export default function QuickStartWizard({ userRole, onComplete }: QuickStartWiz
 
   const isStepValid = () => {
     switch (steps[currentStep].id) {
-      case 'brand':
-        return formData.brandName.trim().length > 0;
-      case 'branch':
-        return formData.branchName && formData.phone && formData.email;
-      case 'theme':
-        return formData.primaryColor;
-      default:
-        return true;
+      case 'brand': return formData.brandName.trim().length > 0 && formData.industry !== '';
+      case 'contact': return formData.branchName && formData.phone && formData.email;
+      case 'theme': return formData.primaryColor;
+      default: return true;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 dark:from-primary-950 via-white dark:via-neutral-900 to-accent-50 dark:to-accent-950 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
         {/* Progress Bar */}
         <div className="mb-8">
@@ -172,24 +229,22 @@ export default function QuickStartWizard({ userRole, onComplete }: QuickStartWiz
                 <div key={step.id} className="flex items-center flex-1">
                   <div className="flex flex-col items-center">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                         isCompleted
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-success-500 text-white shadow-lg'
                           : isActive
-                          ? 'bg-blue-600 text-white scale-110'
-                          : 'bg-gray-200 text-gray-400'
+                          ? 'bg-primary-600 text-white scale-110 shadow-xl'
+                          : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400'
                       }`}
                     >
-                      {isCompleted ? <Check className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
+                      {isCompleted ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                     </div>
-                    <span className="text-xs mt-2 text-gray-600 hidden sm:block">{step.title}</span>
+                    <span className="text-[10px] mt-2 font-medium text-neutral-500 dark:text-neutral-400 hidden sm:block uppercase tracking-wider">
+                      {step.title}
+                    </span>
                   </div>
                   {index < steps.length - 1 && (
-                    <div
-                      className={`flex-1 h-1 mx-2 transition-all ${
-                        isCompleted ? 'bg-green-500' : 'bg-gray-200'
-                      }`}
-                    />
+                    <div className={`flex-1 h-[2px] mx-2 ${isCompleted ? 'bg-success-500' : 'bg-neutral-200 dark:bg-neutral-800'}`} />
                   )}
                 </div>
               );
@@ -198,297 +253,451 @@ export default function QuickStartWizard({ userRole, onComplete }: QuickStartWiz
         </div>
 
         {/* Content Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
-          {/* Welcome Step */}
+        <div className="bg-white dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl p-8 md:p-12 transition-all">
+          
+          {/* Step: Welcome */}
           {steps[currentStep].id === 'welcome' && (
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto">
-                <Sparkles className="w-10 h-10 text-white" />
+            <div className="text-center space-y-8 py-4">
+              <div className="relative inline-block">
+                <div className="w-24 h-24 bg-gradient-to-tr from-primary-600 to-accent-500 rounded-3xl rotate-12 flex items-center justify-center mx-auto shadow-2xl">
+                  <Sparkles className="w-12 h-12 text-white -rotate-12" />
+                </div>
+                <div className="absolute -top-2 -right-2 bg-success-500 text-white p-2 rounded-full animate-bounce">
+                  <Rocket className="w-4 h-4" />
+                </div>
               </div>
-              <h2 className="text-3xl font-bold text-gray-900">
-                Welcome to Parichay!
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Let's create your professional microsite in just 2 minutes. No technical skills needed!
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <div className="text-3xl mb-2">⚡</div>
-                  <h3 className="font-semibold text-gray-900">Quick Setup</h3>
-                  <p className="text-sm text-gray-600">Just 4 simple steps</p>
-                </div>
-                <div className="p-4 bg-purple-50 roed-lg">
-                  <div className="text-3xl mb-2">🎨</div>
-                  <h3 className="font-semibold text-gray-900">Beautiful Design</h3>
-                  <p className="text-sm text-gray-600">Professional templates</p>
-                </div>
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <div className="text-3xl mb-2">🚀</div>
-                  <h3 className="font-semibold text-gray-900">Instant Live</h3>
-                  <p className="text-sm text-gray-600">Go live immediately</p>
-                </div>
+              <div className="space-y-4">
+                <h2 className="text-4xl font-black text-neutral-900 dark:text-neutral-100 tracking-tight">
+                  Let's make it official!
+                </h2>
+                <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto leading-relaxed">
+                  Start your professional digital journey. We've simplified the setup into a few smart steps tailored to your industry.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+                {[
+                  { icon: Building2, label: 'Custom Identity', color: 'text-primary-500' },
+                  { icon: Share2, label: 'Instant Social', color: 'text-accent-500' },
+                  { icon: Globe, label: 'SEO Booster', color: 'text-success-500' },
+                ].map((item, i) => (
+                  <div key={i} className="p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800 transition-hover hover:shadow-lg">
+                    <item.icon className={`w-8 h-8 mx-auto mb-3 ${item.color}`} />
+                    <h3 className="font-bold text-neutral-900 dark:text-neutral-100">{item.label}</h3>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Brand Step */}
+          {/* Step: Brand Identity */}
           {steps[currentStep].id === 'brand' && (
-            <div className="space-y-6">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Tell us about your business</h2>
-                <p className="text-gray-600">This will be displayed on your microsite</p>
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Brand Identity</h2>
+                <p className="text-neutral-500">Every big thing starts with a name and a face.</p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.brandName}
-                  onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
-                  placeholder="e.g., Acme Corporation"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-neutral-600 dark:text-neutral-400 mb-2 uppercase tracking-wide">
+                      Business Name <span className="text-error-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.brandName}
+                      onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
+                      placeholder="e.g., Elite Coffee Co."
+                      className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 border-none rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-lg transition-all"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tagline (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={formData.tagline}
-                  onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
-                  placeholder="e.g., Your trusted partner in success"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-neutral-600 dark:text-neutral-400 mb-2 uppercase tracking-wide">
+                      Catchy Tagline
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.tagline}
+                      onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
+                      placeholder="The perfect cup, every time"
+                      className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 border-none rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Industry
-                </label>
-                <select
-                  value={formData.industry}
-                  onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select industry</option>
-                  <option value="retail">Retail</option>
-                  <option value="restaurant">Restaurant</option>
-                  <option value="healthcare">Healthcare</option>
-                  <option value="education">Education</option>
-                  <option value="technology">Technology</option>
-                  <option value="real-estate">Real Estate</option>
-                  <option value="other">Other</option>
-                </select>
+                  <div>
+                    <label className="block text-sm font-semibold text-neutral-600 dark:text-neutral-400 mb-2 uppercase tracking-wide">
+                      Industry <span className="text-error-500">*</span>
+                    </label>
+                    <select
+                      value={formData.industry}
+                      onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                      className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 border-none rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all cursor-pointer"
+                    >
+                      <option value="">Select your industry</option>
+                      <option value="retail">Retail & Boutique</option>
+                      <option value="restaurant">Food & Dining</option>
+                      <option value="healthcare">Health & Wellness</option>
+                      <option value="consulting">Professional Consulting</option>
+                      <option value="real-estate">Real Estate</option>
+                      <option value="technology">Software & IT</option>
+                      <option value="other">Other Business</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center justify-center p-8 bg-neutral-50 dark:bg-neutral-800 rounded-3xl border-2 border-dashed border-neutral-200 dark:border-neutral-700">
+                  {logoPreview ? (
+                    <div className="relative group">
+                      <Image 
+                        src={logoPreview} 
+                        alt="Logo Preview" 
+                        width={180} 
+                        height={180} 
+                        className="rounded-2xl shadow-xl object-contain bg-white p-4" 
+                      />
+                      <button 
+                        onClick={() => {setLogoPreview(null); setFormData({...formData, logo: ''})}}
+                        className="absolute -top-3 -right-3 bg-error-500 text-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <ArrowLeft className="w-4 h-4 rotate-45" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-16 h-16 bg-neutral-200 dark:bg-neutral-700 rounded-full flex items-center justify-center mb-4">
+                        <Upload className="w-8 h-8 text-neutral-400" />
+                      </div>
+                      <p className="text-center font-bold text-neutral-900 dark:text-neutral-100 mb-1">Company Logo</p>
+                      <p className="text-center text-sm text-neutral-500 mb-6 px-4">Upload your brand mark (PNG/JPG)</p>
+                      <label className="px-6 py-3 bg-white dark:bg-neutral-700 shadow-lg rounded-xl font-bold text-primary-600 dark:text-primary-400 cursor-pointer hover:scale-105 transition-all">
+                        Select File
+                        <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                      </label>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Branch Step */}
-          {steps[currentStep].id === 'branch' && (
-            <div className="space-y-6">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Add your location details</h2>
-                <p className="text-gray-600">Help customers reach you</p>
+          {/* Step: Location & Contact */}
+          {steps[currentStep].id === 'contact' && (
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Contact Details</h2>
+                <p className="text-neutral-500">Where can your customers find you?</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Branch Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.branchName}
-                    onChange={(e) => setFormData({ ...formData, branchName: e.target.value })}
-                    placeholder="e.g., Head Office"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+91 98765 43210"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="contact@example.com"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.address.street}
-                    onChange={(e) => setFormData({ ...formData, address: { ...formData.address, street: e.target.value } })}
-                    placeholder="Street address"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-3"
-                  />
-                  <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-400 mb-2 uppercase">Main Branch Name</label>
                     <input
                       type="text"
-                      value={formData.address.city}
-                      onChange={(e) => setFormData({ ...formData, address: { ...formData.address, city: e.target.value } })}
-                      placeholder="City"
-                      className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={formData.branchName}
+                      onChange={(e) => setFormData({ ...formData, branchName: e.target.value })}
+                      placeholder="e.g., Downtown Showroom"
+                      className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
                     />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-neutral-400 mb-2 uppercase">Official Phone</label>
+                      <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="+91..."
+                        className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-neutral-400 mb-2 uppercase">Official Email</label>
+                      <input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="hello@brand.com"
+                        className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-primary-50 dark:bg-primary-900/10 rounded-3xl border border-primary-100 dark:border-primary-900/30">
+                   <h3 className="flex items-center gap-2 font-bold text-primary-900 dark:text-primary-100 mb-4">
+                     <MapPin className="w-5 h-5" /> Registered Address
+                   </h3>
+                   <div className="space-y-3">
+                     <input
+                       type="text"
+                       value={formData.address.street}
+                       onChange={(e) => setFormData({ ...formData, address: { ...formData.address, street: e.target.value } })}
+                       placeholder="Street & Area"
+                       className="w-full px-4 py-3 bg-white dark:bg-neutral-900 rounded-xl outline-none focus:ring-2 focus:ring-primary-500"
+                     />
+                     <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="text"
+                          value={formData.address.city}
+                          onChange={(e) => setFormData({ ...formData, address: { ...formData.address, city: e.target.value } })}
+                          placeholder="City"
+                          className="w-full px-4 py-3 bg-white dark:bg-neutral-900 rounded-xl outline-none focus:ring-2 focus:ring-primary-500"
+                        />
+                        <input
+                          type="text"
+                          value={formData.address.zipCode}
+                          onChange={(e) => setFormData({ ...formData, address: { ...formData.address, zipCode: e.target.value } })}
+                          placeholder="ZIP Code"
+                          className="w-full px-4 py-3 bg-white dark:bg-neutral-900 rounded-xl outline-none focus:ring-2 focus:ring-primary-500"
+                        />
+                     </div>
+                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* NEW Step: Social Media */}
+          {steps[currentStep].id === 'social' && (
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Social Connectivity</h2>
+                <p className="text-neutral-500">Connect your fans and followers instantly.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                {[
+                  { key: 'whatsapp', label: 'WhatsApp for Business', icon: Smartphone, color: 'text-green-500', placeholder: '919876543210' },
+                  { key: 'instagram', label: 'Instagram Profile', icon: Share2, color: 'text-pink-500', placeholder: '@yourbrand' },
+                  { key: 'facebook', label: 'Facebook Page', icon: Building2, color: 'text-blue-600', placeholder: 'facebook.com/yourbrand' },
+                  { key: 'linkedin', label: 'LinkedIn Company', icon: Globe, color: 'text-indigo-600', placeholder: 'linkedin.com/company/...' },
+                ].map((item) => (
+                  <div key={item.key} className="space-y-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <item.icon className={`w-4 h-4 ${item.color}`} />
+                      <span className="text-sm font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-tight">{item.label}</span>
+                    </div>
                     <input
                       type="text"
-                      value={formData.address.state}
-                      onChange={(e) => setFormData({ ...formData, address: { ...formData.address, state: e.target.value } })}
-                      placeholder="State"
-                      className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={(formData.social as any)[item.key]}
+                      onChange={(e) => setFormData({ ...formData, social: { ...formData.social, [item.key]: e.target.value } })}
+                      placeholder={item.placeholder}
+                      className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 rounded-2xl border-none outline-none focus:ring-2 focus:ring-primary-500 transition-all font-medium"
                     />
+                  </div>
+                ))}
+              </div>
+              
+              <div className="p-5 bg-accent-50 dark:bg-accent-950/20 rounded-2xl flex items-start gap-4">
+                <Sparkles className="w-6 h-6 text-accent-500 shrink-0 mt-1" />
+                <p className="text-sm text-accent-700 dark:text-accent-300">
+                  <strong>Pro Tip:</strong> WhatsApp integration is the #1 requested feature. Adding your business number here enables instant "Click-to-Chat" buttons on your microsite.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* NEW Step: Marketing Booster */}
+          {steps[currentStep].id === 'marketing' && (
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Marketing Booster</h2>
+                <p className="text-neutral-500">Power up your search presence and tracking.</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-400 mb-2 uppercase tracking-widest">SEO Meta Title</label>
+                    <input
+                      type="text"
+                      value={formData.marketing.seoTitle}
+                      onChange={(e) => setFormData({ ...formData, marketing: { ...formData.marketing, seoTitle: e.target.value } })}
+                      placeholder="e.g., Best Artisan Coffee in City Name"
+                      className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-400 mb-2 uppercase tracking-widest">GA4 Tracking ID (Optional)</label>
+                    <input
+                      type="text"
+                      value={formData.marketing.ga4Id}
+                      onChange={(e) => setFormData({ ...formData, marketing: { ...formData.marketing, ga4Id: e.target.value } })}
+                      placeholder="G-XXXXXXXXXX"
+                      className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-neutral-400 mb-2 uppercase tracking-widest">SEO Meta Description</label>
+                  <textarea
+                    value={formData.marketing.seoDescription}
+                    onChange={(e) => setFormData({ ...formData, marketing: { ...formData.marketing, seoDescription: e.target.value } })}
+                    placeholder="Short description for Google Search results..."
+                    rows={3}
+                    className="w-full px-5 py-4 bg-neutral-50 dark:bg-neutral-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="p-6 bg-neutral-50 dark:bg-neutral-800 rounded-3xl grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-success-100 dark:bg-success-900/30 rounded-2xl flex items-center justify-center">
+                    <Globe className="w-6 h-6 text-success-600 dark:text-success-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-neutral-900 dark:text-neutral-100">Google Ready</h4>
+                    <p className="text-xs text-neutral-500">Automated sitemap & meta-tags</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center">
+                    <Settings className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-neutral-900 dark:text-neutral-100">Live Analytics</h4>
+                    <p className="text-xs text-neutral-500">Track views, scans & conversions</p>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Theme Step */}
+          {/* Existing Theme & Design Step */}
           {steps[currentStep].id === 'theme' && (
-            <div className="space-y-6">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose your brand color</h2>
-                <p className="text-gray-600">Pick a color that represents your brand</p>
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Choose your brand color</h2>
+                <p className="text-neutral-500">Pick a color that defines your digital presence.</p>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { name: 'Blue', color: '#3B82F6' },
-                  { name: 'Purple', color: '#8B5CF6' },
-                  { name: 'Green', color: '#10B981' },
-                  { name: 'Red', color: '#EF4444' },
-                  { name: 'Orange', color: '#F59E0B' },
-                  { name: 'Pink', color: '#EC4899' },
-                  { name: 'Teal', color: '#14B8A6' },
-                  { name: 'Indigo', color: '#6366F1' },
+                  { name: 'Classic Blue', color: '#3B82F6' },
+                  { name: 'Royal Purple', color: '#8B5CF6' },
+                  { name: 'Emerald Green', color: '#10B981' },
+                  { name: 'Modern Red', color: '#EF4444' },
+                  { name: 'Sunset Orange', color: '#F59E0B' },
+                  { name: 'Vibrant Pink', color: '#EC4899' },
+                  { name: 'Deep Teal', color: '#14B8A6' },
+                  { name: 'Tech Indigo', color: '#6366F1' },
                 ].map((theme) => (
                   <button
                     key={theme.color}
                     onClick={() => setFormData({ ...formData, primaryColor: theme.color })}
-                    className={`p-6 rounded-xl border-2 transition-all ${
+                    className={`p-1 rounded-[2.5rem] transition-all relative ${
                       formData.primaryColor === theme.color
-                        ? 'border-gray-900 scale-105'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'ring-4 ring-primary-500/30'
+                        : ''
                     }`}
                   >
-                    <div
-                      className="w-full h-16 rounded-lg mb-2"
-                      style={{ backgroundColor: theme.color }}
-                    />
-                    <p className="text-sm font-medium text-gray-900">{theme.name}</p>
+                    <div className="p-6 rounded-[2rem] bg-neutral-50 dark:bg-neutral-800 hover:shadow-xl transition-all flex flex-col items-center">
+                      <div className="w-full h-12 rounded-2xl mb-4" style={{ backgroundColor: theme.color }} />
+                      <p className="text-xs font-black uppercase tracking-widest text-neutral-500">{theme.name}</p>
+                    </div>
+                    {formData.primaryColor === theme.color && (
+                      <div className="absolute top-4 right-4 bg-primary-500 text-white rounded-full p-1 border-2 border-white dark:border-neutral-900">
+                        <Check className="w-3 h-3" />
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
 
-              <div className="mt-8 p-6 bg-gray-50 rounded-xl">
-                <h3 className="font-semibold text-gray-900 mb-4">Preview</h3>
-                <div className="bg-white p-6 rounded-lg border-2" style={{ borderColor: formData.primaryColor }}>
-                  <h4 className="text-xl font-bold mb-2" style={{ color: formData.primaryColor }}>
-                    {formData.brandName || 'Your Business Name'}
-                  </h4>
-                  <p className="text-gray-600 mb-4">{formData.tagline || 'Your tagline here'}</p>
-                  <button
-                    className="px-6 py-2 rounded-lg text-white font-medium"
-                    style={{ backgroundColor: formData.primaryColor }}
-                  >
-                    Contact Us
-                  </button>
+              <div className="mt-8 p-10 bg-neutral-900 rounded-[3rem] text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/20 rounded-full blur-[100px] -mr-32 -mt-32" />
+                <h3 className="text-xl font-bold mb-8 flex items-center gap-2">
+                  <Palette className="w-6 h-6 text-primary-400" /> Real-time Preview
+                </h3>
+                <div className="p-8 bg-neutral-800/50 backdrop-blur-md rounded-2xl border border-neutral-700/50">
+                  <div className="flex items-start gap-4 mb-6">
+                    {logoPreview ? (
+                      <Image src={logoPreview} alt="Logo" width={48} height={48} className="rounded-lg bg-white p-1" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg" style={{ backgroundColor: formData.primaryColor }} />
+                    )}
+                    <div>
+                      <h4 className="text-2xl font-black">{formData.brandName || 'Business Title'}</h4>
+                      <p className="text-neutral-400 font-medium">{formData.tagline || 'Tagline text'}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="h-2 rounded-full bg-neutral-700" />
+                    <div className="h-2 rounded-full bg-neutral-700" />
+                    <div className="h-2 rounded-full bg-neutral-700 w-1/2" />
+                  </div>
+                  <div className="mt-10 flex gap-3">
+                    <div className="px-6 py-3 rounded-xl font-bold flex-1 text-center" style={{ backgroundColor: formData.primaryColor }}>
+                       Contact Now
+                    </div>
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/10">
+                       <Share2 className="w-5 h-5" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Launch Step */}
+          {/* Step: Launch */}
           {steps[currentStep].id === 'launch' && (
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto">
-                <Rocket className="w-10 h-10 text-white" />
+            <div className="text-center space-y-8 py-6">
+              <div className="relative inline-block">
+                <div className="w-24 h-24 bg-success-500 rounded-full flex items-center justify-center mx-auto shadow-2xl">
+                  <Rocket className="w-12 h-12 text-white animate-pulse" />
+                </div>
+                <div className="absolute inset-0 rounded-full bg-success-500 animate-ping opacity-25" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-900">
-                Ready to Launch! 🚀
-              </h2>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Your microsite is configured and ready to go live. Click the button below to launch!
-              </p>
-              <div className="bg-blue-50 p-6 rounded-xl max-w-md mx-auto">
-                <h3 className="font-semibold text-gray-900 mb-3">What's included:</h3>
-                <ul className="space-y-2 text-left">
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>Professional microsite</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>QR code for sharing</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>Analytics dashboard</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>Lead capture forms</span>
-                  </li>
-                </ul>
+              <div className="space-y-4">
+                <h2 className="text-5xl font-black text-neutral-900 dark:text-neutral-100">Ready to Skyrocket!</h2>
+                <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
+                  We've assembled your brand identity, connected your socials, and optimized your search presence.
+                </p>
+              </div>
+              
+              <div className="max-w-md mx-auto grid grid-cols-2 gap-4">
+                {[
+                  { label: 'Branded Microsite', icon: Smartphone },
+                  { label: 'QR Scan Analytics', icon: Settings },
+                  { label: 'SEO Configured', icon: Globe },
+                  { label: 'WhatsApp Ready', icon: Smartphone },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-100 dark:border-neutral-800">
+                    <Check className="w-5 h-5 text-success-500" />
+                    <span className="text-sm font-bold text-neutral-700 dark:text-neutral-300">{item.label}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-between mt-8 pt-8 border-t border-gray-200">
+          <div className="flex items-center justify-between mt-12 pt-8 border-t border-neutral-200 dark:border-neutral-800">
             <button
               onClick={handleBack}
               disabled={currentStep === 0}
-              className="flex items-center gap-2 px-6 py-3 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-8 py-4 text-neutral-500 hover:text-neutral-900 font-bold transition-all disabled:opacity-0"
             >
-              <ArrowLeft className="w-5 h-5" />
-              Back
+              <ArrowLeft className="w-5 h-5" /> Back
             </button>
 
             <button
               onClick={handleNext}
               disabled={!isStepValid() || loading}
-              className="flex items-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-3 px-10 py-5 bg-neutral-900 dark:bg-primary-500 hover:scale-105 active:scale-95 text-white dark:text-neutral-900 rounded-[2rem] font-black text-lg transition-all shadow-2xl shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Creating...
+                  <div className="w-6 h-6 border-4 border-white dark:border-neutral-900 border-t-transparent rounded-full animate-spin" />
+                  Setting up...
                 </>
               ) : currentStep === steps.length - 1 ? (
-                <>
-                  Launch Now
-                  <Rocket className="w-5 h-5" />
-                </>
+                <>Launch Platform <Rocket className="w-6 h-6" /></>
               ) : (
-                <>
-                  Continue
-                  <ArrowRight className="w-5 h-5" />
-                </>
+                <>Next Step <ArrowRight className="w-6 h-6" /></>
               )}
             </button>
           </div>

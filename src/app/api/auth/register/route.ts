@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { AuthService } from '@/lib/auth';
 import { registerSchema } from '@/lib/validations';
+import logger from '@/lib/logger';
+import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,6 +61,10 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      // Generate email verification token
+      const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+      const emailVerificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
       // Create user
       const user = await tx.user.create({
         data: {
@@ -68,6 +74,9 @@ export async function POST(request: NextRequest) {
           lastName: validatedData.lastName,
           role: validatedData.brandName ? 'BRAND_MANAGER' : 'BRANCH_ADMIN',
           brandId: brand?.id,
+          emailVerified: false,
+          emailVerificationToken,
+          emailVerificationExpiry,
         },
       });
 
@@ -79,8 +88,17 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      return { user, brand };
+      return { user, brand, emailVerificationToken };
     });
+
+    // Send verification email (in production, use email service)
+    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${result.emailVerificationToken}`;
+    
+    if (process.env.NODE_ENV === 'development') {
+      logger.info({ email: result.user.email, verificationUrl }, 'Verification email details (Dev only)');
+    } else {
+      logger.info({ email: result.user.email }, 'Registration successful, verification pending');
+    }
 
     // Generate tokens
     const accessToken = AuthService.generateToken({
@@ -102,8 +120,12 @@ export async function POST(request: NextRequest) {
         role: result.user.role,
         brandId: result.user.brandId,
         brand: result.brand,
+        emailVerified: false,
       },
       accessToken,
+      message: 'Registration successful. Please check your email to verify your account.',
+      // Only include verification URL in development
+      ...(process.env.NODE_ENV === 'development' && { verificationUrl }),
     }, { status: 201 });
 
     response.cookies.set('accessToken', accessToken, {
@@ -122,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error({ error }, 'Registration error');
 
     if (error instanceof Error) {
       if (error.name === 'ZodError') {

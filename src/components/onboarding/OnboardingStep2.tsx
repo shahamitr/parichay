@@ -64,22 +64,22 @@ export default function OnboardingStep2({
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+      <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
         Create Your First Branch
       </h2>
-      <p className="text-gray-600 mb-6">
+      <p className="text-neutral-600 dark:text-neutral-400 mb-6">
         Add your first location or branch details
       </p>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="mb-4 p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-md">
+          <p className="text-sm text-error-800 dark:text-error-200">{error}</p>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="name" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             Branch Name *
           </label>
           <input
@@ -88,16 +88,16 @@ export default function OnboardingStep2({
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
             placeholder="e.g., Ahmedabad"
           />
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900">Address</h3>
+          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">Address</h3>
 
           <div>
-            <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="street" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Street Address *
             </label>
             <input
@@ -111,13 +111,13 @@ export default function OnboardingStep2({
                   address: { ...formData.address, street: e.target.value },
                 })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="city" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                 City *
               </label>
               <input
@@ -131,12 +131,12 @@ export default function OnboardingStep2({
                     address: { ...formData.address, city: e.target.value },
                   })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
               />
             </div>
 
             <div>
-              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="state" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                 State *
               </label>
               <input
@@ -150,14 +150,14 @@ export default function OnboardingStep2({
                     address: { ...formData.address, state: e.target.value },
                   })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="zipCode" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                 ZIP Code *
               </label>
               <input
@@ -171,12 +171,12 @@ export default function OnboardingStep2({
                     address: { ...formData.address, zipCode: e.target.value },
                   })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
               />
             </div>
 
             <div>
-              <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="country" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                 Country *
               </label>
               <input
@@ -190,17 +190,17 @@ export default function OnboardingStep2({
                     address: { ...formData.address, country: e.target.value },
                   })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
               />
             </div>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-gray-900">Contact Information</h3>
+          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">Contact Information</h3>
 
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="phone" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Phone Number *
             </label>
             <input
@@ -214,12 +214,12 @@ export default function OnboardingStep2({
                   contact: { ...formData.contact, phone: e.target.value },
                 })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
             />
           </div>
 
           <div>
-            <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="whatsapp" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               WhatsApp Number
             </label>
             <input
@@ -232,12 +232,12 @@ export default function OnboardingStep2({
                   contact: { ...formData.contact, whatsapp: e.target.value },
                 })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Email Address *
             </label>
             <input
@@ -251,7 +251,7 @@ export default function OnboardingStep2({
                   contact: { ...formData.contact, email: e.target.value },
                 })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
             />
           </div>
         </div>
@@ -260,14 +260,14 @@ export default function OnboardingStep2({
           <button
             type="button"
             onClick={onBack}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-6 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
           >
             Back
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-primary-600 dark:bg-primary-500 text-white dark:text-neutral-900 rounded-md hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Creating...' : 'Continue'}
           </button>

@@ -135,7 +135,7 @@ export function generateMicrositeSEO(data: MicrositeData): Metadata {
   const description = seoSettings?.description || generateLocalDescription(data);
   const keywords = allKeywords;
 
-  const url = `https://onetouchbizcard.in/${brand.slug}/${branch.slug}`;
+  const url = `https://parichay.com/${brand.slug}/${branch.slug}`;
   const ogImage = seoSettings?.ogImage || brand.logo || '/default-og-image.png';
 
   return {
@@ -207,7 +207,7 @@ export function generateStructuredData(data: MicrositeData) {
   const micrositeConfig = branch.micrositeConfig as any;
   const services = micrositeConfig?.sections?.services?.items || [];
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://onetouchbizcard.in';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://parichay.com';
 
   const structuredData: any = {
     '@context': 'https://schema.org',
@@ -321,7 +321,7 @@ export function generateSitemapEntry(data: MicrositeData): SitemapEntry {
   const { brand, branch } = data;
 
   return {
-    url: `https://onetouchbizcard.in/${brand.slug}/${branch.slug}`,
+    url: `https://parichay.com/${brand.slug}/${branch.slug}`,
     lastModified: new Date(branch.updatedAt),
     changeFrequency: 'weekly',
     priority: 0.8,

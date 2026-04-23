@@ -46,7 +46,7 @@ export default function ExecutivePortal() {
       const userData = await userResponse.json();
 
       if (!userData.success || userData.data.role !== 'EXECUTIVE') {
-        router.push('/dashboard');
+        router.push('/admin');
         return;
       }
 
@@ -86,12 +86,12 @@ export default function ExecutivePortal() {
     setActiveTab('branches');
   };
 
-  if (loading != null) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400 mx-auto"></div>
+          <p className="mt-4 text-neutral-600 dark:text-neutral-400">Loading...</p>
         </div>
       </div>
     );
@@ -99,12 +99,12 @@ export default function ExecutivePortal() {
 
   if (!executiveData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600">Failed to load executive data</p>
+          <p className="text-error-600 dark:text-error-400">Failed to load executive data</p>
           <button
-            onClick={() => router.push('/dashboard')}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md"
+            onClick={() => router.push('/admin')}
+            className="mt-4 px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-md hover:bg-primary-700 dark:hover:bg-primary-600"
           >
             Go to Dashboard
           </button>
@@ -114,7 +114,7 @@ export default function ExecutivePortal() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
       {/* Header */}
       <ExecutiveHeader
         name={executiveData.name}
@@ -123,15 +123,15 @@ export default function ExecutivePortal() {
       />
 
       {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'dashboard'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary-500 text-primary-600 dark:border-primary-400 dark:text-primary-400'
+                  : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
               }`}
             >
               <LayoutDashboard className="w-5 h-5" />
@@ -142,8 +142,8 @@ export default function ExecutivePortal() {
               onClick={() => setActiveTab('onboard')}
               className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'onboard'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary-500 text-primary-600 dark:border-primary-400 dark:text-primary-400'
+                  : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
               }`}
             >
               <PlusCircle className="w-5 h-5" />
@@ -154,8 +154,8 @@ export default function ExecutivePortal() {
               onClick={() => setActiveTab('branches')}
               className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'branches'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary-500 text-primary-600 dark:border-primary-400 dark:text-primary-400'
+                  : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300 dark:hover:border-neutral-600'
               }`}
             >
               <Building2 className="w-5 h-5" />

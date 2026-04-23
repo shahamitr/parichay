@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyRazorpayWebhookSignature } from '@/lib/razorpay';
+import logger from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
     if (!webhookSecret) {
-      console.error('RAZORPAY_WEBHOOK_SECRET is not configured');
+      logger.error('RAZORPAY_WEBHOOK_SECRET is not configured');
       return NextResponse.json(
         { error: 'Webhook secret not configured' },
         { status: 500 }
@@ -55,12 +56,12 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.event}`);
+        logger.info({ eventType: event.event }, 'Unhandled Razorpay event type');
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Razorpay webhook error:', error);
+    logger.error({ error }, 'Razorpay webhook error');
     return NextResponse.json(
       { error: 'Webhook processing failed' },
       { status: 400 }
@@ -97,9 +98,10 @@ async function handlePaymentCaptured(payment: any) {
       }
     }
 
-    console.log('Payment captured:', payment.id);
+    logger.info({ paymentId: payment.id }, 'Payment captured');
   } catch (error) {
-    console.error('Error processing payment captured:', error);
+
+    logger.error({ error, paymentId: payment.id }, 'Error processing payment captured');
   }
 }
 
@@ -125,9 +127,10 @@ async function handlePaymentFailed(payment: any) {
       });
     }
 
-    console.log('Payment failed:', payment.id);
+    logger.warn({ paymentId: payment.id }, 'Payment failed');
   } catch (error) {
-    console.error('Error processing payment failure:', error);
+
+    logger.error({ error, paymentId: payment.id }, 'Error processing payment failure');
   }
 }
 
@@ -162,8 +165,9 @@ async function handleRefundCreated(refund: any) {
       }
     }
 
-    console.log('Refund processed:', refund.id);
+    logger.info({ refundId: refund.id }, 'Refund processed');
   } catch (error) {
-    console.error('Error processing refund:', error);
+
+    logger.error({ error, refundId: refund.id }, 'Error processing refund');
   }
 }

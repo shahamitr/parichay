@@ -110,14 +110,32 @@ export async function PUT(
         : undefined;
     }
 
-    // Handle slug update if name changed
+    // Handle slug update
     let updateData: any = { ...validatedData };
-    if (validatedData.name) {
+
+    // If slug is provided explicitly, check uniqueness
+    if (validatedData.slug && validatedData.slug !== currentBrand.slug) {
+      let slug = validatedData.slug;
+      let counter = 1;
+      const baseSlug = slug;
+
+      while (await prisma.brand.findFirst({
+        where: {
+          slug,
+          NOT: { id }
+        }
+      })) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+      updateData.slug = slug;
+    }
+    // If name changed but no slug provided, auto-generate (fallback)
+    else if (validatedData.name && !validatedData.slug) {
       const baseSlug = generateSlug(validatedData.name);
       let slug = baseSlug;
       let counter = 1;
 
-      // Ensure slug uniqueness (excluding current brand)
       while (await prisma.brand.findFirst({
         where: {
           slug,
@@ -143,8 +161,11 @@ export async function PUT(
     return NextResponse.json({ brand });
   } catch (error) {
     console.error('Error updating brand:', error);
+    if (error instanceof Error) {
+      console.error('Stack:', error.stack);
+    }
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: String(error) },
       { status: 500 }
     );
   }

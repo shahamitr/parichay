@@ -31,7 +31,7 @@ export default function OnboardingStep0({ onComplete, initialData }: OnboardingS
         <button
           onClick={handleContinue}
           disabled={!selectedCategory}
-          className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-8 py-3 bg-primary-600 dark:bg-primary-500 text-white dark:text-neutral-900 rounded-lg font-semibold hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Continue
         </button>

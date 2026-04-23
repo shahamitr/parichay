@@ -49,6 +49,7 @@ export const industryCategories: IndustryCategory[] = [
       secondary: '#3B82F6',
       accent: '#60A5FA',
     },
+    demoUrl: '/demo-business-owners/main',
   },
   {
     id: 'corporate-professionals',
@@ -82,6 +83,7 @@ export const industryCategories: IndustryCategory[] = [
       secondary: '#334155',
       accent: '#64748B',
     },
+    demoUrl: '/demo-corporate-professionals/main',
   },
   {
     id: 'event-planners',
@@ -115,6 +117,7 @@ export const industryCategories: IndustryCategory[] = [
       secondary: '#EC4899',
       accent: '#F472B6',
     },
+    demoUrl: '/demo-event-planners/main',
   },
   {
     id: 'freelancers-consultants',
@@ -148,6 +151,7 @@ export const industryCategories: IndustryCategory[] = [
       secondary: '#8B5CF6',
       accent: '#A78BFA',
     },
+    demoUrl: '/demo-freelancers-consultants/main',
   },
   {
     id: 'educational-institutions',
@@ -181,6 +185,7 @@ export const industryCategories: IndustryCategory[] = [
       secondary: '#10B981',
       accent: '#34D399',
     },
+    demoUrl: '/demo-educational-institutions/main',
   },
   {
     id: 'creatives-designers',
@@ -214,6 +219,7 @@ export const industryCategories: IndustryCategory[] = [
       secondary: '#F97316',
       accent: '#FB923C',
     },
+    demoUrl: '/demo-creatives-designers/main',
   },
   {
     id: 'real-estate-agents',
@@ -247,7 +253,7 @@ export const industryCategories: IndustryCategory[] = [
       secondary: '#06B6D4',
       accent: '#22D3EE',
     },
-    demoUrl: '/prime-properties/downtown',
+    demoUrl: '/demo-real-estate-agents/main',
   },
   {
     id: 'healthcare-professionals',
@@ -281,7 +287,7 @@ export const industryCategories: IndustryCategory[] = [
       secondary: '#EF4444',
       accent: '#F87171',
     },
-    demoUrl: '/city-health-clinic/main',
+    demoUrl: '/demo-healthcare-professionals/main',
   },
   {
     id: 'restaurants-cafes',
@@ -315,7 +321,7 @@ export const industryCategories: IndustryCategory[] = [
       secondary: '#F59E0B',
       accent: '#FBBF24',
     },
-    demoUrl: '/gourmet-bistro/downtown',
+    demoUrl: '/demo-restaurants-cafes/main',
   },
   {
     id: 'fitness-wellness',
@@ -349,7 +355,7 @@ export const industryCategories: IndustryCategory[] = [
       secondary: '#22C55E',
       accent: '#4ADE80',
     },
-    demoUrl: '/fitlife-gym/main',
+    demoUrl: '/demo-fitness-wellness/main',
   },
   {
     id: 'legal-services',
@@ -383,6 +389,6 @@ export const industryCategories: IndustryCategory[] = [
       secondary: '#6B7280',
       accent: '#9CA3AF',
     },
-    demoUrl: '/justice-law/hq',
+    demoUrl: '/demo-legal-services/main',
   },
 ];

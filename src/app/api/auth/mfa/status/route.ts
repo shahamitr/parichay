@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth-utils';
+import logger from '@/lib/logger';
 
 /**
  * GET /api/auth/mfa/status
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
       remainingBackupCodes,
     });
   } catch (error) {
-    console.error('MFA status error:', error);
+    logger.error({ error }, 'MFA status error');
     return NextResponse.json(
       { error: 'Failed to get MFA status' },
       { status: 500 }

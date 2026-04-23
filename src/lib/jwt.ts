@@ -1,7 +1,11 @@
 import jwt from 'jsonwebtoken';
 import { UserRole } from '../generated/prisma';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is missing in production');
+}
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-keep-it-long-and-secure';
 
 export interface JWTPayload {
   userId: string;
@@ -14,7 +18,7 @@ export class JWTService {
   static generateToken(payload: JWTPayload): string {
     return jwt.sign(payload, JWT_SECRET, {
       expiresIn: '7d',
-      issuer: 'onetouch-bizcard',
+      issuer: 'parichay',
     });
   }
 
@@ -32,7 +36,7 @@ export class JWTService {
   static generateRefreshToken(userId: string): string {
     return jwt.sign({ userId }, JWT_SECRET, {
       expiresIn: '30d',
-      issuer: 'onetouch-bizcard-refresh',
+      issuer: 'parichay-refresh',
     });
   }
 

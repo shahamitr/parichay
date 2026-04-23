@@ -30,7 +30,32 @@ export class AuthService {
   }
 }
 /**
-
- * Export verifyToken function for backward compatibility
+ * Verify token from NextRequest for API routes
  */
-export const verifyToken = AuthService.verifyToken.bind(AuthService);
+export async function verifyToken(request: Request | string): Promise<JWTPayload | null> {
+  try {
+    const token = typeof request === 'string' 
+      ? request 
+      : request.headers.get('authorization')?.substring(7) || 
+        request.headers.get('cookie')?.match(/token=([^;]+)/)?.[1];
+        
+    if (!token) return null;
+    return AuthService.verifyToken(token);
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return null;
+  }
+}
+
+/**
+ * Get the authenticated user record from the database
+ */
+export async function getAuthUser(request: Request | string): Promise<any | null> {
+  const payload = await verifyToken(request);
+  if (!payload) return null;
+
+  const { prisma } = await import('./prisma');
+  return prisma.user.findUnique({
+    where: { id: payload.userId }
+  });
+}

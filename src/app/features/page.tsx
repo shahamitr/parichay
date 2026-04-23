@@ -1,43 +1,28 @@
 import Link from "next/link";
+import CommonHeader from "@/components/layout/CommonHeader";
+import CommonFooter from "@/components/layout/CommonFooter";
 
 export default function FeaturesPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-blue-600">
-              OneTouch BizCard
-            </Link>
-            <div className="flex items-center space-x-4">
-              <Link href="/login" className="text-gray-700 hover:text-blue-600 px-3 py-2">
-                Sign In
-              </Link>
-              <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
+      <CommonHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-5xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
             Powerful Features for Your Digital Business Card
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto">
             Everything you need to create, manage, and share professional digital business cards
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+            <div key={index} className="bg-white dark:bg-neutral-800 p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
               <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-              <p className="text-gray-600">{feature.description}</p>
+              <h3 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">{feature.title}</h3>
+              <p className="text-neutral-600 dark:text-neutral-400">{feature.description}</p>
             </div>
           ))}
         </div>
@@ -45,9 +30,9 @@ export default function FeaturesPage() {
         <div className="mt-16 text-center">
           <Link
             href="/register"
-            className="inline-block bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700"
+            className="inline-block bg-primary-600 dark:bg-primary-500 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-primary-700 dark:hover:bg-primary-600"
           >
-            Start Free Trial
+            Get Started
           </Link>
         </div>
       </main>

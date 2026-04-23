@@ -72,7 +72,7 @@ export default function MyBranches({ executiveId, onRefresh }: MyBranchesProps) 
     });
   };
 
-  if (loading != null) {
+  if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-8">
         <div className="animate-pulse space-y-4">

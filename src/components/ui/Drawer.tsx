@@ -34,7 +34,7 @@ export default function Drawer({ isOpen, onClose, title, children, size = 'md' }
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          <div className="fixed inset-0 bg-neutral-500 dark:bg-neutral-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-hidden">
@@ -50,16 +50,16 @@ export default function Drawer({ isOpen, onClose, title, children, size = 'md' }
                 leaveTo="translate-x-full"
               >
                 <Dialog.Panel className={`pointer-events-auto w-screen ${sizeClasses[size]}`}>
-                  <div className="flex h-full flex-col overflow-y-scroll bg-white dark:bg-gray-900 shadow-xl">
-                    <div className="px-4 py-6 sm:px-6 border-b border-gray-200 dark:border-gray-800">
+                  <div className="flex h-full flex-col overflow-y-scroll bg-white dark:bg-neutral-900 shadow-xl">
+                    <div className="px-4 py-6 sm:px-6 border-b border-neutral-200 dark:border-neutral-800">
                       <div className="flex items-start justify-between">
-                        <Dialog.Title className="text-lg font-semibold leading-6 text-gray-900 dark:text-white">
+                        <Dialog.Title className="text-lg font-semibold leading-6 text-neutral-900 dark:text-white">
                           {title}
                         </Dialog.Title>
                         <div className="ml-3 flex h-7 items-center">
                           <button
                             type="button"
-                            className="relative rounded-md bg-white dark:bg-gray-900 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            className="relative rounded-md bg-white dark:bg-neutral-900 text-neutral-400 dark:text-neutral-500 hover:text-neutral-500 dark:hover:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:ring-offset-2"
                             onClick={onClose}
                           >
                             <span className="absolute -inset-2.5" />

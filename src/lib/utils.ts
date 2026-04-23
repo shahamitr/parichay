@@ -1,5 +1,5 @@
 /**
- * Utility functions for OneTouch BizCard
+ * Utility functions for Parichay
  */
 
 import { type ClassValue, clsx } from "clsx"
@@ -131,7 +131,7 @@ export function generateMicrositeUrl(brandSlug: string, branchSlug: string, cust
   // Use window.location.origin for client-side, fallback to env var or localhost
   const baseUrl = customDomain ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001');
+    (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
   return `${baseUrl}/${brandSlug}/${branchSlug}`;
 }
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Phone, Mail, MapPin, Download, MessageCircle, Share2, Briefcase, Award, Users } from 'lucide-react';
 import Image from 'next/image';
 import { getImageWithFallback } from '@/lib/placeholder-utils';
+import BusinessCardDownload from '../BusinessCardDownload';
 
 interface ProfileSectionProps {
   branch: any;
@@ -13,6 +14,7 @@ interface ProfileSectionProps {
 export default function ProfileSection({ branch, brand }: ProfileSectionProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
   const contact = branch.contact;
   const address = branch.address;
   const colorTheme = brand.colorTheme as any;
@@ -21,36 +23,6 @@ export default function ProfileSection({ branch, brand }: ProfileSectionProps) {
   useEffect(() => {
     setIsVisible(true);
   }, []);
-
-  const handleSaveContact = async () => {
-    try {
-      await fetch('/api/analytics/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventType: 'VCARD_DOWNLOAD',
-          branchId: branch.id,
-          brandId: brand.id,
-          metadata: { action: 'save_contact' },
-        }),
-      });
-
-      const response = await fetch(`/api/branches/${branch.id}/vcard`);
-      if (!response.ok) throw new Error('Failed to generate vCard');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${branch.name.replace(/[^a-zA-Z0-9]/g, '_')}.vcf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error saving contact:', error);
-    }
-  };
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -180,7 +152,7 @@ export default function ProfileSection({ branch, brand }: ProfileSectionProps) {
           {/* Secondary Actions Row */}
           <div className="flex gap-3">
             <button
-              onClick={handleSaveContact}
+              onClick={() => setShowDownloadModal(true)}
               className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gray-100 hover:bg-gray-200 rounded-2xl text-gray-700 font-medium transition-all duration-300"
             >
               <Download className="w-5 h-5" />
@@ -248,6 +220,16 @@ export default function ProfileSection({ branch, brand }: ProfileSectionProps) {
           )}
         </div>
       </div>
+
+      {/* Business Card Download Modal */}
+      <BusinessCardDownload
+        branchId={branch.id}
+        branchName={branch.name}
+        brandName={brand.name}
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        primaryColor={primaryColor}
+      />
     </div>
   );
 }

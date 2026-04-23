@@ -166,7 +166,7 @@ null;
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <p className="text-body text-gray-600 leading-relaxed">
-            Join thousands of satisfied customers who trust {brand.name}
+            Join professionals and businesses who trust {brand.name}
           </p>
         </motion.div>
       </div>

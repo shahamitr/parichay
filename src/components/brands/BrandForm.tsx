@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth-context';
 import Drawer from '@/components/ui/Drawer';
 import FileUpload from '@/components/ui/FileUpload';
 import ColorThemePicker from '@/components/ui/ColorThemePicker';
+import LayoutSelector from '../dashboard/microsite/LayoutSelector';
 
 interface Brand {
   id?: string;
@@ -20,6 +21,7 @@ interface Brand {
     secondary: string;
     accent: string;
   };
+  layoutId?: string;
   initialBranch?: {
     name: string;
     phone: string;
@@ -48,6 +50,7 @@ export default function BrandForm({ brand, onSave, onCancel }: BrandFormProps) {
     tagline: '',
     logo: '',
     customDomain: '',
+    layoutId: 'modern-business',
     colorTheme: {
       primary: '#3B82F6',
       secondary: '#1E40AF',
@@ -296,6 +299,15 @@ export default function BrandForm({ brand, onSave, onCancel }: BrandFormProps) {
             </div>
           </div>
         )}
+
+        {/* Layout Selection */}
+        <div>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Layout Template</h3>
+          <LayoutSelector
+            selectedLayout={formData.layoutId || 'modern-business'}
+            onLayoutChange={(layoutId) => setFormData(prev => ({ ...prev, layoutId }))}
+          />
+        </div>
 
         {/* Color Theme */}
         <div>

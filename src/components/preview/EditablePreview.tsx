@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { Edit2, Save, X, Sparkles, RefreshCw } from 'lucide-react';
-import ContentGenerator from '@/components/ai/ContentGenerator';
-import { ContentGenerationRequest } from '@/lib/ai-content-generator';
+import AIContentGenerator from '@/components/ai/AIContentGenerator';
+import type { ContentType } from '@/components/ai/AIContentGenerator';
 
 interface EditableSection {
   id: string;
-  type: ContentGenerationRequest['type'];
+  type: ContentType;
   label: string;
   content: string;
   editable: boolean;
@@ -156,10 +156,10 @@ export default function EditablePreview({
               <div className="p-6">
                 {isGenerating ? (
                   <div>
-                    <ContentGenerator
+                    <AIContentGenerator
+                      mode="panel"
                       type={section.type}
-                      businessName={businessName}
-                      industry={industry}
+                      context={{ businessName, industry }}
                       currentContent={section.content}
                       onSelect={(content) => handleAISelect(section.id, content)}
                     />

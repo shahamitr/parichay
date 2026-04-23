@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/Toast';
+import { useToastHelpers } from '@/components/ui/Toast';
 import Drawer from '@/components/ui/Drawer';
 
 interface User {
@@ -22,7 +22,7 @@ interface UserFormProps {
 }
 
 export default function UserForm({ user, onSave, onCancel }: UserFormProps) {
-  const { success, error, info, warning } = useToastHelpers();
+  const { showSuccess: success, showError: error } = useToastHelpers();
   const [formData, setFormData] = useState<User>({
     email: '',
     firstName: '',

@@ -86,7 +86,7 @@ class EmailService {
             </div>
             <div class="content">
               <p>Hello,</p>
-              <p>We received a request to reset your password for your OneTouch BizCard account.</p>
+              <p>We received a request to reset your password for your Parichay account.</p>
               <p>Click the button below to reset your password:</p>
               <a href="${resetUrl}" class="button">Reset Password</a>
               <p>Or copy and paste this link into your browser:</p>
@@ -95,7 +95,7 @@ class EmailService {
               <p>If you didn't request a password reset, please ignore this email.</p>
             </div>
             <div class="footer">
-              <p>&copy; ${new Date().getFullYear()} OneTouch BizCard. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} Parichay. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -104,7 +104,7 @@ class EmailService {
 
     return this.sendEmail({
       to: email,
-      subject: 'Reset Your Password - OneTouch BizCard',
+      subject: 'Reset Your Password - Parichay',
       html,
     });
   }
@@ -146,7 +146,7 @@ class EmailService {
               <p>Your subscription has been activated successfully.</p>
             </div>
             <div class="footer">
-              <p>&copy; ${new Date().getFullYear()} OneTouch BizCard. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} Parichay. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -187,11 +187,11 @@ class EmailService {
               <p>Hello,</p>
               <p>Your <strong>${planName}</strong> subscription will expire in <strong>${daysUntilExpiry} days</strong>.</p>
               <p>To continue enjoying uninterrupted service, please renew your subscription.</p>
-              <a href="${process.env.APP_URL}/dashboard/subscription" class="button">Renew Subscription</a>
+              <a href="${process.env.APP_URL}/admin/subscription" class="button">Renew Subscription</a>
               <p>If you have auto-renewal enabled, your subscription will be renewed automatically.</p>
             </div>
             <div class="footer">
-              <p>&copy; ${new Date().getFullYear()} OneTouch BizCard. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} Parichay. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -232,11 +232,11 @@ class EmailService {
               <p>Hello,</p>
               <p>Your license (${licenseKey}) will expire in <strong>${daysUntilExpiry} days</strong>.</p>
               <p>After expiration, your microsites will be suspended until you renew your subscription.</p>
-              <a href="${process.env.APP_URL}/dashboard/subscription" class="button">Renew Now</a>
+              <a href="${process.env.APP_URL}/admin/subscription" class="button">Renew Now</a>
               <p>Don't lose access to your digital business cards!</p>
             </div>
             <div class="footer">
-              <p>&copy; ${new Date().getFullYear()} OneTouch BizCard. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} Parichay. All rights reserved.</p>
             </div>
           </div>
         </body>

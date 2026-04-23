@@ -22,8 +22,8 @@ function StarRating({ rating }: { rating: number }) {
           key={star}
           className={`w-5 h-5 ${
             star <= rating
-              ? 'fill-yellow-400 text-yellow-400'
-              : 'fill-gray-200 text-gray-200'
+              ? 'fill-warning-400 text-warning-400 dark:fill-warning-500 dark:text-warning-500'
+              : 'fill-neutral-200 text-neutral-200 dark:fill-neutral-700 dark:text-neutral-700'
           }`}
         />
       ))}
@@ -60,12 +60,12 @@ export default function TestimonialsSection({
   return (
     <section
       ref={containerRef}
-      className="relative bg-gray-50 py-20 px-6"
+      className="relative bg-neutral-50 dark:bg-neutral-900 py-20 px-6"
     >
       <div className="max-w-6xl mx-auto">
         {/* Section Header - Clean */}
         <div className="text-center mb-16">
-          <h2 id="testimonials-heading" className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+          <h2 id="testimonials-heading" className="text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
             What Our Customers Say
           </h2>
           <div className="w-16 h-1 bg-brand-primary mx-auto rounded-full"></div>
@@ -73,12 +73,12 @@ export default function TestimonialsSection({
 
         {/* Testimonial Carousel - Clean Design 2 */}
         <div className="max-w-4xl mx-auto">
-          <div className="relative bg-white rounded-2xl p-10 md:p-14 shadow-sm border border-gray-100">
+          <div className="relative bg-white dark:bg-neutral-800 rounded-2xl p-10 md:p-14 shadow-sm border border-neutral-100 dark:border-neutral-700">
             {/* Testimonial Content */}
             <div>
               {/* Customer Photo */}
               <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200">
+                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-neutral-200 dark:border-neutral-600">
                   <img
                     src={
                       currentTestimonial.photo ||
@@ -96,16 +96,16 @@ export default function TestimonialsSection({
               </div>
 
               {/* Testimonial Text */}
-              <blockquote className="text-lg sm:text-xl text-gray-700 leading-relaxed text-center mb-8">
+              <blockquote className="text-lg sm:text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed text-center mb-8">
                 "{currentTestimonial.content}"
               </blockquote>
 
               {/* Customer Info */}
               <div className="text-center">
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
                   {currentTestimonial.name}
                 </p>
-                <p className="text-base text-gray-600">
+                <p className="text-base text-neutral-600 dark:text-neutral-400">
                   {currentTestimonial.role}
                 </p>
               </div>
@@ -116,17 +116,17 @@ export default function TestimonialsSection({
               <>
                 <button
                   onClick={handlePrevious}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors duration-200"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors duration-200"
                   aria-label="Previous testimonial"
                 >
-                  <ChevronLeft className="w-5 h-5 text-gray-700" />
+                  <ChevronLeft className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
                 </button>
                 <button
                   onClick={handleNext}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors duration-200"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors duration-200"
                   aria-label="Next testimonial"
                 >
-                  <ChevronRight className="w-5 h-5 text-gray-700" />
+                  <ChevronRight className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
                 </button>
               </>
             )}
@@ -142,7 +142,7 @@ export default function TestimonialsSection({
                   className={`h-2 rounded-full transition-all duration-200 ${
                     index === currentIndex
                       ? 'w-8 bg-brand-primary'
-                      : 'w-2 bg-gray-300 hover:bg-gray-400'
+                      : 'w-2 bg-neutral-300 dark:bg-neutral-600 hover:bg-neutral-400 dark:hover:bg-neutral-500'
                   }`}
                   aria-label={`Go to testimonial ${index + 1}`}
                 />
@@ -157,7 +157,7 @@ export default function TestimonialsSection({
             {testimonials.slice(0, 3).map((testimonial) => (
               <div
                 key={testimonial.id}
-                className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100"
+                className="bg-white dark:bg-neutral-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 border border-neutral-100 dark:border-neutral-700"
               >
                 {/* Mini Rating */}
                 <div className="flex gap-1 mb-3">
@@ -166,21 +166,21 @@ export default function TestimonialsSection({
                       key={star}
                       className={`w-4 h-4 ${
                         star <= testimonial.rating
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'fill-gray-200 text-gray-200'
+                          ? 'fill-warning-400 text-warning-400 dark:fill-warning-500 dark:text-warning-500'
+                          : 'fill-neutral-200 text-neutral-200 dark:fill-neutral-700 dark:text-neutral-700'
                       }`}
                     />
                   ))}
                 </div>
 
                 {/* Content */}
-                <p className="text-base text-gray-700 leading-relaxed mb-4 line-clamp-4">
+                <p className="text-base text-neutral-700 dark:text-neutral-300 leading-relaxed mb-4 line-clamp-4">
                   "{testimonial.content}"
                 </p>
 
                 {/* Customer */}
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-neutral-200 dark:border-neutral-600">
                     <img
                       src={
                         testimonial.photo ||
@@ -191,10 +191,10 @@ export default function TestimonialsSection({
                     />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900">
+                    <p className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
                       {testimonial.name}
                     </p>
-                    <p className="text-xs text-gray-600">{testimonial.role}</p>
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400">{testimonial.role}</p>
                   </div>
                 </div>
               </div>

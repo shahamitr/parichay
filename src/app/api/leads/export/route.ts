@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const branchId = searchParams.get('branchId');
+    const brandId = searchParams.get('brandId');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
@@ -25,7 +26,16 @@ export async function GET(request: NextRequest) {
     const where: any = {};
 
     if (user.role === 'SUPER_ADMIN') {
-      if (branchId) where.branchId = branchId;
+      if (branchId) {
+        where.branchId = branchId;
+      } else if (brandId) {
+        // Get all branches for the specified brand
+        const branches = await prisma.branch.findMany({
+          where: { brandId },
+          select: { id: true },
+        });
+        where.branchId = { in: branches.map((b) => b.id) };
+      }
     } else if (user.role === 'BRAND_MANAGER') {
       // Get all branches for the brand
       const branches = await prisma.branch.findMany({

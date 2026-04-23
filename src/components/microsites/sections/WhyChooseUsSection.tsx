@@ -58,7 +58,7 @@ const defaultFeatures = [
   {
     icon: 'thumbsUp',
     title: 'Trusted by Many',
-    description: 'Thousands of satisfied customers trust us with their needs.',
+    description: 'professionals and businesses trust us with their needs.',
   },
   {
     icon: 'zap',
@@ -198,7 +198,7 @@ export default function WhyChooseUsSection({ brand, branch, config }: WhyChooseU
               ))}
             </div>
             <div className="text-left">
-              <p className="text-sm font-semibold text-gray-900">Trusted by 1000+ customers</p>
+              <p className="text-sm font-semibold text-gray-900">Trusted by our customers</p>
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />

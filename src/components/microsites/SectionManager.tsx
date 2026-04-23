@@ -26,7 +26,6 @@ interface SectionManagerProps {
   onSectionToggle: (sectionKey: keyof MicrositeConfig['sections']) => void;
   onSectionReorder: (sections: (keyof MicrositeConfig['sections'])[]) => void;
   onEditSection: (sectionKey: keyof MicrositeConfig['sections']) => void;
-  onConfigUpdate: (updates: Partial<MicrositeConfig>) => void;
 }
 
 interface SectionItemProps {

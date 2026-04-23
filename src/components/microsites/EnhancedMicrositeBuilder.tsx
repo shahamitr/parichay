@@ -204,7 +204,7 @@ export default function EnhancedMicrositeBuilder({
 
   // Cancel handler
   const handleCancel = () => {
-    if (hasUnsavedChanges != null) {
+    if (hasUnsavedChanges) {
       if (confirm('You have unsaved changes. Are you sure you want to cancel?')) {
         onCancel();
       }
@@ -220,24 +220,24 @@ export default function EnhancedMicrositeBuilder({
   } : null;
 
   return (
-    <div className={`flex h-screen bg-gray-100 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+    <div className={`flex h-screen bg-neutral-100 dark:bg-neutral-900 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
       {/* Sidebar */}
       {!isFullscreen && (
-        <div className="w-80 bg-white border-r flex flex-col">
+        <div className="w-80 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b">
+          <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-lg font-bold text-gray-900">Microsite Builder</h1>
+              <h1 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">Microsite Builder</h1>
               <button
                 onClick={() => setShowTemplateSelector(true)}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
               >
                 Templates
               </button>
             </div>
 
             {/* Tab Navigation */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div className="flex bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
               {[
                 { id: 'sections' as SidebarTab, icon: Layers, label: 'Sections' },
                 { id: 'design' as SidebarTab, icon: Palette, label: 'Design' },
@@ -248,8 +248,8 @@ export default function EnhancedMicrositeBuilder({
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-white dark:bg-neutral-600 text-neutral-900 dark:text-neutral-100 shadow-sm'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
@@ -288,7 +288,7 @@ export default function EnhancedMicrositeBuilder({
                   <div>
                     <button
                       onClick={() => setEditingSection(null)}
-                      className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 mb-4"
+                      className="flex items-center gap-1 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 mb-4"
                     >
                       <ChevronLeft className="w-4 h-4" />
                       Back to sections
@@ -302,7 +302,7 @@ export default function EnhancedMicrositeBuilder({
                     />
                     <button
                       onClick={() => setShowSectionTemplates(editingSection)}
-                      className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100"
+                      className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-accent-50 dark:bg-accent-900 text-accent-700 dark:text-accent-300 rounded-lg hover:bg-accent-100 dark:hover:bg-accent-800"
                     >
                       <Sparkles className="w-4 h-4" />
                       Choose Layout Template
@@ -310,9 +310,9 @@ export default function EnhancedMicrositeBuilder({
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Layout className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">Select a section to edit</p>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <Layout className="w-12 h-12 text-neutral-300 dark:text-neutral-600 mx-auto mb-3" />
+                    <p className="text-neutral-500 dark:text-neutral-400">Select a section to edit</p>
+                    <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-1">
                       Go to Sections tab and click the settings icon
                     </p>
                   </div>
@@ -339,26 +339,26 @@ export default function EnhancedMicrositeBuilder({
           />
 
           {/* Footer Actions */}
-          <div className="p-4 border-t bg-gray-50">
+          <div className="p-4 border-t border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-900">
             <div className="flex gap-2">
               <button
                 onClick={handleCancel}
                 disabled={saving}
-                className="flex-1 px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                className="flex-1 px-4 py-2 text-sm border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !hasUnsavedChanges}
-                className="flex-1 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 text-sm bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 {saving ? 'Saving...' : 'Save'}
               </button>
             </div>
             {hasUnsavedChanges && (
-              <p className="text-xs text-orange-600 mt-2 text-center">Unsaved changes</p>
+              <p className="text-xs text-warning-600 dark:text-warning-400 mt-2 text-center">Unsaved changes</p>
             )}
           </div>
         </div>
@@ -367,21 +367,21 @@ export default function EnhancedMicrositeBuilder({
       {/* Main Preview Area */}
       <div className="flex-1 flex flex-col">
         {/* Preview Header */}
-        <div className="bg-white border-b px-4 py-3 flex items-center justify-between">
+        <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             {isFullscreen && (
               <button
                 onClick={() => setIsFullscreen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
               </button>
             )}
             <div>
-              <h2 className="font-semibold text-gray-900">
+              <h2 className="font-semibold text-neutral-900 dark:text-neutral-100">
                 {initialData?.brand.name} - {initialData?.branch.name}
               </h2>
-              <p className="text-sm text-gray-500">Live Preview</p>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Live Preview</p>
             </div>
           </div>
 
@@ -396,7 +396,7 @@ export default function EnhancedMicrositeBuilder({
         </div>
 
         {/* Preview Content */}
-        <div className="flex-1 overflow-auto bg-gray-200 p-4">
+        <div className="flex-1 overflow-auto bg-neutral-200 dark:bg-neutral-900 p-4">
           {previewData ? (
             <PreviewContainer device={previewDevice}>
               {/* Apply custom fonts */}
@@ -406,8 +406,8 @@ export default function EnhancedMicrositeBuilder({
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <Eye className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No preview available</p>
+                <Eye className="w-16 h-16 text-neutral-300 dark:text-neutral-600 mx-auto mb-4" />
+                <p className="text-neutral-500 dark:text-neutral-400">No preview available</p>
               </div>
             </div>
           )}

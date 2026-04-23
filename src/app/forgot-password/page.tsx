@@ -18,9 +18,9 @@ function Toast({ message, type, onClose }: { message: string; type: 'error' | 's
   };
 
   const colors = {
-    error: 'bg-red-50 border-red-200 text-red-800',
-    success: 'bg-green-50 border-green-200 text-green-800',
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+    error: 'bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800 text-error-800 dark:text-error-200',
+    success: 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800 text-success-800 dark:text-success-200',
+    warning: 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800 text-warning-800 dark:text-warning-200',
   };
 
   return (
@@ -109,7 +109,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900 py-12 px-4 sm:px-6 lg:px-8">
       {/* Toast Notification */}
       {toast && (
         <Toast
@@ -121,24 +121,24 @@ export default function ForgotPasswordPage() {
 
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-neutral-900 dark:text-neutral-100">
             Reset your password
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-neutral-600 dark:text-neutral-400">
             Enter your email address and we'll send you a link to reset your password.
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {message && (
-            <div className="rounded-md bg-green-50 p-4">
-              <p className="text-sm text-green-800">{message}</p>
+            <div className="rounded-md bg-success-50 dark:bg-success-900/20 p-4">
+              <p className="text-sm text-success-800 dark:text-success-200">{message}</p>
             </div>
           )}
 
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="rounded-md bg-error-50 dark:bg-error-900/20 p-4">
+              <p className="text-sm text-error-800 dark:text-error-200">{error}</p>
             </div>
           )}
 
@@ -154,7 +154,7 @@ export default function ForgotPasswordPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 placeholder-neutral-500 dark:placeholder-neutral-400 text-neutral-900 dark:text-neutral-100 bg-white dark:bg-neutral-700 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
               placeholder="Email address"
             />
           </div>
@@ -163,7 +163,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 dark:bg-primary-500 hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Sending...' : 'Send reset link'}
             </button>
@@ -173,7 +173,7 @@ export default function ForgotPasswordPage() {
             <button
               type="button"
               onClick={() => router.push('/login')}
-              className="text-sm text-blue-600 hover:text-blue-500"
+              className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300"
             >
               Back to login
             </button>

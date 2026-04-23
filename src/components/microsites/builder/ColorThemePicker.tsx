@@ -71,16 +71,16 @@ function ColorInput({
           type="color"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-10 h-10 rounded-lg cursor-pointer border-2 border-gray-200"
+          className="w-10 h-10 rounded-lg cursor-pointer border-2 border-neutral-200 dark:border-neutral-700"
         />
       </div>
       <div className="flex-1">
-        <label className="block text-xs text-gray-500 mb-1">{label}</label>
+        <label className="block text-xs text-neutral-500 dark:text-neutral-400 mb-1">{label}</label>
         <input
           type="text"
           value={inputValue}
           onChange={(e) => handleChange(e.target.value)}
-          className="w-full px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+          className="w-full px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-transparent font-mono"
           placeholder="#000000"
         />
       </div>
@@ -121,13 +121,13 @@ export default function ColorThemePicker({ theme, onChange }: ColorThemePickerPr
   return (
     <div className="p-4">
       <div className="flex items-center gap-2 mb-4">
-        <Palette className="w-5 h-5 text-gray-600" />
-        <h3 className="font-semibold text-gray-900">Color Theme</h3>
+        <Palette className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+        <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Color Theme</h3>
       </div>
 
       {/* Preview */}
-      <div className="mb-4 p-4 rounded-lg border bg-gray-50">
-        <p className="text-xs text-gray-500 mb-2">Preview</p>
+      <div className="mb-4 p-4 rounded-lg border bg-neutral-50 dark:bg-neutral-800 dark:border-neutral-700">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">Preview</p>
         <div className="flex gap-2">
           <div
             className="flex-1 h-12 rounded-lg flex items-center justify-center text-white text-xs font-medium"
@@ -151,15 +151,15 @@ export default function ColorThemePicker({ theme, onChange }: ColorThemePickerPr
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1">
+      <div className="flex gap-1 mb-4 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-1">
         {(['presets', 'industry', 'custom'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               activeTab === tab
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
             }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -180,8 +180,8 @@ export default function ColorThemePicker({ theme, onChange }: ColorThemePickerPr
                 onClick={() => handlePresetSelect(preset.colors)}
                 className={`relative p-2 rounded-lg border-2 transition-all ${
                   isSelected
-                    ? 'border-blue-500 ring-2 ring-blue-200'
-                    : 'border-gray-200 hover:border-gray-300'
+                    ? 'border-primary-500 dark:border-primary-400 ring-2 ring-primary-200 dark:ring-primary-800'
+                    : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
                 }`}
               >
                 <div className="flex gap-0.5 mb-1">
@@ -198,10 +198,10 @@ export default function ColorThemePicker({ theme, onChange }: ColorThemePickerPr
                     style={{ backgroundColor: preset.colors.accent }}
                   />
                 </div>
-                <p className="text-xs text-gray-600 truncate">{preset.name}</p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 truncate">{preset.name}</p>
                 {isSelected && (
-                  <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                    <Check className="w-3 h-3 text-white" />
+                  <div className="absolute top-1 right-1 w-4 h-4 bg-primary-500 dark:bg-primary-400 rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white dark:text-neutral-900" />
                   </div>
                 )}
               </button>

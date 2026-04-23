@@ -52,22 +52,22 @@ export default function OnboardingStep1({ onComplete, initialData }: OnboardingS
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+      <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
         Create Your Brand
       </h2>
-      <p className="text-gray-600 mb-6">
+      <p className="text-neutral-600 dark:text-neutral-400 mb-6">
         Let's start by setting up your brand identity
       </p>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="mb-4 p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-md">
+          <p className="text-sm text-error-800 dark:text-error-200">{error}</p>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="name" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             Brand Name *
           </label>
           <input
@@ -76,13 +76,13 @@ export default function OnboardingStep1({ onComplete, initialData }: OnboardingS
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
             placeholder="e.g., Neelkanth EV Motors"
           />
         </div>
 
         <div>
-          <label htmlFor="tagline" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="tagline" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             Tagline
           </label>
           <input
@@ -90,13 +90,13 @@ export default function OnboardingStep1({ onComplete, initialData }: OnboardingS
             id="tagline"
             value={formData.tagline}
             onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
             placeholder="e.g., Driving the Future of Electric Mobility"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             Brand Logo
           </label>
           <FileUpload
@@ -107,7 +107,7 @@ export default function OnboardingStep1({ onComplete, initialData }: OnboardingS
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             Brand Colors
           </label>
           <ColorThemePicker
@@ -120,7 +120,7 @@ export default function OnboardingStep1({ onComplete, initialData }: OnboardingS
           <button
             type="submit"
             disabled={isLoading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-primary-600 dark:bg-primary-500 text-white dark:text-neutral-900 rounded-md hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Creating...' : 'Continue'}
           </button>

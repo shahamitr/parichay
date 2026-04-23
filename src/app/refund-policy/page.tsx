@@ -1,12 +1,15 @@
 import Link from "next/link";
+import CommonHeader from "@/components/layout/CommonHeader";
+import CommonFooter from "@/components/layout/CommonFooter";
 
 export default function RefundPolicyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <CommonHeader />
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-blue-600">OneTouch BizCard</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600">Parichay</Link>
             <div className="flex items-center space-x-4">
               <Link href="/login" className="text-gray-700 hover:text-blue-600 px-3 py-2">Sign In</Link>
               <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Get Started</Link>
@@ -49,7 +52,7 @@ export default function RefundPolicyPage() {
             To request a refund:
           </p>
           <ol className="list-decimal pl-6 text-gray-600 space-y-2 mb-6">
-            <li>Contact our support team at support@onetouchbizcard.in</li>
+            <li>Contact our support team at support@parichay.com</li>
             <li>Provide your order number and reason for refund</li>
             <li>Our team will review your request within 2-3 business days</li>
             <li>If approved, refund will be processed within 7-10 business days</li>
@@ -86,7 +89,7 @@ export default function RefundPolicyPage() {
             For refund requests or questions about our refund policy:
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-            <p className="text-gray-700"><strong>Email:</strong> support@onetouchbizcard.in</p>
+            <p className="text-gray-700"><strong>Email:</strong> support@parichay.com</p>
             <p className="text-gray-700"><strong>Phone:</strong> +91 90545 90987</p>
             <p className="text-gray-700"><strong>Business Hours:</strong> Monday - Saturday, 9 AM - 6 PM IST</p>
           </div>

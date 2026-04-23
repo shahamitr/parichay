@@ -35,13 +35,13 @@ export const vendorChunks = {
  */
 export const routeChunks = {
   // Admin/Executive routes
-  admin: ['/executive', '/dashboard/admin'],
+  admin: ['/executive', '/admin'],
 
   // Builder/Editor routes
-  builder: ['/dashboard/builder', '/dashboard/editor'],
+  builder: ['/admin/builder', '/admin/editor'],
 
   // Analytics routes
-  analytics: ['/dashboard/analytics'],
+  analytics: ['/admin/analytics'],
 
   // Public microsite routes
   microsite: ['/[brand]'],
@@ -71,7 +71,6 @@ export const componentPriorities = {
   ],
   low: [
     'AnimatedSection',
-    'AiContentGenerator',
     'InteractiveProductCatalog',
     'LiveChatWidget',
     'AppointmentBooking',
@@ -85,13 +84,13 @@ export const componentPriorities = {
  */
 export const prefetchConfig = {
   // Prefetch on hover for these routes
-  hoverPrefetch: ['/dashboard', '/pricing', '/features'],
+  hoverPrefetch: ['/admin', '/pricing', '/features'],
 
   // Prefetch on viewport for these components
   viewportPrefetch: ['ThemeEditor', 'BrandCustomizationPanel'],
 
   // Prefetch after initial load
-  idlePrefetch: ['AnalyticsChart', 'AiContentGenerator'],
+  idlePrefetch: ['AnalyticsChart'],
 };
 
 /**

@@ -1,57 +1,176 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/jwt';
+import { prisma } from '@/lib/prisma';
+import { getAuthenticatedUser } from '@/lib/auth-utils';
 
-// Note: In a real implementation, categories would be stored in a database
-// For now, this is a placeholder that returns an error since we're using static data
-
-export async function PUT(
+/**
+ * GET - Fetch a single category by ID
+ */
+export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Get token from Authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    const token = authHeader.substring(7);
-    const decoded = await verifyToken(token);
-
-    if (!decoded || !decoded.userId) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is super admin
-    if (decoded.role !== 'SUPER_ADMIN') {
+    if (user.role !== 'SUPER_ADMIN') {
       return NextResponse.json(
         { error: 'Forbidden - Super Admin access required' },
         { status: 403 }
       );
     }
 
-    const body = await request.json();
-    const categoryId = params.id;
+    const { id } = await params;
 
-    // TODO: Implement database storage for categories
-    // For now, categories are defined in static data files
+    const category = await prisma.industryCategory.findUnique({
+      where: { id },
+    });
+
+    if (!category) {
+      return NextResponse.json(
+        { error: 'Category not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      category,
+    });
+  } catch (error) {
+    console.error('Error fetching category:', error);
     return NextResponse.json(
-      {
-        error: 'Category updates not yet implemented',
-        message: 'Categories are currently defined in static data files. Database storage coming soon.'
-      },
-      { status: 501 }
+      { error: 'Failed to fetch category' },
+      { status: 500 }
     );
+  }
+}
+
+/**
+ * PUT - Update a category
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden - Super Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+
+    // Check if category exists
+    const existing = await prisma.industryCategory.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: 'Category not found' },
+        { status: 404 }
+      );
+    }
+
+    // Build update data
+    const updateData: any = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.slug !== undefined) updateData.slug = body.slug;
+    if (body.description !== undefined) updateData.description = body.description;
+    if (body.icon !== undefined) updateData.icon = body.icon;
+    if (body.enabled !== undefined) updateData.enabled = body.enabled;
+    if (body.features !== undefined) updateData.features = body.features;
+    if (body.benefits !== undefined) updateData.benefits = body.benefits;
+    if (body.useCases !== undefined) updateData.useCases = body.useCases;
+    if (body.colorScheme !== undefined) updateData.colorScheme = body.colorScheme;
+
+    const category = await prisma.industryCategory.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return NextResponse.json({
+      success: true,
+      category,
+    });
   } catch (error) {
     console.error('Error updating category:', error);
     return NextResponse.json(
       { error: 'Failed to update category' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE - Delete a category
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden - Super Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const { id } = await params;
+
+    // Check if category exists
+    const existing = await prisma.industryCategory.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: 'Category not found' },
+        { status: 404 }
+      );
+    }
+
+    await prisma.industryCategory.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Category deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete category' },
       { status: 500 }
     );
   }

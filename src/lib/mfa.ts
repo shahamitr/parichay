@@ -1,9 +1,15 @@
-import speakeasy from 'speakeasy';
-import QRCode from 'qrcode';
-import bcrypt from 'bcrypt';
-import crypto from 'crypto';
+/**
+ * MFA (Multi-Factor Authentication) Service
+ * Handles TOTP-based two-factor authentication
+ */
 
-export interface MFASetupResult {
+import * as speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
+import bcrypt from 'bcryptjs';
+
+const APP_NAME = 'Parichay';
+
+interface MFASetup {
   secret: string;
   qrCodeUrl: string;
   backupCodes: string[];
@@ -11,53 +17,57 @@ export interface MFASetupResult {
 
 export class MFAService {
   /**
-   * Generate a new MFA secret and QR code for TOTP setup
+   * Generate a new MFA secret and QR code for setup
    */
-  static async generateMFASecret(userEmail: string, issuer: string = 'OneTouch BizCard'): Promise<MFASetupResult> {
+  static async generateMFASecret(email: string): Promise<MFASetup> {
     // Generate secret
-    const secret = speakeasy.generateSecret({
-      name: `${issuer} (${userEmail})`,
-      issuer: issuer,
-      length: 32,
+    const secretObj = speakeasy.generateSecret({
+      name: email,
+      issuer: APP_NAME,
+      length: 32
     });
 
-    if (!secret.base32) {
-      throw new Error('Failed to generate MFA secret');
-    }
-
-    // Generate QR code
-    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url || '');
+    // Generate QR code as data URL
+    const qrCodeUrl = await QRCode.toDataURL(secretObj.otpauth_url!);
 
     // Generate backup codes
-    const backupCodes = this.generateBackupCodes(10);
+    const backupCodes = MFAService.generateBackupCodes(8);
 
     return {
-      secret: secret.base32,
+      secret: secretObj.base32,
       qrCodeUrl,
       backupCodes,
     };
   }
 
   /**
-   * Verify a TOTP token against a secret
+   * Verify a TOTP token
    */
   static verifyTOTP(token: string, secret: string): boolean {
-    return speakeasy.totp.verify({
-      secret: secret,
-      encoding: 'base32',
-      token: token,
-      window: 2, // Allow 2 time steps before and after for clock drift
-    });
+    try {
+      return speakeasy.totp.verify({
+        secret: secret,
+        encoding: 'base32',
+        token: token,
+        window: 2 // Allow 2 time steps before/after for clock drift
+      });
+    } catch (error) {
+      console.error('TOTP verification error:', error);
+      return false;
+    }
   }
 
   /**
-   * Generate backup codes for account recovery
+   * Generate random backup codes
    */
-  static generateBackupCodes(count: number = 10): string[] {
+  static generateBackupCodes(count: number = 8): string[] {
     const codes: string[] = [];
     for (let i = 0; i < count; i++) {
       // Generate 8-character alphanumeric code
-      const code = crypto.randomBytes(4).toString('hex').toUpperCase();
+      const code = Array.from(
+        { length: 8 },
+        () => '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 36)]
+      ).join('');
       codes.push(code);
     }
     return codes;
@@ -75,32 +85,48 @@ export class MFAService {
 
   /**
    * Verify a backup code against stored hashed codes
+   * Returns the index of the matched code, or -1 if no match
    */
-  static async verifyBackupCode(code: string, hashedCodes: string[]): Promise<{ valid: boolean; remainingCodes: string[] }> {
+  static async verifyBackupCode(
+    code: string,
+    hashedCodes: string[]
+  ): Promise<number> {
     for (let i = 0; i < hashedCodes.length; i++) {
-      const isValid = await bcrypt.compare(code, hashedCodes[i]);
-      if (isValid != null) {
-        // Remove the used backup code
-        const remainingCodes = [...hashedCodes];
-        remainingCodes.splice(i, 1);
-        return { valid: true, remainingCodes };
+      const isMatch = await bcrypt.compare(code.toUpperCase(), hashedCodes[i]);
+      if (isMatch) {
+        return i;
       }
     }
-    return { valid: false, remainingCodes: hashedCodes };
+    return -1;
   }
 
   /**
-   * Check if MFA is required for a sensitive operation
+   * Remove a used backup code from the list
    */
-  static isSensitiveOperation(operation: string): boolean {
-    const sensitiveOperations = [
-      'change_password',
-      'update_email',
-      'delete_account',
-      'update_payment_method',
-      'disable_mfa',
-      'export_data',
-    ];
-    return sensitiveOperations.includes(operation);
+  static removeBackupCode(hashedCodes: string[], index: number): string[] {
+    const newCodes = [...hashedCodes];
+    newCodes.splice(index, 1);
+    return newCodes;
+  }
+
+  /**
+   * Check if user has MFA enabled and needs verification
+   */
+  static isMFARequired(user: { mfaEnabled: boolean }): boolean {
+    return user.mfaEnabled === true;
+  }
+
+  /**
+   * Generate a temporary MFA verification token for login flow
+   */
+  static generateMFASessionToken(): string {
+    return Array.from(
+      { length: 32 },
+      () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[
+        Math.floor(Math.random() * 62)
+      ]
+    ).join('');
   }
 }
+
+export default MFAService;

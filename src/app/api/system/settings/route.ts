@@ -7,9 +7,9 @@ const SETTINGS_FILE = path.join(process.cwd(), 'system-settings.json');
 
 // Default settings
 const defaultSettings = {
-  siteName: 'OneTouch BizCard',
+  siteName: 'Parichay',
   siteUrl: 'http://localhost:3000',
-  supportEmail: 'support@onetouchbizcard.in',
+  supportEmail: 'support@parichay.com',
   smtpHost: '',
   smtpPort: 587,
   smtpUser: '',

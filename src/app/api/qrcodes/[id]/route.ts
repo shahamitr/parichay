@@ -50,7 +50,7 @@ export async function GET(
     if (user.role !== 'SUPER_ADMIN') {
       const hasAccess =
         (qrCode.brandId && user.brandId === qrCode.brandId) ||
-        (qrCode.branchId && user.branches.some((b) => b.id === qrCode.branchId));
+        (qrCode.branchId && user.branches?.some((b) => b.id === qrCode.branchId));
 
       if (!hasAccess) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -99,7 +99,7 @@ export async function DELETE(
     if (user.role !== 'SUPER_ADMIN') {
       const hasAccess =
         (qrCode.brandId && user.brandId === qrCode.brandId) ||
-        (qrCode.branchId && user.branches.some((b) => b.id === qrCode.branchId));
+        (qrCode.branchId && user.branches?.some((b) => b.id === qrCode.branchId));
 
       if (!hasAccess) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

@@ -8,7 +8,7 @@ export default function DigitalBusinessCardPage() {
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-blue-600">OneTouch BizCard</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600">Parichay</Link>
             <div className="flex items-center space-x-4">
               <Link href="/features" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">Features</Link>
               <Link href="/pricing" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">Pricing</Link>
@@ -184,7 +184,7 @@ export default function DigitalBusinessCardPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
           <h2 className="text-4xl font-bold mb-4">Ready to Go Digital?</h2>
           <p className="text-xl mb-8 opacity-90">
-            Join thousands of professionals who have already made the switch
+            Join professionals who have already made the switch
           </p>
           <Link href="/register" className="inline-block bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 shadow-lg">
             Create Your Free Digital Business Card

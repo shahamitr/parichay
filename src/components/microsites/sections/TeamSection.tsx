@@ -39,19 +39,19 @@ export default function TeamSection({ config, brand, branch }: TeamSectionProps)
   }
 
   return (
-    <section className="py-12 px-4 bg-gray-50">
+    <section className="py-12 px-4 bg-neutral-50 dark:bg-neutral-900">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full mb-4">
+          <div className="inline-flex items-center gap-2 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 px-4 py-2 rounded-full mb-4">
             <Users className="w-5 h-5" />
             <span className="font-semibold">Our Team</span>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">
+          <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
             {config.title || 'Meet Our Team'}
           </h2>
           {config.subtitle && (
-            <p className="text-gray-600 max-w-2xl mx-auto">{config.subtitle}</p>
+            <p className="text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">{config.subtitle}</p>
           )}
         </div>
 
@@ -64,10 +64,10 @@ export default function TeamSection({ config, brand, branch }: TeamSectionProps)
           {config.members.map((member) => (
             <div
               key={member.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all"
+              className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm border border-neutral-100 dark:border-neutral-700 overflow-hidden hover:shadow-lg transition-all"
             >
               {/* Photo */}
-              <div className="relative h-64 bg-gray-200">
+              <div className="relative h-64 bg-neutral-200 dark:bg-neutral-700">
                 <img
                   src={member.photo || getImageWithFallback(undefined, 'avatar', member.name)}
                   alt={member.name}
@@ -77,13 +77,13 @@ export default function TeamSection({ config, brand, branch }: TeamSectionProps)
 
               {/* Info */}
               <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
                   {member.name}
                 </h3>
                 <p className="text-brand-primary font-medium mb-3">{member.role}</p>
 
                 {member.bio && (
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">{member.bio}</p>
+                  <p className="text-neutral-600 dark:text-neutral-300 text-sm mb-4 line-clamp-3">{member.bio}</p>
                 )}
 
                 {/* Contact */}
@@ -91,7 +91,7 @@ export default function TeamSection({ config, brand, branch }: TeamSectionProps)
                   {member.email && (
                     <a
                       href={`mailto:${member.email}`}
-                      className="flex items-center gap-2 text-sm text-gray-600 hover:text-brand-primary"
+                      className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-brand-primary dark:hover:text-brand-primary"
                     >
                       <Mail className="w-4 h-4" />
                       {member.email}
@@ -100,7 +100,7 @@ export default function TeamSection({ config, brand, branch }: TeamSectionProps)
                   {member.phone && (
                     <a
                       href={`tel:${member.phone}`}
-                      className="flex items-center gap-2 text-sm text-gray-600 hover:text-brand-primary"
+                      className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-brand-primary dark:hover:text-brand-primary"
                     >
                       <Phone className="w-4 h-4" />
                       {member.phone}
@@ -116,7 +116,7 @@ export default function TeamSection({ config, brand, branch }: TeamSectionProps)
                         href={member.social.linkedin}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 bg-gray-100 rounded-full hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                        className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                       >
                         <Linkedin className="w-4 h-4" />
                       </a>
@@ -126,7 +126,7 @@ export default function TeamSection({ config, brand, branch }: TeamSectionProps)
                         href={member.social.twitter}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 bg-gray-100 rounded-full hover:bg-blue-100 hover:text-blue-400 transition-colors"
+                        className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-400 dark:hover:text-primary-400 transition-colors"
                       >
                         <Twitter className="w-4 h-4" />
                       </a>
@@ -136,7 +136,7 @@ export default function TeamSection({ config, brand, branch }: TeamSectionProps)
                         href={member.social.facebook}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 bg-gray-100 rounded-full hover:bg-blue-100 hover:text-blue-600 transition-colors"
+                        className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                       >
                         <Facebook className="w-4 h-4" />
                       </a>

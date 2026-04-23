@@ -49,7 +49,7 @@ export async function PUT(
     if (
       user.role !== 'SUPER_ADMIN' &&
       user.brandId !== branch.brandId &&
-      !user.branches.some((b: any) => b.id === id)
+      !user.branches?.some((b: any) => b.id === id)
     ) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

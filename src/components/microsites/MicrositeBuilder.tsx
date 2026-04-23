@@ -58,7 +58,7 @@ export default function MicrositeBuilder({
       // Check for Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
       if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
         event.preventDefault();
-        if (canUndo != null) {
+        if (canUndo) {
           undo();
         }
       }
@@ -68,7 +68,7 @@ export default function MicrositeBuilder({
         ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'z')
       ) {
         event.preventDefault();
-        if (canRedo != null) {
+        if (canRedo) {
           redo();
         }
       }
@@ -137,7 +137,7 @@ export default function MicrositeBuilder({
   };
 
   const handleCancel = () => {
-    if (hasUnsavedChanges != null) {
+    if (hasUnsavedChanges) {
       if (confirm('You have unsaved changes. Are you sure you want to cancel?')) {
         onCancel();
       }
@@ -162,20 +162,20 @@ export default function MicrositeBuilder({
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-neutral-100 dark:bg-neutral-900">
       {/* Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+      <div className="w-80 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold text-gray-900">Microsite Builder</h1>
+            <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">Microsite Builder</h1>
             <div className="flex items-center gap-2">
               {/* Undo/Redo Buttons */}
               <div className="flex items-center gap-1 mr-2">
                 <button
                   onClick={undo}
                   disabled={!canUndo}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
                   title="Undo (Ctrl+Z)"
                   aria-label="Undo"
                 >
@@ -186,7 +186,7 @@ export default function MicrositeBuilder({
                 <button
                   onClick={redo}
                   disabled={!canRedo}
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
                   title="Redo (Ctrl+Y)"
                   aria-label="Redo"
                 >
@@ -197,7 +197,7 @@ export default function MicrositeBuilder({
               </div>
               <button
                 onClick={() => setShowTemplateSelector(true)}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
               >
                 Change Template
               </button>

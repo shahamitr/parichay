@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { MFAService } from '@/lib/mfa';
 import { verifyToken } from '@/lib/auth-utils';
+import logger from '@/lib/logger';
 
 /**
  * POST /api/auth/mfa/setup
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
       message: 'Scan the QR code with your authenticator app and verify to enable MFA',
     });
   } catch (error) {
-    console.error('MFA setup error:', error);
+    logger.error({ error }, 'MFA setup error');
     return NextResponse.json(
       { error: 'Failed to set up MFA' },
       { status: 500 }

@@ -12,22 +12,44 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-      return;
-    }
+    const checkOnboarding = async () => {
+      if (!user) {
+        router.push('/auth/login');
+        return;
+      }
 
-    // Check if onboarding is already completed
-    const completed = localStorage.getItem('onboarding-completed');
-    if (completed != null) {
-      router.push('/dashboard');
-      return;
-    }
+      // Quick check localStorage first for speed
+      const localCompleted = localStorage.getItem('onboarding-completed');
+      if (localCompleted != null) {
+        router.push('/admin');
+        return;
+      }
 
-    setLoading(false);
+      // Verify with server (source of truth)
+      try {
+        const response = await fetch('/api/user/onboarding', {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.completed) {
+            // Sync localStorage with server state
+            localStorage.setItem('onboarding-completed', 'true');
+            router.push('/admin');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+      }
+
+      setLoading(false);
+    };
+
+    checkOnboarding();
   }, [user, router]);
 
-  if (loading != null) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

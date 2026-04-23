@@ -7,6 +7,8 @@ import { Copy, Check, Download } from 'lucide-react';
 import AppointmentBooking from '../AppointmentBooking';
 import LiveChatWidget from '../LiveChatWidget';
 import QRCodeDisplay from '../QRCodeDisplay';
+import MathCaptcha from '@/components/ui/MathCaptcha';
+import GoogleMap from '../GoogleMap';
 
 interface ContactSectionProps {
   config: ContactConfig;
@@ -20,6 +22,7 @@ export default function ContactSection({ config, brand, branch }: ContactSection
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [captchaValid, setCaptchaValid] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
   const contact = branch.contact as any;
@@ -223,25 +226,25 @@ export default function ContactSection({ config, brand, branch }: ContactSection
   };
 
   return (
-    <section ref={sectionRef} className="relative bg-white py-20">
+    <section ref={sectionRef} className="relative bg-white dark:bg-neutral-950 py-20">
       <div className="max-w-6xl mx-auto px-6">
         {/* Section Header */}
         <div className={`text-center mb-16 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <h2 id="contact-heading" className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+          <h2 id="contact-heading" className="text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
             Contact Us
           </h2>
           <div className="w-16 h-1 mx-auto rounded-full" style={{ backgroundColor: primaryColor }}></div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="max-w-4xl mx-auto space-y-8">
           {/* Contact Information */}
-          <div className="space-y-6 w-full">
+          <div className="space-y-6">
             {/* Contact Action Buttons - Clean */}
-            <div className="w-full">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
+            <div>
+              <h3 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
                 Get in Touch
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {contact.phone && (
                   <button
                     onClick={() => handleContactAction('call', contact.phone)}
@@ -258,7 +261,7 @@ export default function ContactSection({ config, brand, branch }: ContactSection
                 {contact.whatsapp && (
                   <button
                     onClick={() => handleContactAction('whatsapp', contact.whatsapp)}
-                    className="flex items-center justify-center space-x-2 px-6 py-4 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors duration-200 font-medium shadow-sm hover:shadow-md"
+                    className="flex items-center justify-center space-x-2 px-6 py-4 bg-success-600 dark:bg-success-700 text-white rounded-xl hover:bg-success-700 dark:hover:bg-success-800 transition-colors duration-200 font-medium shadow-sm hover:shadow-md"
                     aria-label="Contact via WhatsApp"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -271,7 +274,7 @@ export default function ContactSection({ config, brand, branch }: ContactSection
                 {contact.email && (
                   <button
                     onClick={() => handleContactAction('email', contact.email)}
-                    className="flex items-center justify-center space-x-2 px-6 py-4 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-colors duration-200 font-medium"
+                    className="flex items-center justify-center space-x-2 px-6 py-4 bg-white dark:bg-neutral-800 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:border-neutral-400 dark:hover:border-neutral-500 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors duration-200 font-medium"
                     aria-label="Send email"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
@@ -285,7 +288,7 @@ export default function ContactSection({ config, brand, branch }: ContactSection
                 {address && (
                   <button
                     onClick={() => handleContactAction('directions', '')}
-                    className="flex items-center justify-center space-x-2 px-6 py-4 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-colors duration-200 font-medium"
+                    className="flex items-center justify-center space-x-2 px-6 py-4 bg-white dark:bg-neutral-800 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:border-neutral-400 dark:hover:border-neutral-500 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors duration-200 font-medium"
                     aria-label="Get directions"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
@@ -298,7 +301,7 @@ export default function ContactSection({ config, brand, branch }: ContactSection
                 {/* Save Contact Button */}
                 <button
                   onClick={handleSaveContact}
-                  className="flex items-center justify-center space-x-2 px-6 py-4 text-white rounded-xl transition-colors duration-200 font-medium shadow-sm hover:shadow-md sm:col-span-2"
+                  className="flex items-center justify-center space-x-2 px-6 py-4 text-white rounded-xl transition-colors duration-200 font-medium shadow-sm hover:shadow-md"
                   style={{ backgroundColor: primaryColor }}
                   aria-label="Save contact to phone"
                 >
@@ -309,8 +312,8 @@ export default function ContactSection({ config, brand, branch }: ContactSection
             </div>
 
             {/* Contact Details with Copy */}
-            <div className="bg-gray-50 p-6 rounded-xl">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
+            <div className="bg-neutral-50 dark:bg-neutral-900 p-6 rounded-xl w-full">
+              <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-4">
                 Contact Information
               </h3>
               <div className="space-y-3">
@@ -320,17 +323,17 @@ export default function ContactSection({ config, brand, branch }: ContactSection
                       <svg className="w-5 h-5" style={{ color: primaryColor }} fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                         <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                       </svg>
-                      <span className="text-gray-700">{contact.phone}</span>
+                      <span className="text-neutral-700 dark:text-neutral-300">{contact.phone}</span>
                     </div>
                     <button
                       onClick={() => copyToClipboard(contact.phone, 'phone')}
-                      className="p-2 rounded-lg hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
+                      className="p-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors opacity-0 group-hover:opacity-100"
                       aria-label="Copy phone number"
                     >
                       {copiedField === 'phone' ? (
-                        <Check className="w-4 h-4 text-green-500" />
+                        <Check className="w-4 h-4 text-success-500" />
                       ) : (
-                        <Copy className="w-4 h-4 text-gray-400" />
+                        <Copy className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
                       )}
                     </button>
                   </div>
@@ -343,17 +346,17 @@ export default function ContactSection({ config, brand, branch }: ContactSection
                         <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                         <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                       </svg>
-                      <span className="text-gray-700">{contact.email}</span>
+                      <span className="text-neutral-700 dark:text-neutral-300">{contact.email}</span>
                     </div>
                     <button
                       onClick={() => copyToClipboard(contact.email, 'email')}
-                      className="p-2 rounded-lg hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100"
+                      className="p-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors opacity-0 group-hover:opacity-100"
                       aria-label="Copy email"
                     >
                       {copiedField === 'email' ? (
-                        <Check className="w-4 h-4 text-green-500" />
+                        <Check className="w-4 h-4 text-success-500" />
                       ) : (
-                        <Copy className="w-4 h-4 text-gray-400" />
+                        <Copy className="w-4 h-4 text-neutral-400 dark:text-neutral-500" />
                       )}
                     </button>
                   </div>
@@ -364,7 +367,7 @@ export default function ContactSection({ config, brand, branch }: ContactSection
                     <svg className="w-5 h-5 text-brand-primary mt-0.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                       <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                     </svg>
-                    <div className="text-gray-700">
+                    <div className="text-neutral-700 dark:text-neutral-300">
                       <p>{address.street}</p>
                       <p>{address.city}, {address.state} {address.zipCode}</p>
                       <p>{address.country}</p>
@@ -376,11 +379,11 @@ export default function ContactSection({ config, brand, branch }: ContactSection
 
             {/* Business Hours - Clean */}
             {businessHours && (
-              <div className="bg-gray-50 p-6 rounded-xl">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
+              <div className="bg-neutral-50 dark:bg-neutral-900 p-6 rounded-xl">
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-4">
                   Business Hours
                 </h3>
-                <div className="space-y-2 text-sm text-gray-700">
+                <div className="space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
                   {formatBusinessHours()}
                 </div>
               </div>
@@ -396,8 +399,8 @@ export default function ContactSection({ config, brand, branch }: ContactSection
 
           </div>
 
-          {/* Right Column - Forms */}
-          <div className="space-y-8 w-full">
+          {/* Forms Section */}
+          <div className="space-y-8">
             {/* Appointment Booking */}
             {config.appointmentBooking?.enabled && (
               <AppointmentBooking config={config.appointmentBooking} branch={branch} />
@@ -406,21 +409,21 @@ export default function ContactSection({ config, brand, branch }: ContactSection
             {/* Contact Form - Clean Design 2 */}
             {config.leadForm?.enabled && (
               <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-6">
+                <h3 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">
                   Send us a Message
                 </h3>
 
               {submitStatus === 'success' && (
-                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-                  <p className="text-green-800">
+                <div className="mb-6 p-4 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-xl">
+                  <p className="text-success-800 dark:text-success-300">
                     Thank you for your message! We'll get back to you soon.
                   </p>
                 </div>
               )}
 
               {submitStatus === 'error' && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <p className="text-red-800">
+                <div className="mb-6 p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-xl">
+                  <p className="text-error-800 dark:text-error-300">
                     Sorry, there was an error. Please try again.
                   </p>
                 </div>
@@ -429,16 +432,16 @@ export default function ContactSection({ config, brand, branch }: ContactSection
               <form onSubmit={handleSubmit} className="space-y-4">
                 {config.leadForm?.fields?.map((field) => (
                   <div key={field}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 capitalize">
                       {field.replace('_', ' ')}
-                      {['name', 'email'].includes(field) && <span className="text-red-500 ml-1">*</span>}
+                      {['name', 'email'].includes(field) && <span className="text-error-500 ml-1">*</span>}
                     </label>
                     {field === 'message' ? (
                       <textarea
                         value={formData[field] || ''}
                         onChange={(e) => handleInputChange(field, e.target.value)}
                         rows={4}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-shadow"
+                        className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-shadow"
                         placeholder={`Enter your ${field}`}
                       />
                     ) : (
@@ -447,16 +450,18 @@ export default function ContactSection({ config, brand, branch }: ContactSection
                         value={formData[field] || ''}
                         onChange={(e) => handleInputChange(field, e.target.value)}
                         required={['name', 'email'].includes(field)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-shadow"
+                        className="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-transparent transition-shadow"
                         placeholder={`Enter your ${field}`}
                       />
                     )}
                   </div>
                 ))}
 
+                <MathCaptcha onVerify={setCaptchaValid} />
+
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !captchaValid}
                   className="w-full px-6 py-4 bg-brand-primary text-white rounded-xl hover:bg-brand-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow-md"
                 >
                   {isSubmitting ? 'Sending...' : 'Send Message'}
@@ -467,24 +472,21 @@ export default function ContactSection({ config, brand, branch }: ContactSection
           </div>
         </div>
 
-        {/* Google Maps - Full Width - Always show if address exists */}
-        {address && (
+        {/* Google Maps - Enhanced with Interactive Features */}
+        {address && config.showMap && (
           <div className="mt-16">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            <h3 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-6 text-center">
               Find Us
             </h3>
-            <div className="w-full rounded-xl overflow-hidden shadow-lg" style={{ height: '450px' }}>
-              <iframe
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(`${address.street}, ${address.city}, ${address.state} ${address.zipCode}, ${address.country}`)}&output=embed`}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Location map"
-              />
-            </div>
+            <GoogleMap
+              address={address}
+              businessName={branch.name}
+              showDirectionsButton={config.mapConfig?.showDirectionsButton ?? true}
+              showCopyButton={config.mapConfig?.showCopyButton ?? true}
+              height={config.mapConfig?.height ?? "450px"}
+              primaryColor={primaryColor}
+              className="w-full"
+            />
           </div>
         )}
       </div>

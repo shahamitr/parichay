@@ -13,13 +13,14 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('accessToken')?.value;
   const hostname = request.headers.get('host') || '';
 
-  // Debug logging
-  console.log('Middleware:', {
-    pathname,
-    hasToken: !!accessToken,
-    isProtected: protectedRoutes.some(r => pathname.startsWith(r)),
-    isAuth: authRoutes.some(r => pathname.startsWith(r))
-  });
+  // Debug logging (only for protected routes in development)
+  const isProtected = protectedRoutes.some(r => pathname.startsWith(r));
+  const isAuth = authRoutes.some(r => pathname.startsWith(r));
+
+  // Minimal logging - only log auth issues
+  if (process.env.NODE_ENV === 'development' && (isProtected || isAuth) && !pathname.startsWith('/api/')) {
+    console.log('Middleware:', { pathname, hasToken: !!accessToken });
+  }
 
   // Generate or retrieve correlation ID for request tracing
   const correlationId = getCorrelationId(request);
@@ -47,21 +48,15 @@ export async function middleware(request: NextRequest) {
   // Handle custom domain routing (skip for IP addresses and localhost)
   const isIpAddress = /^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/.test(hostname.split(':')[0]);
   const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
-  const isMainDomain = hostname.includes('onetouchbizcard.in');
+  const isMainDomain = hostname.includes('parichay.com');
 
   if (!isIpAddress && !isLocalhost && !isMainDomain) {
     return handleCustomDomain(request, hostname);
   }
 
-  // Check if the route is protected
-  const isProtectedRoute = protectedRoutes.some(route =>
-    pathname.startsWith(route)
-  );
-
-  // Check if the route is an auth route
-  const isAuthRoute = authRoutes.some(route =>
-    pathname.startsWith(route)
-  );
+  // Route checks already done above
+  const isProtectedRoute = isProtected;
+  const isAuthRoute = isAuth;
 
   // If it's a protected route and no token, redirect to login
   if (isProtectedRoute && !accessToken) {
@@ -73,7 +68,6 @@ export async function middleware(request: NextRequest) {
   // If token exists, verify it
   if (accessToken != null) {
     const payload = await JWTEdgeService.verifyToken(accessToken);
-    console.log('🔍 Token verification:', { hasPayload: !!payload, isAuthRoute, pathname });
 
     // If token is invalid, clear cookies and redirect to login
     if (!payload && isProtectedRoute) {
@@ -86,8 +80,7 @@ export async function middleware(request: NextRequest) {
 
     // If user is authenticated and trying to access auth routes, redirect based on role
     if (payload && isAuthRoute) {
-      const redirectUrl = payload.role === 'EXECUTIVE' ? '/executive' : '/dashboard';
-      console.log('🔄 Middleware redirecting authenticated user from', pathname, 'to', redirectUrl);
+      const redirectUrl = payload.role === 'EXECUTIVE' ? '/executive' : '/admin';
       const response = NextResponse.redirect(new URL(redirectUrl, request.url));
 
       // Preserve cookies in redirect
@@ -112,13 +105,14 @@ export async function middleware(request: NextRequest) {
         });
       }
 
-      console.log('✅ Redirect response created with cookies preserved');
       return applySecurityHeaders(response);
     }
 
     // Redirect executives trying to access admin dashboard to executive portal
     // BUT allow access to microsite editor (both branch and brand level)
-    if (payload && payload.role === 'EXECUTIVE' && pathname.startsWith('/dashboard') && !pathname.startsWith('/dashboard/microsite') && !pathname.includes('/microsite')) {
+    const isAdminRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
+    const isMicrositeRoute = pathname.includes('/microsite');
+    if (payload && payload.role === 'EXECUTIVE' && isAdminRoute && !isMicrositeRoute) {
       const response = NextResponse.redirect(new URL('/executive', request.url));
 
       // Preserve cookies in redirect

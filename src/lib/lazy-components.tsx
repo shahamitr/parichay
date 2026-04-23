@@ -49,18 +49,6 @@ export const HeroCustomizer = dynamic(
 );
 
 /**
- * Lazy load AI content generator
- * Heavy component with complex logic
- */
-export const AiContentGenerator = dynamic(
-  () => import('@/components/microsites/AiContentGenerator'),
-  {
-    ssr: false,
-    loading: () => (<div className="animate-pulse bg-gray-200 h-48 rounded-lg" />),
-  }
-);
-
-/**
  * Lazy load interactive catalog
  * Contains complex interactions and state management
  */

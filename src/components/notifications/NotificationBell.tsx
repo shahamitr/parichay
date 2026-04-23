@@ -34,7 +34,7 @@ export default function NotificationBell() {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full"
+        className="relative p-2 text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 rounded-full"
         aria-label="Notifications"
       >
         <svg
@@ -51,7 +51,7 @@ export default function NotificationBell() {
           />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full">
+          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white dark:text-white transform translate-x-1/2 -translate-y-1/2 bg-error-600 dark:bg-error-500 rounded-full">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { AlertCircle, CheckCircle, XCircle, Database } from 'lucide-react';
+import { AlertCircle, CheckCircle, XCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
+import AuthLayout from '@/components/layout/AuthLayout';
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'warning'; onClose: () => void }) {
@@ -19,9 +20,9 @@ function Toast({ message, type, onClose }: { message: string; type: 'error' | 's
   };
 
   const colors = {
-    error: 'bg-red-50 border-red-200 text-red-800',
-    success: 'bg-green-50 border-green-200 text-green-800',
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+    error: 'bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800 text-error-800 dark:text-error-200',
+    success: 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800 text-success-800 dark:text-success-200',
+    warning: 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800 text-warning-800 dark:text-warning-200',
   };
 
   return (
@@ -46,6 +47,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'warning' } | null>(null);
@@ -61,8 +63,6 @@ export default function LoginPage() {
     setToast(null);
 
     try {
-      console.log('🔐 Attempting login for:', email);
-
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -73,57 +73,29 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
-      console.log('📥 Login response:', { ok: response.ok, status: response.status });
 
       if (response.ok && data.success) {
-        console.log('✅ Login successful, user:', data.user.email, 'role:', data.user.role);
-
         showToast('Login successful! Redirecting...', 'success');
-
-        // Role-based redirect
-        const redirectPath = data.user.role === 'EXECUTIVE' ? '/executive' : '/dashboard';
-
-        console.log('🔄 Redirecting to:', redirectPath);
-
-        // Small delay to ensure cookies are fully set
+        const redirectPath = data.user.role === 'EXECUTIVE' ? '/executive' : '/admin';
         await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Direct redirect to dashboard
         window.location.href = redirectPath;
       } else {
-        console.error('❌ Login failed:', data);
-
-        // Handle specific error types
-        if (data.type === 'DATABASE_ERROR') {
-          showToast('⚠️ Database connection failed. Please ensure the database is running and try again.', 'error');
-          setError('Database is not available. Please contact support if this persists.');
-        } else if (data.type === 'NETWORK_ERROR') {
-          showToast('⚠️ Network error. Please check your internet connection.', 'error');
-          setError(data.error || 'Network error occurred.');
-        } else {
-          showToast(data.error || 'Login failed. Please check your credentials.', 'error');
-          setError(data.error || 'Login failed. Please try again.');
-        }
+        showToast(data.error || 'Login failed. Please check your credentials.', 'error');
+        setError(data.error || 'Login failed. Please try again.');
       }
     } catch (err) {
-      console.error('❌ Login error:', err);
-
-      // Network or fetch errors
-      if (err instanceof TypeError && err.message.includes('fetch')) {
-        showToast('⚠️ Cannot connect to server. Please check if the application is running.', 'error');
-        setError('Cannot connect to server. Please try again later.');
-      } else {
-        showToast('⚠️ An unexpected error occurred. Please try again.', 'error');
-        setError('An error occurred. Please try again.');
-      }
+      showToast('⚠️ An unexpected error occurred. Please try again.', 'error');
+      setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
-      {/* Toast Notification */}
+    <AuthLayout 
+        title="Welcome Back" 
+        subtitle="Sign in to your account and manage your digital identity"
+    >
       {toast && (
         <Toast
           message={toast.message}
@@ -132,34 +104,16 @@ export default function LoginPage() {
         />
       )}
 
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/">
-            <span className="text-3xl font-bold text-blue-600">
-              OneTouch BizCard
-            </span>
-          </Link>
-          <h2 className="mt-4 text-2xl font-bold text-gray-900">
-            Welcome back
-          </h2>
-          <p className="mt-2 text-gray-600">Sign in to your account</p>
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 text-error-700 dark:text-error-200 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
 
-        {/* Login Form */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-
+        <div className="space-y-4">
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
+              <label htmlFor="email" className="block text-sm font-bold text-neutral-700 dark:text-neutral-300 mb-2">
                 Email Address
               </label>
               <input
@@ -168,80 +122,82 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="you@example.com"
+                className="w-full px-5 py-4 border-2 border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 text-neutral-900 dark:text-white rounded-2xl focus:border-primary-500 outline-none transition-all"
+                placeholder="you@email.com"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
+              <label htmlFor="password" className="block text-sm font-bold text-neutral-700 dark:text-neutral-300 mb-2">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember"
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="remember"
-                  className="ml-2 block text-sm text-gray-700"
-                >
-                  Remember me
-                </label>
+              <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-5 py-4 border-2 border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 text-neutral-900 dark:text-white rounded-2xl focus:border-primary-500 outline-none transition-all"
+                    placeholder="••••••••"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-primary-500 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
               </div>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-blue-600 hover:text-blue-500"
-              >
-                Forgot password?
-              </Link>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link
-                href="/register"
-                className="text-blue-600 hover:text-blue-500 font-semibold"
-              >
-                Sign up
-              </Link>
-            </p>
-          </div>
         </div>
 
-        {/* Back to Home */}
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-gray-600 hover:text-gray-900">
-            ← Back to home
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <input
+              id="remember"
+              type="checkbox"
+              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 dark:border-neutral-600 rounded"
+            />
+            <label htmlFor="remember" className="ml-2 block text-sm text-neutral-600 dark:text-neutral-400 font-medium cursor-pointer">
+              Remember me
+            </label>
+          </div>
+          <Link
+            href="/forgot-password"
+            className="text-sm text-primary-600 dark:text-primary-400 hover:underline font-bold"
+          >
+            Forgot password?
           </Link>
         </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-primary-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {loading && <Loader2 className="w-5 h-5 animate-spin" />}
+          {loading ? 'AUTHENTICATING...' : 'SIGN IN'}
+        </button>
+      </form>
+
+      <div className="mt-10 text-center">
+        <p className="text-neutral-600 dark:text-neutral-400 font-medium">
+          Don't have an account?{' '}
+          <Link
+            href="/register"
+            className="text-primary-600 dark:text-primary-400 hover:underline font-black"
+          >
+            CREATE ACCOUNT
+          </Link>
+        </p>
       </div>
-    </div>
+
+      <div className="mt-10 pt-8 border-t border-neutral-100 dark:border-neutral-800 text-center">
+        <Link href="/" className="text-sm font-bold text-neutral-400 hover:text-primary-500 transition-colors uppercase tracking-widest">
+          ← Return to Landing
+        </Link>
+      </div>
+    </AuthLayout>
   );
 }

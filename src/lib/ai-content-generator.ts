@@ -382,7 +382,7 @@ function getProductTemplates(businessName: string, productName?: string, tone?: 
     persuasive: [
       `Don't miss out on ${product} - the solution you've been searching for. With proven results and satisfied customers worldwide, this is your opportunity to experience excellence. Limited availability, unlimited potential. Order now and transform your experience.`,
 
-      `${product} will change everything. Join thousands of satisfied customers who've already made the switch. This isn't just another product - it's an investment in quality, performance, and your success. Don't settle for less.`,
+      `${product} will change everything. Join professionals and businesses who've already made the switch. This isn't just another product - it's an investment in quality, performance, and your success. Don't settle for less.`,
 
       `Why choose ${product}? Because it delivers results that speak for themselves. Superior quality, exceptional performance, and unmatched value. This is the product you've been waiting for. Make the smart choice today.`,
     ],

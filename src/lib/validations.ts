@@ -2,12 +2,22 @@ import { z } from 'zod';
 
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
 });
 
 export const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   brandName: z.string().min(1, 'Brand name is required').optional(),
@@ -65,20 +75,26 @@ export const brandCreateSchema = z.object({
       zipCode: z.string().min(1, 'ZIP code is required'),
       country: z.string().min(1, 'Country is required'),
     }),
+    socialMedia: z.any().optional(),
+    micrositeConfig: z.any().optional(),
   }).optional(),
 });
 
 export const brandUpdateSchema = z.object({
   name: z.string().min(1, 'Brand name is required').max(100, 'Brand name too long').optional(),
-  tagline: z.string().max(200, 'Tagline too long').optional().or(z.literal('')),
+  tagline: z.string().max(200, 'Tagline too long').nullish().or(z.literal('')),
   logo: logoSchema,
-  customDomain: z.string().optional().or(z.literal('')), // Allow empty string or domain name
+  customDomain: z.string().nullish().or(z.literal('')), // Allow empty string or domain name
   colorTheme: z.object({
     primary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid primary color'),
     secondary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid secondary color'),
     accent: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid accent color'),
-  }).optional(),
-  sslEnabled: z.boolean().optional(),
+  }).nullish(),
+  isActive: z.boolean().nullish(),
+  description: z.string().nullish().or(z.literal('')),
+  slug: z.string().min(1, 'Slug is required').optional(),
+  layoutId: z.string().nullish(),
+  festivalSettings: z.any().nullish(),
 });
 
 // Branch validation schemas

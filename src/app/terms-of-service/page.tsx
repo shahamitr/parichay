@@ -1,13 +1,16 @@
 import { Metadata } from 'next';
+import CommonHeader from "@/components/layout/CommonHeader";
+import CommonFooter from "@/components/layout/CommonFooter";
 
 export const metadata: Metadata = {
-  title: 'Terms of Service - OneTouch BizCard',
-  description: 'Terms of Service for OneTouch BizCard platform',
+  title: 'Terms of Service - Parichay',
+  description: 'Terms of Service for Parichay platform',
 };
 
 export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <CommonHeader />
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Terms of Service</h1>
         <p className="text-sm text-gray-600 mb-8">Last Updated: {new Date().toLocaleDateString()}</p>
@@ -16,7 +19,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">1. Acceptance of Terms</h2>
             <p>
-              By accessing and using OneTouch BizCard, you accept and agree to be bound by these Terms of Service.
+              By accessing and using Parichay, you accept and agree to be bound by these Terms of Service.
               If you do not agree to these terms, please do not use our platform.
             </p>
           </section>
@@ -24,7 +27,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">2. Service Description</h2>
             <p>
-              OneTouch BizCard provides a platform for creating and managing digital business card microsites.
+              Parichay provides a platform for creating and managing digital business card microsites.
               We offer subscription-based services with various features and limitations based on your chosen plan.
             </p>
           </section>
@@ -47,7 +50,7 @@ export default function TermsOfServicePage() {
               <li>Subscriptions are billed in advance on a monthly or yearly basis</li>
               <li>Payments are processed through Stripe or Razorpay</li>
               <li>Auto-renewal can be disabled in your account settings</li>
-              <li>Refunds are subject to our refund policy</li>
+              <li>All sales are final. Subscription fees are non-refundable.</li>
               <li>We reserve the right to change pricing with 30 days notice</li>
             </ul>
           </section>
@@ -76,7 +79,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">7. Service Availability</h2>
             <p>
-              We strive to maintain 99.9% uptime but do not guarantee uninterrupted service.
+              We strive to maintain high availability but do not guarantee uninterrupted service.
               We reserve the right to modify or discontinue services with reasonable notice.
             </p>
           </section>
@@ -92,7 +95,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">9. Limitation of Liability</h2>
             <p>
-              OneTouch BizCard is provided "as is" without warranties. We are not liable for any
+              Parichay is provided "as is" without warranties. We are not liable for any
               indirect, incidental, or consequential damages arising from your use of the service.
             </p>
           </section>
@@ -110,7 +113,7 @@ export default function TermsOfServicePage() {
             <p>
               For questions about these terms, contact us at:
               <br />
-              Email: legal@onetouchbizcard.in
+              Email: legal@parichay.com
             </p>
           </section>
         </div>

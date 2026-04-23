@@ -23,13 +23,15 @@ export function I18nProvider({ children, defaultLanguage = 'en' }: I18nProviderP
   useEffect(() => {
     // Load saved language preference
     const savedLang = localStorage.getItem('parichay-language') as Language;
-    if (savedLang && (savedLang === 'en' || savedLang === 'hi')) {
+    if (savedLang && (savedLang === 'en' || savedLang === 'hi' || savedLang === 'gu')) {
       setLanguageState(savedLang);
     } else {
       // Detect browser language
       const browserLang = navigator.language.toLowerCase();
       if (browserLang.startsWith('hi')) {
         setLanguageState('hi');
+      } else if (browserLang.startsWith('gu')) {
+        setLanguageState('gu');
       }
     }
   }, []);

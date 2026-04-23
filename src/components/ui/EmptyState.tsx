@@ -39,14 +39,14 @@ export default function EmptyState({
         <div className="relative mb-6">
           {/* Animated background circles */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-32 h-32 bg-blue-100 dark:bg-blue-900/20 rounded-full animate-pulse" />
+            <div className="w-32 h-32 bg-primary-100 dark:bg-primary-900/20 rounded-full animate-pulse" />
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-24 h-24 bg-purple-100 dark:bg-purple-900/20 rounded-full animate-pulse delay-75" />
+            <div className="w-24 h-24 bg-accent-100 dark:bg-accent-900/20 rounded-full animate-pulse delay-75" />
           </div>
 
           {/* Icon */}
-          <div className="relative z-10 w-20 h-20 mx-auto flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-xl">
+          <div className="relative z-10 w-20 h-20 mx-auto flex items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-accent-600 text-white shadow-xl">
             <Icon className="w-10 h-10" />
           </div>
         </div>
@@ -54,10 +54,10 @@ export default function EmptyState({
 
       {/* Content */}
       <div className="text-center max-w-md">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
           {title}
         </h3>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-neutral-600 dark:text-neutral-400 mb-6">
           {description}
         </p>
 
@@ -67,7 +67,7 @@ export default function EmptyState({
             {action && (
               <button
                 onClick={action.onClick}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-accent-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
               >
                 {action.icon && <action.icon className="w-5 h-5" />}
                 {action.label}
@@ -76,7 +76,7 @@ export default function EmptyState({
             {secondaryAction && (
               <button
                 onClick={secondaryAction.onClick}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl font-medium border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-xl font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
               >
                 {secondaryAction.label}
               </button>
