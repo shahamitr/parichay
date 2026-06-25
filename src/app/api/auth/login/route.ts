@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { AuthService } from '@/lib/auth';
 import { MFAService } from '@/lib/mfa';
 import { loginSchema } from '@/lib/validations';
+import { rateLimiters } from '@/lib/rate-limiter';
 import logger from '@/lib/logger';
 
 /**
@@ -228,8 +229,28 @@ import logger from '@/lib/logger';
  *                   type: string
  *                   example: INTERNAL_ERROR
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Rate limit login attempts by IP
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    const rlResult = await rateLimiters.auth.checkLimit(`login:${ip}`);
+
+    if (!rlResult.allowed) {
+      const retryAfter = Math.ceil((rlResult.resetTime - Date.now()) / 1000);
+      logger.warn({ ip }, 'Login rate limit exceeded');
+      return NextResponse.json(
+        { error: `Too many login attempts. Please try again in ${Math.ceil(retryAfter / 60)} minute(s).` },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Remaining': '0',
+          },
+        }
+      );
+    }
+
     const body = await request.json();
     logger.info({ email: body.email }, 'Login attempt');
 
@@ -250,11 +271,30 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if account is soft-deleted
+    if (user.deletedAt) {
+      return NextResponse.json(
+        { error: 'This account has been deleted. Please contact support.' },
+        { status: 401 }
+      );
+    }
+
     if (!user.isActive) {
       logger.warn({ email: validatedData.email }, 'User inactive');
       return NextResponse.json(
         { error: 'Account is inactive' },
         { status: 401 }
+      );
+    }
+
+    // Account lockout check
+    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+      const remainingMs = new Date(user.lockedUntil).getTime() - Date.now();
+      const remainingMin = Math.ceil(remainingMs / 60000);
+      logger.warn({ email: validatedData.email }, 'Account locked');
+      return NextResponse.json(
+        { error: `Account is temporarily locked. Try again in ${remainingMin} minute(s).` },
+        { status: 429 }
       );
     }
 
@@ -265,7 +305,33 @@ export async function POST(request: Request) {
     );
 
     if (!isValidPassword) {
-      logger.warn({ email: validatedData.email }, 'Invalid password');
+      // Increment failed attempts
+      const failedAttempts = (user.failedLoginAttempts || 0) + 1;
+      const MAX_ATTEMPTS = 5;
+      const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
+      const updateData: Record<string, unknown> = {
+        failedLoginAttempts: failedAttempts,
+      };
+
+      if (failedAttempts >= MAX_ATTEMPTS) {
+        updateData.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS);
+        logger.warn({ email: validatedData.email, failedAttempts }, 'Account locked due to failed attempts');
+      }
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: updateData,
+      });
+
+      if (failedAttempts >= MAX_ATTEMPTS) {
+        return NextResponse.json(
+          { error: 'Too many failed attempts. Account locked for 15 minutes.' },
+          { status: 429 }
+        );
+      }
+
+      logger.warn({ email: validatedData.email, failedAttempts }, 'Invalid password');
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -315,10 +381,14 @@ export async function POST(request: Request) {
       }
     }
 
-    // Update last login
+    // Update last login and reset failed attempts
     await prisma.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() },
+      data: {
+        lastLoginAt: new Date(),
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      },
     });
 
     // Generate tokens
@@ -355,7 +425,7 @@ export async function POST(request: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 15 * 60, // 15 minutes
       path: '/',
     });
 

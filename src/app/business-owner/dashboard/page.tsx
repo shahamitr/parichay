@@ -58,88 +58,15 @@ export default function BusinessOwnerDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-
-      // Mock data for demo - in production, fetch from API
-      const mockStats: DashboardStats = {
-        totalViews: 1247,
-        totalLeads: 89,
-        totalAppointments: 34,
-        conversionRate: 7.1,
-        avgRating: 4.8,
-        totalReviews: 156,
-        monthlyGrowth: 23.5,
-        activeOffers: 3
-      };
-
-      const mockActivity: RecentActivity[] = [
-        {
-          id: '1',
-          type: 'lead',
-          title: 'New Lead from Website',
-          description: 'Sarah Johnson inquired about hair styling services',
-          timestamp: '2024-01-24T10:30:00Z'
-        },
-        {
-          id: '2',
-          type: 'appointment',
-          title: 'Appointment Booked',
-          description: 'Mike Chen scheduled a consultation for tomorrow',
-          timestamp: '2024-01-24T09:15:00Z'
-        },
-        {
-          id: '3',
-          type: 'review',
-          title: 'New 5-Star Review',
-          description: 'Emma Davis left a positive review about your service',
-          timestamp: '2024-01-24T08:45:00Z'
-        },
-        {
-          id: '4',
-          type: 'view',
-          title: 'Profile Views Spike',
-          description: 'Your profile received 45 views in the last hour',
-          timestamp: '2024-01-24T08:00:00Z'
+      const res = await fetch('/api/business-owner/dashboard');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          setStats(json.data.stats);
+          setRecentActivity(json.data.recentActivity);
+          setRecentLeads(json.data.recentLeads);
         }
-      ];
-
-      const mockLeads: Lead[] = [
-        {
-          id: '1',
-          name: 'Sarah Johnson',
-          email: 'sarah.j@email.com',
-          phone: '+1 (555) 123-4567',
-          message: 'Interested in hair styling services for a wedding event',
-          source: 'website',
-          status: 'new',
-          priority: 'high',
-          createdAt: '2024-01-24T10:30:00Z'
-        },
-        {
-          id: '2',
-          name: 'Mike Chen',
-          email: 'mike.chen@email.com',
-          phone: '+1 (555) 987-6543',
-          message: 'Looking for business consultation services',
-          source: 'qr_code',
-          status: 'contacted',
-          priority: 'medium',
-          createdAt: '2024-01-24T09:15:00Z'
-        },
-        {
-          id: '3',
-          name: 'Emma Davis',
-          phone: '+1 (555) 456-7890',
-          message: 'Need plumbing repair services urgently',
-          source: 'social_share',
-          status: 'qualified',
-          priority: 'high',
-          createdAt: '2024-01-23T16:20:00Z'
-        }
-      ];
-
-      setStats(mockStats);
-      setRecentActivity(mockActivity);
-      setRecentLeads(mockLeads);
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {

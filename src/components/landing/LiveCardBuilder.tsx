@@ -1,23 +1,23 @@
 'use client';
 
-import React, { useState, useRef, useEffect, MouseEvent } from 'react';
+import React, { useState, useRef, MouseEvent } from 'react';
 import Link from 'next/link';
-import { Mail, Phone, Globe, Briefcase, User, MapPin, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Mail, Phone, Globe, Briefcase, User, MapPin, Zap, Sparkles, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const THEMES = [
-  { id: 'blue', gradient: 'from-blue-600 to-indigo-600', hex: '#4F46E5', name: 'Ocean' },
-  { id: 'purple', gradient: 'from-purple-600 to-pink-600', hex: '#9333EA', name: 'Amethyst' },
-  { id: 'emerald', gradient: 'from-emerald-500 to-teal-600', hex: '#10B981', name: 'Forest' },
-  { id: 'rose', gradient: 'from-rose-500 to-orange-500', hex: '#F43F5E', name: 'Sunset' },
-  { id: 'dark', gradient: 'from-neutral-800 to-black', hex: '#171717', name: 'Midnight' },
+  { id: 'indigo', gradient: 'from-indigo-600 to-indigo-400', hex: '#4F46E5', name: 'Arctic Indigo' },
+  { id: 'emerald', gradient: 'from-emerald-600 to-emerald-400', hex: '#10B981', name: 'Forest Emerald' },
+  { id: 'violet', gradient: 'from-violet-600 to-fuchsia-500', hex: '#8B5CF6', name: 'Royal Violet' },
+  { id: 'slate', gradient: 'from-slate-700 to-slate-500', hex: '#334155', name: 'Midnight Slate' },
+  { id: 'rose', gradient: 'from-rose-500 to-orange-400', hex: '#F43F5E', name: 'Sunset Rose' },
 ];
 
 export default function LiveCardBuilder() {
   const [formData, setFormData] = useState({
     name: 'Aarav Sharma',
-    role: 'Founding Partner',
-    company: 'NextGen Innovations',
+    role: 'Freelance Designer',
+    company: 'Pixel Craft Studio',
     theme: THEMES[0],
   });
 
@@ -27,10 +27,10 @@ export default function LiveCardBuilder() {
   const [genStep, setGenStep] = useState(0);
 
   const generationSteps = [
-    "Analyzing Brand Identity...",
-    "Optimizing for SEO & Search...",
-    "Configuring Global Map Node...",
-    "Deploying Live Microsite..."
+    "Analyzing Identity...",
+    "Optimizing Network Node...",
+    "Deploying Digital Presence...",
+    "Finalizing Node Protocol..."
   ];
 
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
@@ -88,237 +88,222 @@ export default function LiveCardBuilder() {
   };
 
   return (
-    <div className="relative w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
+    <div className="relative w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-24 py-20 px-6">
       
-      {/* LEFT PANE: Hero Text & Form Builder */}
-      <div className="w-full lg:w-[55%] relative z-20 space-y-8">
+      {/* LEFT PANE: Builder Panel */}
+      <div className="w-full lg:w-[50%] relative z-20 space-y-10">
         
-        {/* Launch Badge */}
-        <div className="inline-flex items-center gap-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold border border-blue-200/50 shadow-lg">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-gray-700 dark:text-gray-300">🚀 Experience Live Introduction Technology</span>
+        <div className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full"
+          >
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-200">Interactive Demo</span>
+          </motion.div>
+
+          <h2 className="text-5xl lg:text-6xl font-black tracking-tight text-white leading-[0.9]">
+            Identity is <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">Everything.</span>
+          </h2>
+
+          <p className="text-xl text-slate-400 font-medium leading-relaxed max-w-xl">
+            For individuals, freelancers, and small businesses—your digital presence starts here. Type your details and watch the node build in real-time.
+          </p>
         </div>
 
-        {/* Hero Title with Dynamic Aura */}
-        <div className="relative group cursor-pointer">
-          <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity rounded-[3rem]"></div>
-          <h1 className="relative text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-tight">
-            <span className="text-gray-900 dark:text-white">Turn Every Meeting</span>
-            <br />
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              into a Lead
-            </span>
-          </h1>
-          <div className="mt-4 flex items-center gap-2 text-primary-500 font-black text-xs uppercase tracking-widest animate-pulse">
-            <Zap className="w-4 h-4 fill-current" />
-            Active Microsite Generator Engine
-          </div>
-        </div>
+        {/* The Builder Panel */}
+        <div className="bg-[#121214] border border-white/10 rounded-[3rem] p-8 lg:p-12 shadow-2xl relative overflow-hidden group">
+          <AnimatePresence>
+            {isGenerating && (
+              <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-50 bg-[#080809]/95 backdrop-blur-xl flex flex-col items-center justify-center p-12 text-center"
+              >
+                  <div className="w-24 h-24 mb-8 relative">
+                      <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
+                      <motion.div 
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="absolute inset-0 border-4 border-t-indigo-500 rounded-full"
+                      ></motion.div>
+                  </div>
+                  <h3 className="text-3xl font-black text-white mb-3 tracking-tighter">{generationSteps[genStep]}</h3>
+                  <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Orchestrating Network Node...</p>
+                  <div className="w-full max-w-xs h-1 bg-white/5 rounded-full mt-10 overflow-hidden">
+                      <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(genStep + 1) * 25}%` }}
+                          className="h-full bg-indigo-500"
+                      />
+                  </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl font-medium">
-          Type your business details below. Watch our AI engine build your professional digital gateway in real-time.
-        </p>
-
-        {/* The Form Builder */}
-        <div className="bg-white/10 dark:bg-black/20 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 border border-gray-200 dark:border-gray-800 shadow-xl relative overflow-hidden">
-          {isGenerating && (
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-10 text-center"
-            >
-                <div className="w-20 h-20 mb-6 relative">
-                    <div className="absolute inset-0 border-4 border-primary-500/30 rounded-full"></div>
-                    <motion.div 
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-0 border-4 border-t-primary-500 rounded-full"
-                    ></motion.div>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-2">Your Name</label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full bg-white/5 border border-white/5 text-white rounded-2xl py-4 pl-12 pr-6 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-bold placeholder-slate-600"
+                    placeholder="Enter Name"
+                    maxLength={40}
+                  />
                 </div>
-                <h3 className="text-2xl font-black text-white mb-2">{generationSteps[genStep]}</h3>
-                <p className="text-neutral-400 font-medium">Sit tight, we are crafting your digital parichay...</p>
-                <div className="w-full max-w-xs h-1.5 bg-white/10 rounded-full mt-8 overflow-hidden">
-                    <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(genStep + 1) * 25}%` }}
-                        className="h-full bg-primary-500"
-                    />
-                </div>
-            </motion.div>
-          )}
+              </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                  placeholder="Your Name"
-                  maxLength={40}
-                />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-2">Job / Passion</label>
+                <div className="relative">
+                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <input
+                    type="text"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    className="w-full bg-white/5 border border-white/5 text-white rounded-2xl py-4 pl-12 pr-6 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-bold placeholder-slate-600"
+                    placeholder="Freelancer, Owner, etc."
+                    maxLength={40}
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-                Job Title
-              </label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-2">Business / Studio</label>
               <div className="relative">
-                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  className="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                  placeholder="e.g. Real Estate Agent"
-                  maxLength={40}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-                Company Name
-              </label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type="text"
                   name="company"
                   value={formData.company}
                   onChange={handleInputChange}
-                  className="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
-                  placeholder="Your Company"
+                  className="w-full bg-white/5 border border-white/5 text-white rounded-2xl py-4 pl-12 pr-6 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-bold placeholder-slate-600"
+                  placeholder="Company Name"
                   maxLength={40}
                 />
               </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 mt-4">
-              Choose Theme
-            </label>
-            <div className="flex gap-3">
-              {THEMES.map((theme) => (
-                <button
-                  key={theme.id}
-                  onClick={() => handleThemeChange(theme)}
-                  className={`w-8 h-8 rounded-full shadow-sm transition-all duration-300 transform outline-none focus:outline-none ${
-                    formData.theme.id === theme.id ? 'scale-125 ring-2 ring-white ring-offset-2 ring-offset-gray-900' : 'hover:scale-110'
-                  }`}
-                  style={{ background: theme.hex }}
-                  aria-label={`Select ${theme.name} theme`}
-                  title={theme.name}
-                />
-              ))}
+            <div className="pt-4 space-y-4">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-2">Select Aesthetic</label>
+              <div className="flex gap-4">
+                {THEMES.map((theme) => (
+                  <button
+                    key={theme.id}
+                    onClick={() => handleThemeChange(theme)}
+                    className={`w-10 h-10 rounded-full transition-all duration-300 transform ring-offset-4 ring-offset-[#121214] ${
+                      formData.theme.id === theme.id ? 'scale-110 ring-2 ring-indigo-500 shadow-xl' : 'hover:scale-105 opacity-50'
+                    }`}
+                    style={{ background: theme.hex }}
+                    aria-label={`Select ${theme.name} theme`}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="pt-4 flex flex-col sm:flex-row gap-3">
-            <button 
-              onClick={handleGenerate}
-              className={`flex-[2] py-4 px-2 rounded-xl text-white font-black text-xl text-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-gradient-to-r ${formData.theme.gradient}`}
-            >
-              Generate My Microsite
-              <span className="block text-[10px] font-bold uppercase tracking-widest opacity-80 mt-1">Free Introduction Gateway</span>
-            </button>
-            <Link 
-              href="/demo"
-              className={`flex-[1] flex items-center justify-center py-4 px-2 rounded-xl text-gray-900 dark:text-white font-black text-xl text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 bg-white/60 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 backdrop-blur-md hover:bg-gray-50 dark:hover:bg-gray-700 uppercase`}
-            >
-              Demo
-            </Link>
+            <div className="pt-8">
+              <button 
+                onClick={handleGenerate}
+                className={`w-full group/btn relative py-6 px-10 rounded-3xl text-white font-black text-xl flex items-center justify-center gap-3 overflow-hidden shadow-2xl transition-all hover:-translate-y-1 bg-gradient-to-r ${formData.theme.gradient}`}
+              >
+                <div className="absolute inset-0 bg-white/10 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000"></div>
+                Deploy My Presence
+                <ArrowRight className="w-6 h-6 group-hover/btn:translate-x-1 transition-transform" />
+              </button>
+              <div className="text-center mt-6">
+                 <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-600">No Credit Card Required • Instant Activation</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* RIGHT PANE: Live Phone Preview */}
       <div 
-        className="w-full lg:w-[45%] relative lg:h-[650px] flex items-center justify-center perspective-[1000px] z-10 mt-12 lg:mt-0"
+        className="w-full lg:w-[50%] relative lg:h-[700px] flex items-center justify-center perspective-[2000px] z-10"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
-        {/* Glow behind phone */}
+        {/* Dynamic Glow */}
         <div 
-          className={`absolute inset-0 bg-gradient-to-br ${formData.theme.gradient} blur-[80px] opacity-20 rounded-full transition-all duration-700`}
+          className={`absolute inset-0 bg-gradient-to-br ${formData.theme.gradient} blur-[120px] opacity-10 rounded-full transition-all duration-700`}
         />
 
-        {/* 3D Phone Mockup Container */}
-        <div 
+        {/* Phone Mockup */}
+        <motion.div 
           ref={phoneRef}
-          className="relative w-[300px] h-[600px] rounded-[40px] bg-black shadow-2xl border-[8px] border-neutral-900 transition-transform duration-200 ease-out preserve-3d"
+          initial={{ opacity: 0, scale: 0.9, y: 50 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          className="relative w-[320px] h-[640px] rounded-[3.5rem] bg-[#080809] shadow-2xl border-[10px] border-[#1a1a1e] overflow-hidden transition-transform duration-200 ease-out"
           style={{
             transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
             transformStyle: 'preserve-3d'
           }}
         >
-          {/* Phone Screen */}
-          <div className="absolute inset-0 rounded-[32px] overflow-hidden bg-white dark:bg-neutral-900 flex flex-col">
-            {/* Top Notch */}
-            <div className="absolute top-0 inset-x-0 h-[24px] flex justify-center z-50">
-              <div className="w-[120px] h-[24px] bg-black rounded-b-2xl"></div>
-            </div>
-
-            {/* Live Profile Header */}
-            <div className={`h-[180px] w-full bg-gradient-to-br ${formData.theme.gradient} relative transition-all duration-500`}>
-              {/* Profile Picture overlapping banner */}
-              <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
-                <div className="w-[100px] h-[100px] rounded-full bg-white dark:bg-neutral-800 p-1 shadow-lg">
-                  <div className={`w-full h-full rounded-full bg-gradient-to-br ${formData.theme.gradient} flex items-center justify-center text-white text-3xl font-bold transition-all duration-500`}>
-                    {getInitials(formData.name)}
-                  </div>
+          {/* Internal Content */}
+          <div className="h-full flex flex-col bg-[#080809]">
+             {/* Banner */}
+             <div className={`h-[200px] w-full bg-gradient-to-br ${formData.theme.gradient} relative transition-all duration-500`}>
+                <div className="absolute top-8 left-0 right-0 flex justify-center">
+                   <div className="w-[100px] h-[6px] bg-black/20 rounded-full"></div>
                 </div>
-              </div>
-            </div>
-
-            {/* Profile Content */}
-            <div className="flex-1 mt-14 px-6 text-center">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white truncate">
-                {formData.name || 'Your Name'}
-              </h2>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1 truncate">
-                {formData.role || 'Your Job Title'}
-              </p>
-              <div className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${formData.theme.gradient} transition-all duration-500 truncate max-w-full`}>
-                {formData.company || 'Company Name'}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 mt-6">
-                <div className={`flex-1 py-3 rounded-xl text-white font-medium text-sm shadow-md bg-gradient-to-r ${formData.theme.gradient} transition-all duration-500`}>
-                  Save Contact
+                <div className="absolute -bottom-14 left-1/2 -translate-x-1/2">
+                   <div className="w-[110px] h-[110px] rounded-[2.5rem] bg-[#080809] p-1.5 shadow-2xl">
+                      <div className={`w-full h-full rounded-[2.2rem] bg-gradient-to-br ${formData.theme.gradient} flex items-center justify-center text-white text-4xl font-black transition-all duration-500`}>
+                        {getInitials(formData.name)}
+                      </div>
+                   </div>
                 </div>
-                <div className="w-12 h-12 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300">
-                  <Globe className="w-5 h-5" />
+             </div>
+
+             <div className="flex-1 mt-20 px-8 text-center space-y-6">
+                <div className="space-y-1">
+                   <h3 className="text-2xl font-black text-white truncate">{formData.name}</h3>
+                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">{formData.role}</p>
                 </div>
-              </div>
+                
+                <div className={`inline-flex px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white bg-gradient-to-r ${formData.theme.gradient} shadow-lg transition-all duration-500`}>
+                   {formData.company}
+                </div>
 
-              {/* Contact Items Mockup */}
-              <div className="mt-6 space-y-3 text-left">
-                {[Mail, Phone, MapPin].map((Icon, idx) => (
-                    <div key={idx} className="w-full bg-gray-50 dark:bg-neutral-800 p-3 rounded-xl flex items-center gap-3 border border-gray-100 dark:border-neutral-700">
-                        <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
-                            <Icon className="w-4 h-4 text-neutral-500" />
-                        </div>
-                        <div className={`h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full ${idx === 0 ? 'w-32' : idx === 1 ? 'w-24' : 'w-40'}`}></div>
-                    </div>
-                ))}
-              </div>
-            </div>
+                <div className="pt-6 grid grid-cols-2 gap-4">
+                   <div className={`h-12 rounded-2xl bg-gradient-to-r ${formData.theme.gradient} flex items-center justify-center text-white font-black text-[10px] uppercase tracking-widest shadow-lg`}>
+                      Connect
+                   </div>
+                   <div className="h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-slate-400">
+                      <Globe className="w-5 h-5" />
+                   </div>
+                </div>
 
-            {/* Bottom Home Indicator */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[100px] h-[4px] bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+                <div className="space-y-3 text-left pt-4">
+                   {[Mail, Phone, MapPin].map((Icon, i) => (
+                      <div key={i} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                         <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-500">
+                            <Icon className="w-4 h-4" />
+                         </div>
+                         <div className={`h-2 bg-white/5 rounded-full ${i === 0 ? 'w-32' : i === 1 ? 'w-24' : 'w-40'}`}></div>
+                      </div>
+                   ))}
+                </div>
+             </div>
+
+             {/* Bottom bar */}
+             <div className="p-8 mt-auto flex justify-center">
+                <div className="w-32 h-1 bg-white/5 rounded-full"></div>
+             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

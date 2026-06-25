@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { industryCategories } from '@/data/categories';
+import { resolveDemoUrl } from '@/lib/demo-utils';
 import {
   Briefcase,
   Building2,
@@ -118,6 +119,17 @@ export default function CategorySelector({
                   </div>
                 ))}
               </div>
+
+              <a
+                href={resolveDemoUrl(category)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="mt-4 inline-flex items-center text-xs font-medium hover:underline"
+                style={{ color: category.colorScheme.primary }}
+              >
+                View Demo →
+              </a>
             </button>
           );
         })}

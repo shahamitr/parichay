@@ -7,6 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { validateFormSubmission } from '@/lib/bot-protection';
+import { rateLimiters } from '@/lib/rate-limiter';
 
 const createReviewSchema = z.object({
   branchId: z.string(),
@@ -85,6 +87,21 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    // Rate limit
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    const rl = await rateLimiters.formSubmission.checkLimit(`review:${ip}`);
+    if (!rl.allowed) {
+      return NextResponse.json({ success: true, message: 'Review submitted!' });
+    }
+
+    // Bot protection
+    const botCheck = validateFormSubmission(request, body);
+    if (!botCheck.allowed) {
+      return NextResponse.json({ success: true, message: 'Review submitted!' }); // Silent reject
+    }
+
     const validatedData = createReviewSchema.parse(body);
 
     // Check if branch exists

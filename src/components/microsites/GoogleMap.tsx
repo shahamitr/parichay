@@ -154,10 +154,27 @@ export default function GoogleMap({
     }
   };
 
-  // Open directions in Google Maps
+  // Open directions in Google Maps using current location as origin
   const openDirections = () => {
-    const directionsUrl = `https://maps.google.com/maps?daddr=${encodedAddress}`;
-    window.open(directionsUrl, '_blank');
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const directionsUrl = `https://www.google.com/maps/dir/${latitude},${longitude}/${encodedAddress}`;
+          window.open(directionsUrl, '_blank');
+        },
+        () => {
+          // Fallback if geolocation denied — use "Current Location" label
+          const directionsUrl = `https://www.google.com/maps/dir/Current+Location/${encodedAddress}`;
+          window.open(directionsUrl, '_blank');
+        },
+        { timeout: 5000 }
+      );
+    } else {
+      // Fallback for browsers without geolocation
+      const directionsUrl = `https://www.google.com/maps/dir//${encodedAddress}`;
+      window.open(directionsUrl, '_blank');
+    }
   };
 
   // Open in Google Maps app/website

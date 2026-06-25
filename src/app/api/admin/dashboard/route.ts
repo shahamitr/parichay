@@ -1,62 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { verifyToken } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    // Mock dashboard data to prevent chart rendering issues
-    const mockStats = {
-      totalBrands: 15,
-      totalBranches: 42,
-      totalLeads: 1247,
-      totalViews: 8934,
-      leadsChange: 12.5,
-      viewsChange: 8.3,
-      leadsToday: 23,
-      qrCodes: 156,
-      shortLinks: 89
+    const payload = await verifyToken(request);
+    
+    if (!payload || payload.role !== 'SUPER_ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const [
+      totalBrands,
+      totalBranches,
+      totalLeads,
+      totalViews,
+      qrCodes,
+      shortLinks,
+      recentLeadsData
+    ] = await Promise.all([
+      prisma.brand.count(),
+      prisma.branch.count(),
+      prisma.lead.count(),
+      prisma.analyticsEvent.count({ where: { eventType: 'PAGE_VIEW' } }),
+      prisma.qRCode.count(),
+      prisma.shortLink.count(),
+      prisma.lead.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          branch: {
+            include: {
+              brand: true
+            }
+          }
+        }
+      })
+    ]);
+
+    const stats = {
+      totalBrands,
+      totalBranches,
+      totalLeads,
+      totalViews,
+      leadsChange: 0, // calculate appropriately later
+      viewsChange: 0,
+      leadsToday: 0,
+      qrCodes,
+      shortLinks
     };
 
-    const mockChartData = [
-      { name: 'Mon', views: 120, leads: 15 },
-      { name: 'Tue', views: 180, leads: 22 },
-      { name: 'Wed', views: 150, leads: 18 },
-      { name: 'Thu', views: 220, leads: 28 },
-      { name: 'Fri', views: 280, leads: 35 },
-      { name: 'Sat', views: 200, leads: 25 },
-      { name: 'Sun', views: 160, leads: 20 }
+    const chartData = [
+      { name: 'Mon', views: 0, leads: 0 },
+      { name: 'Tue', views: 0, leads: 0 },
+      { name: 'Wed', views: 0, leads: 0 },
+      { name: 'Thu', views: 0, leads: 0 },
+      { name: 'Fri', views: 0, leads: 0 },
+      { name: 'Sat', views: 0, leads: 0 },
+      { name: 'Sun', views: 0, leads: 0 }
     ];
 
-    const mockRecentLeads = [
-      {
-        id: '1',
-        name: 'John Smith',
-        email: 'john@example.com',
-        createdAt: new Date().toISOString(),
-        branchName: 'Main Office',
-        brandName: 'TechCorp'
-      },
-      {
-        id: '2',
-        name: 'Sarah Johnson',
-        email: 'sarah@example.com',
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        branchName: 'Downtown',
-        brandName: 'Creative Studio'
-      },
-      {
-        id: '3',
-        name: 'Mike Wilson',
-        email: 'mike@example.com',
-        createdAt: new Date(Date.now() - 172800000).toISOString(),
-        branchName: 'Bandra',
-        brandName: 'Spice Garden'
-      }
-    ];
+    const recentLeads = recentLeadsData.map(lead => ({
+      id: lead.id,
+      name: lead.name,
+      email: lead.email,
+      createdAt: lead.createdAt.toISOString(),
+      branchName: lead.branch?.name || 'Unknown',
+      brandName: lead.branch?.brand?.name || 'Unknown'
+    }));
 
     return NextResponse.json({
       success: true,
-      stats: mockStats,
-      chartData: mockChartData,
-      recentLeads: mockRecentLeads
+      stats,
+      chartData,
+      recentLeads
     });
 
   } catch (error) {

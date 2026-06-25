@@ -1,208 +1,393 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { useRouter } from 'next/navigation';
+import { useRequestSigning } from '@/hooks/useRequestSigning';
 import {
   CreditCard,
-  Crown,
-  Zap,
-  Calendar,
-  Receipt,
-  Settings,
   CheckCircle,
-  ArrowUpRight,
-  Package,
-  TrendingUp,
-  Activity,
-  Target,
-  ChevronRight,
-  ShieldCheck
+  Clock,
+  AlertTriangle,
+  Download,
+  ArrowRight,
+  Sparkles,
+  Shield,
+  Zap,
+  Star,
+  Loader2,
 } from 'lucide-react';
-import { SectionHeader, Card, Button, StatCard } from '@/components/ui';
 
-type TabType = 'overview' | 'plans' | 'billing' | 'payment';
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  duration: 'MONTHLY' | 'YEARLY';
+  features: {
+    maxBranches: number;
+    customDomain: boolean;
+    analytics: boolean;
+    qrCodes: boolean;
+    leadCapture: boolean;
+    prioritySupport?: boolean;
+  };
+}
+
+interface Subscription {
+  id: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  autoRenew: boolean;
+  licenseKey: string;
+  isTrial: boolean;
+  trialEndsAt?: string;
+  plan: Plan;
+}
+
+interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  amount: number;
+  currency: string;
+  status: string;
+  paidAt?: string;
+  createdAt: string;
+}
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 export default function SubscriptionPage() {
   const { user } = useAuth();
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const { signedFetch } = useRequestSigning();
+
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingPlan, setProcessingPlan] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
+    loadData();
+    loadRazorpayScript();
   }, []);
 
-  const tabs = [
-    { id: 'overview' as TabType, name: 'MATRIX', icon: Package },
-    { id: 'plans' as TabType, name: 'UPGRADE', icon: Crown },
-    { id: 'billing' as TabType, name: 'LEDGER', icon: Receipt },
-    { id: 'payment' as TabType, name: 'CHANNELS', icon: CreditCard },
-  ];
+  const loadRazorpayScript = () => {
+    if (document.getElementById('razorpay-script')) return;
+    const script = document.createElement('script');
+    script.id = 'razorpay-script';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+  };
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [plansRes, subsRes] = await Promise.all([
+        fetch('/api/subscription-plans', { credentials: 'include' }),
+        fetch('/api/subscriptions', { credentials: 'include' }),
+      ]);
+
+      if (plansRes.ok) {
+        const data = await plansRes.json();
+        setPlans(data.plans || []);
+      }
+
+      if (subsRes.ok) {
+        const data = await subsRes.json();
+        const subs = data.subscriptions || [];
+        if (subs.length > 0) {
+          setSubscription(subs[0]);
+          // Fetch invoices for the subscription
+          const invRes = await fetch(`/api/subscriptions/${subs[0].id}/invoices`, { credentials: 'include' });
+          if (invRes.ok) {
+            const invData = await invRes.json();
+            setInvoices(invData.invoices || []);
+          }
+        }
+      }
+    } catch (err) {
+      setError('Failed to load subscription data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubscribe = async (plan: Plan) => {
+    if (!user) return;
+    setProcessingPlan(plan.id);
+    setError('');
+
+    try {
+      // 1. Create Razorpay order via signed request
+      const orderRes = await signedFetch('/api/payments/razorpay/create-order', {
+        method: 'POST',
+        body: { planId: plan.id, brandId: user.brandId || '' },
+      });
+
+      if (!orderRes.ok) {
+        const data = await orderRes.json();
+        throw new Error(data.error || 'Failed to create order');
+      }
+
+      const orderData = await orderRes.json();
+
+      // 2. Open Razorpay checkout
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount * 100,
+        currency: orderData.currency,
+        name: 'Parichay',
+        description: `${plan.name} - ${plan.duration} Plan`,
+        order_id: orderData.orderId,
+        handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          // 3. Verify payment on server
+          await verifyPayment(response);
+        },
+        prefill: {
+          name: user.firstName + ' ' + user.lastName,
+          email: user.email,
+        },
+        theme: { color: '#6366f1' },
+        modal: {
+          ondismiss: () => setProcessingPlan(null),
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (err: any) {
+      setError(err.message || 'Payment failed');
+      setProcessingPlan(null);
+    }
+  };
+
+  const verifyPayment = async (response: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }) => {
+    try {
+      const verifyRes = await fetch('/api/payments/razorpay/verify', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: response.razorpay_order_id,
+          paymentId: response.razorpay_payment_id,
+          signature: response.razorpay_signature,
+        }),
+      });
+
+      const data = await verifyRes.json();
+      if (data.success) {
+        // Refresh data
+        await loadData();
+        setProcessingPlan(null);
+      } else {
+        setError(data.error || 'Payment verification failed');
+        setProcessingPlan(null);
+      }
+    } catch {
+      setError('Payment verification failed. Please contact support.');
+      setProcessingPlan(null);
+    }
+  };
+
+  const handleDownloadInvoice = (invoiceId: string) => {
+    window.open(`/api/invoices/${invoiceId}/download`, '_blank');
+  };
 
   if (loading) {
     return (
-      <div className="p-8 space-y-8 animate-pulse">
-        <div className="h-12 bg-neutral-900 border border-neutral-800 rounded-2xl w-1/4 mb-8"></div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-neutral-900 border border-neutral-800 rounded-2xl"></div>
-          ))}
-        </div>
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
   }
 
+  const isActive = subscription?.status === 'ACTIVE';
+  const isTrial = subscription?.isTrial;
+  const daysLeft = subscription
+    ? Math.max(0, Math.ceil((new Date(subscription.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
+
   return (
-    <div className="p-8 space-y-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <SectionHeader
-          title="Revenue Intelligence"
-          description="Plan lifecycle management and billing synchronization."
-        />
-        <button className="flex items-center gap-2 px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-primary-500/20">
-          <Zap className="w-4 h-4" />
-          Accelerate Plan
-        </button>
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Subscription & Billing</h1>
+        <p className="text-gray-500 mt-1">Manage your plan, view invoices, and download receipts.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Active Tier"
-          value="Enterprise"
-          icon={<Crown className="w-5 h-5" />}
-          color="primary"
-        />
-        <StatCard
-          title="Next Cycle"
-          value="May 24"
-          icon={<Calendar className="w-5 h-5" />}
-          color="emerald"
-        />
-        <StatCard
-          title="Resource Load"
-          value="42%"
-          icon={<Activity className="w-5 h-5" />}
-          color="amber"
-        />
-        <StatCard
-          title="Vault Status"
-          value="Verified"
-          icon={<ShieldCheck className="w-5 h-5" />}
-          color="indigo"
-        />
-      </div>
+      {error && (
+        <div className="px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+          {error}
+        </div>
+      )}
 
-      <div className="flex flex-col lg:flex-row gap-10">
-        {/* Navigation */}
-        <div className="w-full lg:w-64 space-y-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all border ${
-                activeTab === tab.id
-                  ? 'bg-primary-500/10 border-primary-500/20 text-white'
-                  : 'bg-neutral-900 border-neutral-800 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? 'text-primary-500' : ''}`} />
-                <span className="text-[10px] font-black uppercase tracking-widest">{tab.name}</span>
+      {/* Current Subscription Status */}
+      {subscription && (
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <h2 className="text-lg font-bold text-gray-900">{subscription.plan.name}</h2>
+                {isActive && (
+                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-200">
+                    {isTrial ? 'Trial' : 'Active'}
+                  </span>
+                )}
               </div>
-              {activeTab === tab.id && <ChevronRight className="w-4 h-4" />}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 space-y-8 max-w-4xl">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-8"
-            >
-              {activeTab === 'overview' && (
-                <div className="space-y-8">
-                  <div className="bg-neutral-900 border border-neutral-800 rounded-[32px] p-8 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-3xl -mr-16 -mt-16" />
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-                      <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-neutral-950 border border-neutral-800 rounded-[24px] flex items-center justify-center text-primary-500 group-hover:scale-110 transition-transform">
-                          <Crown className="w-8 h-8" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-black uppercase tracking-widest text-white">Neural Enterprise</h3>
-                          <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Global scaling & intelligence</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <span className="block text-[9px] font-black uppercase tracking-widest text-neutral-600 mb-1">Current Yield</span>
-                          <span className="text-xl font-black text-white">$499<span className="text-sm text-neutral-600">/mo</span></span>
-                        </div>
-                        <button className="p-4 bg-neutral-950 border border-neutral-800 text-primary-500 hover:text-white hover:border-primary-500/30 rounded-2xl transition-all">
-                          <ArrowUpRight className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 pt-12 border-t border-neutral-800/50">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-neutral-500">
-                          <span>Compute Units</span>
-                          <span>42%</span>
-                        </div>
-                        <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
-                          <div className="h-full bg-primary-500" style={{ width: '42%' }} />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-neutral-500">
-                          <span>Bandwidth</span>
-                          <span>18%</span>
-                        </div>
-                        <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-500" style={{ width: '18%' }} />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-neutral-500">
-                          <span>Storage</span>
-                          <span>64%</span>
-                        </div>
-                        <div className="h-1 bg-neutral-950 rounded-full overflow-hidden">
-                          <div className="h-full bg-amber-500" style={{ width: '64%' }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {[
-                      'Unlimited Neural Nodes',
-                      'Priority Support Stream',
-                      'Global Asset Distribution',
-                      'Advanced Analytics Matrix',
-                    ].map((feature) => (
-                      <div key={feature} className="p-6 bg-neutral-900 border border-neutral-800 rounded-2xl flex items-center gap-4 group hover:border-primary-500/20 transition-all">
-                        <CheckCircle className="w-5 h-5 text-emerald-500" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 group-hover:text-white transition-colors">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <p className="text-sm text-gray-500">
+                {isTrial
+                  ? `Free trial ends in ${daysLeft} days`
+                  : `Renews on ${new Date(subscription.endDate).toLocaleDateString()}`}
+              </p>
+              {subscription.licenseKey && (
+                <p className="text-xs text-gray-400 mt-1 font-mono">
+                  License: {subscription.licenseKey}
+                </p>
               )}
-            </motion.div>
-          </AnimatePresence>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-gray-900">
+                ₹{subscription.plan.price.toLocaleString()}
+                <span className="text-sm font-normal text-gray-400">/{subscription.plan.duration === 'MONTHLY' ? 'mo' : 'yr'}</span>
+              </p>
+              {daysLeft <= 7 && daysLeft > 0 && (
+                <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" /> Expires soon
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Plans */}
+      <div>
+        <h2 className="text-lg font-bold text-gray-900 mb-4">
+          {subscription ? 'Change Plan' : 'Choose a Plan'}
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {plans.map((plan) => {
+            const isCurrentPlan = subscription?.plan.id === plan.id;
+            const features = plan.features;
+
+            return (
+              <div
+                key={plan.id}
+                className={`relative bg-white border rounded-2xl p-6 transition-all ${
+                  isCurrentPlan ? 'border-indigo-300 ring-2 ring-indigo-100' : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                }`}
+              >
+                {isCurrentPlan && (
+                  <div className="absolute -top-3 left-4 px-3 py-0.5 bg-indigo-600 text-white text-xs font-semibold rounded-full">
+                    Current Plan
+                  </div>
+                )}
+
+                <h3 className="text-lg font-bold text-gray-900 mt-1">{plan.name}</h3>
+                <p className="text-3xl font-extrabold text-gray-900 mt-3">
+                  ₹{plan.price.toLocaleString()}
+                  <span className="text-sm font-normal text-gray-400">/{plan.duration === 'MONTHLY' ? 'mo' : 'yr'}</span>
+                </p>
+
+                <ul className="mt-5 space-y-2.5">
+                  <Feature text={`${features.maxBranches} Branch${features.maxBranches > 1 ? 'es' : ''}`} />
+                  {features.analytics && <Feature text="Analytics Dashboard" />}
+                  {features.qrCodes && <Feature text="QR Code Generation" />}
+                  {features.leadCapture && <Feature text="Lead Capture Forms" />}
+                  {features.customDomain && <Feature text="Custom Domain" />}
+                  {features.prioritySupport && <Feature text="Priority Support" highlight />}
+                </ul>
+
+                <button
+                  onClick={() => handleSubscribe(plan)}
+                  disabled={isCurrentPlan || processingPlan === plan.id}
+                  className={`w-full mt-6 py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                    isCurrentPlan
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm'
+                  }`}
+                >
+                  {processingPlan === plan.id ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+                  ) : isCurrentPlan ? (
+                    'Current Plan'
+                  ) : subscription ? (
+                    <><ArrowRight className="w-4 h-4" /> Switch to this plan</>
+                  ) : (
+                    <><Zap className="w-4 h-4" /> Subscribe Now</>
+                  )}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
+
+      {/* Invoices */}
+      {invoices.length > 0 && (
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Invoices</h2>
+          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Invoice #</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Date</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Amount</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
+                  <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase">Download</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {invoices.map((inv) => (
+                  <tr key={inv.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-4 text-sm font-medium text-gray-900">{inv.invoiceNumber}</td>
+                    <td className="px-5 py-4 text-sm text-gray-500">{new Date(inv.createdAt).toLocaleDateString()}</td>
+                    <td className="px-5 py-4 text-sm font-medium text-gray-900">₹{inv.amount.toLocaleString()}</td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${
+                        inv.status === 'PAID' ? 'bg-emerald-50 text-emerald-700' :
+                        inv.status === 'OVERDUE' ? 'bg-red-50 text-red-700' :
+                        'bg-amber-50 text-amber-700'
+                      }`}>
+                        {inv.status}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <button
+                        onClick={() => handleDownloadInvoice(inv.id)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-900"
+                        title="Download PDF"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function Feature({ text, highlight }: { text: string; highlight?: boolean }) {
+  return (
+    <li className="flex items-center gap-2 text-sm text-gray-600">
+      <CheckCircle className={`w-4 h-4 flex-shrink-0 ${highlight ? 'text-indigo-500' : 'text-emerald-500'}`} />
+      {text}
+    </li>
   );
 }

@@ -1,248 +1,199 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { JWTEdgeService } from './lib/jwt-edge';
-import { applySecurityHeaders } from './lib/security-headers';
-import { applyRateLimit, rateLimiters } from './lib/rate-limiter';
-import { getCorrelationId, addCorrelationId } from './lib/correlation-id';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// Define protected routes
-const protectedRoutes = ['/dashboard', '/admin', '/executive', '/api/brands', '/api/branches'];
-const authRoutes = ['/login', '/register'];
+// =============================================================================
+// Bot Detection (lightweight, edge-compatible)
+// =============================================================================
+const BOT_UA_PATTERNS = [
+  /bot/i, /crawl/i, /spider/i, /scrape/i, /curl/i, /wget/i,
+  /python-requests/i, /httpx/i, /node-fetch/i,
+  /go-http-client/i, /java\//i, /libwww/i, /lwp-/i,
+  /phantom/i, /headless/i, /selenium/i, /puppeteer/i,
+  /playwright/i, /cypress/i,
+];
 
-export async function middleware(request: NextRequest) {
+const ALLOWED_CRAWLERS = [/googlebot/i, /bingbot/i, /yandexbot/i, /duckduckbot/i];
+
+function isBotRequest(request: NextRequest): boolean {
+  const ua = request.headers.get('user-agent') || '';
+  if (!ua || ua.length < 10) return true;
+  if (BOT_UA_PATTERNS.some((p) => p.test(ua))) {
+    // Allow known search crawlers on GET
+    if (request.method === 'GET' && ALLOWED_CRAWLERS.some((p) => p.test(ua))) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+// =============================================================================
+// Routes Configuration
+// =============================================================================
+const PROTECTED_ROUTES = ['/admin', '/business-owner', '/executive', '/customer-dashboard'];
+// Routes that should redirect authenticated users away
+const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
+
+// Role-based route mapping
+const ROLE_ROUTES: Record<string, string[]> = {
+  SUPER_ADMIN: ['/admin'],
+  BRAND_MANAGER: ['/admin'],
+  BRANCH_ADMIN: ['/admin'],
+  EXECUTIVE: ['/admin', '/executive'],
+  BUSINESS_OWNER: ['/business-owner', '/admin'],
+  CUSTOMER: ['/customer-dashboard'],
+};
+
+// Default redirect for each role after login
+const ROLE_DASHBOARD: Record<string, string> = {
+  SUPER_ADMIN: '/admin/dashboard',
+  BRAND_MANAGER: '/admin/dashboard',
+  BRANCH_ADMIN: '/admin/dashboard',
+  EXECUTIVE: '/admin/dashboard',
+  BUSINESS_OWNER: '/business-owner/dashboard',
+  CUSTOMER: '/customer-dashboard',
+};
+
+function parseJWT(token: string): { userId: string; role: string; email: string } | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (!payload.userId || !payload.role) return null;
+    return { userId: payload.userId, role: payload.role, email: payload.email };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Apply security headers to every response passing through middleware.
+ */
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  // Prevent clickjacking
+  response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+  // Prevent MIME sniffing
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  // XSS Protection (legacy browsers)
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  // Referrer policy
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Permissions Policy
+  response.headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(self), payment=(self)'
+  );
+
+  // HSTS in production
+  if (process.env.NODE_ENV === 'production') {
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
+
+  // Content Security Policy
+  const isDev = process.env.NODE_ENV !== 'production';
+  const csp = [
+    "default-src 'self'",
+    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://js.stripe.com https://checkout.razorpay.com`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com",
+    "font-src 'self' https://fonts.gstatic.com https://cdn.fontshare.com",
+    "img-src 'self' data: https: blob:",
+    "connect-src 'self' https://api.stripe.com https://api.razorpay.com https://*.sentry.io",
+    "frame-src 'self' https://js.stripe.com https://checkout.razorpay.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+    ...(isDev ? [] : ["upgrade-insecure-requests"]),
+  ].join('; ');
+  response.headers.set('Content-Security-Policy', csp);
+
+  return response;
+}
+
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get('accessToken')?.value;
-  const hostname = request.headers.get('host') || '';
 
-  // Debug logging (only for protected routes in development)
-  const isProtected = protectedRoutes.some(r => pathname.startsWith(r));
-  const isAuth = authRoutes.some(r => pathname.startsWith(r));
+  const user = accessToken ? parseJWT(accessToken) : null;
 
-  // Minimal logging - only log auth issues
-  if (process.env.NODE_ENV === 'development' && (isProtected || isAuth) && !pathname.startsWith('/api/')) {
-    console.log('Middleware:', { pathname, hasToken: !!accessToken });
-  }
+  // Check if trying to access protected route
+  const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
+  const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
+  const isApiRoute = pathname.startsWith('/api');
+  const isWriteMethod = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
 
-  // Generate or retrieve correlation ID for request tracing
-  const correlationId = getCorrelationId(request);
-
-  // Apply rate limiting for API routes
-  if (pathname.startsWith('/api/')) {
-    const limiter = getRateLimiterForPath(pathname);
-    const rateLimitResult = await applyRateLimit(request, limiter);
-
-    if (!rateLimitResult.allowed) {
-      const response = NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
-        { status: 429 }
-      );
-
-      // Add rate limit headers
-      Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-
-      return applySecurityHeaders(response);
+  // ─── BOT BLOCKING ───
+  // Block bots on all write API requests (POST/PUT/PATCH/DELETE)
+  // and on auth page loads (login, register — prevents credential stuffing tools)
+  if ((isApiRoute && isWriteMethod) || isAuthRoute) {
+    if (isBotRequest(request)) {
+      if (isApiRoute) {
+        return new NextResponse(
+          JSON.stringify({ error: 'Access denied' }),
+          { status: 403, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+      // For page requests, serve a 403 page
+      return new NextResponse('Forbidden', { status: 403 });
     }
   }
 
-  // Handle custom domain routing (skip for IP addresses and localhost)
-  const isIpAddress = /^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/.test(hostname.split(':')[0]);
-  const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
-  const isMainDomain = hostname.includes('parichay.com');
-
-  if (!isIpAddress && !isLocalhost && !isMainDomain) {
-    return handleCustomDomain(request, hostname);
-  }
-
-  // Route checks already done above
-  const isProtectedRoute = isProtected;
-  const isAuthRoute = isAuth;
-
-  // If it's a protected route and no token, redirect to login
-  if (isProtectedRoute && !accessToken) {
+  if (isProtectedRoute && !user) {
+    // Not authenticated, redirect to login
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+    return applySecurityHeaders(NextResponse.redirect(loginUrl));
   }
 
-  // If token exists, verify it
-  if (accessToken != null) {
-    const payload = await JWTEdgeService.verifyToken(accessToken);
+  if (isAuthRoute && user) {
+    // Already authenticated, redirect to their dashboard
+    const dashboard = ROLE_DASHBOARD[user.role] || '/admin/dashboard';
+    return applySecurityHeaders(NextResponse.redirect(new URL(dashboard, request.url)));
+  }
 
-    // If token is invalid, clear cookies and redirect to login
-    if (!payload && isProtectedRoute) {
-      console.log('❌ Invalid token, clearing cookies and redirecting to login');
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.delete('accessToken');
-      response.cookies.delete('refreshToken');
-      return applySecurityHeaders(response);
+  // Role-based access control for protected routes
+  if (isProtectedRoute && user) {
+    const allowedRoutes = ROLE_ROUTES[user.role] || [];
+    const hasAccess = allowedRoutes.some((route) => pathname.startsWith(route));
+
+    if (!hasAccess) {
+      // Redirect to their correct dashboard
+      const dashboard = ROLE_DASHBOARD[user.role] || '/admin/dashboard';
+      return applySecurityHeaders(NextResponse.redirect(new URL(dashboard, request.url)));
     }
+  }
 
-    // If user is authenticated and trying to access auth routes, redirect based on role
-    if (payload && isAuthRoute) {
-      const redirectUrl = payload.role === 'EXECUTIVE' ? '/executive' : '/admin';
-      const response = NextResponse.redirect(new URL(redirectUrl, request.url));
+  // For API routes, pass authenticated user info via headers
+  // so route handlers can use getUserFromRequest() without re-parsing JWT
+  if (isApiRoute && user) {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-user-id', user.userId);
+    requestHeaders.set('x-user-role', user.role);
+    if (user.email) requestHeaders.set('x-user-email', user.email);
 
-      // Preserve cookies in redirect
-      if (accessToken != null) {
-        response.cookies.set('accessToken', accessToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 7 * 24 * 60 * 60,
-          path: '/',
-        });
-      }
-
-      const refreshToken = request.cookies.get('refreshToken')?.value;
-      if (refreshToken != null) {
-        response.cookies.set('refreshToken', refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 30 * 24 * 60 * 60,
-          path: '/',
-        });
-      }
-
-      return applySecurityHeaders(response);
-    }
-
-    // Redirect executives trying to access admin dashboard to executive portal
-    // BUT allow access to microsite editor (both branch and brand level)
-    const isAdminRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/admin');
-    const isMicrositeRoute = pathname.includes('/microsite');
-    if (payload && payload.role === 'EXECUTIVE' && isAdminRoute && !isMicrositeRoute) {
-      const response = NextResponse.redirect(new URL('/executive', request.url));
-
-      // Preserve cookies in redirect
-      if (accessToken != null) {
-        response.cookies.set('accessToken', accessToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 7 * 24 * 60 * 60,
-          path: '/',
-        });
-      }
-
-      const refreshToken = request.cookies.get('refreshToken')?.value;
-      if (refreshToken != null) {
-        response.cookies.set('refreshToken', refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 30 * 24 * 60 * 60,
-          path: '/',
-        });
-      }
-
-      return applySecurityHeaders(response);
-    }
-
-    // Add user info to headers for API routes
-    if (payload && pathname.startsWith('/api/')) {
-      const requestHeaders = new Headers(request.headers);
-      requestHeaders.set('x-user-id', payload.userId);
-      requestHeaders.set('x-user-role', payload.role);
-      if (payload.brandId) {
-        requestHeaders.set('x-brand-id', payload.brandId);
-      }
-      addCorrelationId(requestHeaders, correlationId);
-
-      const response = NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
-
-      addCorrelationId(response.headers, correlationId);
-      return applySecurityHeaders(response);
-    }
+    const response = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+    return applySecurityHeaders(response);
   }
 
   const response = NextResponse.next();
-  addCorrelationId(response.headers, correlationId);
   return applySecurityHeaders(response);
-}
-
-// Get appropriate rate limiter based on path
-function getRateLimiterForPath(pathname: string) {
-  if (pathname.startsWith('/api/auth/')) {
-    return rateLimiters.auth;
-  }
-  if (pathname.startsWith('/api/payments/')) {
-    return rateLimiters.payment;
-  }
-  if (pathname.startsWith('/api/')) {
-    return rateLimiters.api;
-  }
-  return rateLimiters.public;
-}
-
-// Handle custom domain routing
-async function handleCustomDomain(request: NextRequest, hostname: string) {
-  const { pathname } = request.nextUrl;
-
-  // Skip API routes and static files
-  if (
-    pathname.startsWith('/api/') ||
-    pathname.startsWith('/_next/') ||
-    pathname.startsWith('/favicon.ico')
-  ) {
-    const response = NextResponse.next();
-    return applySecurityHeaders(response);
-  }
-
-  try {
-    // In production, query database to find brand by custom domain
-    // For now, we'll add the custom domain info to headers
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set('x-custom-domain', hostname);
-
-    // Extract branch slug from pathname
-    // Custom domain URL structure: customdomain.com/{branch-slug}
-    const pathParts = pathname.split('/').filter(Boolean);
-    const branchSlug = pathParts[0];
-
-    if (branchSlug != null) {
-      // Rewrite to microsite route with custom domain context
-      const url = request.nextUrl.clone();
-      url.pathname = `/api/microsites/custom-domain/${hostname}/${branchSlug}`;
-
-      const response = NextResponse.rewrite(url, {
-        request: {
-          headers: requestHeaders,
-        },
-      });
-
-      return applySecurityHeaders(response);
-    }
-
-    // If no branch slug, show brand landing page or 404
-    const response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
-
-    return applySecurityHeaders(response);
-  } catch (error) {
-    console.error('Custom domain routing error:', error);
-    const response = NextResponse.next();
-    return applySecurityHeaders(response);
-  }
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    // Protected routes
+    '/admin/:path*',
+    '/business-owner/:path*',
+    '/executive/:path*',
+    '/customer-dashboard/:path*',
+    // Auth routes (redirect if logged in)
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    // API routes (for security headers + user context injection)
+    '/api/:path*',
   ],
 };

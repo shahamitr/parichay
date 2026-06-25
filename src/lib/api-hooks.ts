@@ -79,7 +79,8 @@ export const queryKeys = {
   notifications: (unreadOnly?: boolean) => ['notifications', { unreadOnly }] as const,
 
   // Users
-  users: (filters?: { role?: string; page?: number }) => ['users', filters] as const,
+  users: (filters?: Record<string, unknown>) => ['users', filters] as const,
+  userStats: ['users', 'stats'] as const,
   user: (id: string) => ['users', id] as const,
 
   // Executives
@@ -484,34 +485,81 @@ export function useReminders(days = 3) {
 // =============================================================================
 // USERS HOOKS
 // =============================================================================
-interface UserData {
+export interface UserData {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
   role: string;
   isActive: boolean;
+  phone?: string | null;
+  lastLoginAt?: string | null;
+  lastLogoutAt?: string | null;
+  deletedAt?: string | null;
   createdAt: string;
+  updatedAt?: string;
+  emailVerified?: boolean;
+  mfaEnabled?: boolean;
+  brandId?: string | null;
+  brand?: { id: string; name: string } | null;
 }
 
-interface UserFilters {
+export interface UserStats {
+  totalUsers: number;
+  activeUsers: number;
+  inactiveUsers: number;
+  deletedUsers: number;
+  byRole: Record<string, number>;
+}
+
+export interface UserFilters {
+  search?: string;
   role?: string;
+  status?: string; // 'active' | 'inactive' | 'deleted' | '' (all non-deleted)
   page?: number;
   limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  includeStats?: boolean;
+}
+
+export interface UsersResponse {
+  users: UserData[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  stats?: UserStats;
 }
 
 export function useUsers(filters?: UserFilters) {
   const params = new URLSearchParams();
+  if (filters?.search) params.append('search', filters.search);
   if (filters?.role) params.append('role', filters.role);
+  if (filters?.status) params.append('status', filters.status);
   if (filters?.page) params.append('page', String(filters.page));
   if (filters?.limit) params.append('limit', String(filters.limit));
+  if (filters?.sortBy) params.append('sortBy', filters.sortBy);
+  if (filters?.sortOrder) params.append('sortOrder', filters.sortOrder);
+  if (filters?.includeStats) params.append('includeStats', 'true');
 
   const queryString = params.toString();
   const url = `/api/users${queryString ? `?${queryString}` : ''}`;
 
   return useQuery({
     queryKey: queryKeys.users(filters),
-    queryFn: () => apiClient<{ users: UserData[]; total: number }>(url),
+    queryFn: () => apiClient<UsersResponse>(url),
+    placeholderData: (previousData: UsersResponse | undefined) => previousData,
+  });
+}
+
+export function useUserStats() {
+  return useQuery({
+    queryKey: queryKeys.userStats,
+    queryFn: () =>
+      apiClient<UsersResponse>('/api/users?limit=1&includeStats=true').then(
+        (res) => res.stats!
+      ),
   });
 }
 
@@ -520,7 +568,7 @@ export function useCreateUser() {
 
   return useMutation({
     mutationFn: (data: Partial<UserData> & { password: string }) =>
-      apiClient<UserData>('/api/users', {
+      apiClient<{ user: UserData }>('/api/users', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
@@ -534,8 +582,8 @@ export function useUpdateUser() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<UserData> }) =>
-      apiClient<UserData>(`/api/users/${id}`, {
+    mutationFn: ({ id, data }: { id: string; data: Partial<UserData> & { password?: string } }) =>
+      apiClient<{ user: UserData }>(`/api/users/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       }),
@@ -551,7 +599,19 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: (id: string) =>
-      apiClient(`/api/users/${id}`, { method: 'DELETE' }),
+      apiClient<{ success: boolean }>(`/api/users/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
+export function useRestoreUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient<{ user: UserData }>(`/api/users/${id}/restore`, { method: 'POST' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },

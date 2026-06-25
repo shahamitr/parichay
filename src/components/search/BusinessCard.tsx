@@ -11,8 +11,13 @@ import {
   MessageCircle,
   ExternalLink,
   Award,
-  Verified
+  Verified,
+  Zap,
+  ArrowUpRight,
+  ShieldCheck,
+  Activity
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface BusinessCardProps {
   business: {
@@ -73,216 +78,194 @@ export default function BusinessCard({ business, showDistance = true, compact = 
 
     const todayHours = businessHours[currentDay];
     if (!todayHours || todayHours.closed) {
-      return { status: 'closed', text: 'Closed', color: 'text-red-600' };
+      return { status: 'closed', text: 'OFFLINE', color: 'text-red-400' };
     }
 
     const openTime = parseInt(todayHours.open.replace(':', ''));
     const closeTime = parseInt(todayHours.close.replace(':', ''));
 
     if (currentTime >= openTime && currentTime <= closeTime) {
-      return { status: 'open', text: `Open until ${todayHours.close}`, color: 'text-green-600' };
+      return { status: 'open', text: `ONLINE • UNTIL ${todayHours.close}`, color: 'text-emerald-400' };
     } else {
-      return { status: 'closed', text: `Opens at ${todayHours.open}`, color: 'text-orange-600' };
+      return { status: 'closed', text: `OFFLINE • OPENS ${todayHours.open}`, color: 'text-orange-400' };
     }
-  };
-
-  const getVerificationBadge = () => {
-    if (!business.brand.isVerified) return null;
-
-    const badgeType = business.brand.verificationBadge || 'verified';
-    const badges = {
-      verified: { icon: Verified, text: 'Verified', color: 'bg-green-500' },
-      premium: { icon: Award, text: 'Premium', color: 'bg-purple-500' },
-      trusted: { icon: Award, text: 'Trusted', color: 'bg-blue-500' }
-    };
-
-    const badge = badges[badgeType as keyof typeof badges] || badges.verified;
-    const IconComponent = badge.icon;
-
-    return (
-      <div className={`absolute top-3 right-3 ${badge.color} text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1`}>
-        <IconComponent className="w-3 h-3" />
-        {badge.text}
-      </div>
-    );
   };
 
   const hoursStatus = getBusinessHoursStatus(business.businessHours);
 
   if (compact) {
     return (
-      <Link
-        href={business.url}
-        className="block bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 p-4 relative group"
-      >
-        {getVerificationBadge()}
-
-        <div className="flex items-start gap-3">
-          {business.brand.logo && (
-            <img
-              src={business.brand.logo}
-              alt={business.brand.name}
-              className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-            />
-          )}
-
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-              {business.name}
-            </h3>
-            <p className="text-sm text-gray-600 truncate">{business.brand.name}</p>
-
-            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-              {business.rating > 0 && (
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span>{business.rating}</span>
+      <motion.div whileHover={{ x: 10 }}>
+        <Link
+          href={business.url}
+          className="block bg-white/5 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 relative group hover:border-primary-500/50 transition-all duration-500"
+        >
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              {business.brand.logo ? (
+                <img
+                  src={business.brand.logo}
+                  alt={business.brand.name}
+                  className="w-12 h-12 rounded-xl object-cover grayscale group-hover:grayscale-0 transition-all"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-white font-black">
+                   {business.name.charAt(0)}
                 </div>
               )}
-
-              {showDistance && business.distance && (
-                <div className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  <span>{business.distance}km</span>
+              {business.brand.isVerified && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary-500 rounded-full border-2 border-[#020617] flex items-center justify-center">
+                   <ShieldCheck className="w-2 h-2 text-white" />
                 </div>
               )}
             </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <h3 className="font-black text-white text-sm uppercase tracking-widest truncate group-hover:text-primary-400 transition-colors">
+                  {business.name}
+                </h3>
+                <ArrowUpRight className="w-4 h-4 text-neutral-600 group-hover:text-white transition-all group-hover:translate-x-1 group-hover:-translate-y-1" />
+              </div>
+              <div className="flex items-center gap-4 mt-1 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                <span>{business.brand.name}</span>
+                {showDistance && business.distance && (
+                  <span className="flex items-center gap-1">
+                    <Activity className="w-3 h-3" /> {business.distance}km
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </Link>
+        </Link>
+      </motion.div>
     );
   }
 
   return (
-    <Link
-      href={business.url}
-      className="block bg-white rounded-xl shadow-sm border hover:shadow-lg transition-all duration-300 p-6 relative group hover:-translate-y-1"
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      whileHover={{ y: -5 }}
+      className="relative group"
     >
-      {getVerificationBadge()}
+      <Link
+        href={business.url}
+        className="block bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 overflow-hidden transition-all duration-700 hover:border-primary-500/30 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+      >
+        {/* Animated Background Element */}
+        <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary-600/10 rounded-full blur-3xl group-hover:bg-primary-600/30 transition-all duration-700"></div>
 
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-            {business.name}
-          </h3>
-          <p className="text-sm text-gray-600">{business.brand.name}</p>
-          <p className="text-xs text-gray-500 capitalize mt-1">{business.businessType}</p>
-        </div>
-
-        {business.brand.logo && (
-          <img
-            src={business.brand.logo}
-            alt={business.brand.name}
-            className="w-16 h-16 rounded-xl object-cover flex-shrink-0 ml-4"
-          />
-        )}
-      </div>
-
-      {/* Rating and Reviews */}
-      {business.rating > 0 && (
-        <div className="flex items-center gap-2 mb-3">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-4 h-4 ${
-                  i < Math.floor(business.rating)
-                    ? 'text-yellow-400 fill-current'
-                    : 'text-gray-300'
-                }`}
-              />
-            ))}
-            <span className="ml-2 text-sm font-medium">{business.rating}</span>
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8 relative z-10">
+          <div className="flex-1 min-w-0">
+             <div className="flex items-center gap-3 mb-2">
+                <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[9px] font-black tracking-[0.2em] text-neutral-400 uppercase">
+                   Node ID: {business.id.substring(0, 8)}
+                </div>
+                <div className="px-3 py-1 bg-emerald-600/10 border border-emerald-500/20 rounded-full text-[9px] font-black tracking-[0.2em] text-emerald-400 uppercase">
+                   Local Intelligence
+                </div>
+                {business.brand.isVerified && (
+                   <div className="flex items-center gap-1.5 px-3 py-1 bg-primary-600/10 border border-primary-500/20 rounded-full text-[9px] font-black tracking-[0.2em] text-primary-400 uppercase">
+                      <ShieldCheck className="w-2.5 h-2.5" /> Verified
+                   </div>
+                )}
+             </div>
+             <h3 className="text-2xl font-black text-white tracking-tighter leading-none group-hover:text-primary-400 transition-colors uppercase">
+               {business.name}
+             </h3>
+             <p className="text-xs font-bold text-neutral-500 mt-2 uppercase tracking-widest">{business.brand.name} • {business.businessType}</p>
           </div>
-          <span className="text-sm text-gray-500">
-            ({business.reviewCount} {business.reviewCount === 1 ? 'review' : 'reviews'})
-          </span>
-        </div>
-      )}
 
-      {/* Distance and Location */}
-      {showDistance && business.distance && (
-        <div className="flex items-center gap-1 mb-3 text-sm text-gray-600">
-          <MapPin className="w-4 h-4" />
-          <span>{business.distance}km away</span>
-          {business.address?.city && (
-            <span className="text-gray-400">• {business.address.city}</span>
+          {business.brand.logo ? (
+            <div className="relative group/logo">
+               <div className="absolute inset-0 bg-primary-600/20 blur-xl rounded-full opacity-0 group-hover/logo:opacity-100 transition-opacity"></div>
+               <img
+                 src={business.brand.logo}
+                 alt={business.brand.name}
+                 className="w-16 h-16 rounded-2xl object-cover relative z-10 border border-white/10 group-hover/logo:scale-110 transition-transform duration-500"
+               />
+            </div>
+          ) : (
+             <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl font-black text-white">
+                {business.name.charAt(0)}
+             </div>
           )}
         </div>
-      )}
 
-      {/* Business Hours Status */}
-      {hoursStatus && (
-        <div className="flex items-center gap-1 mb-3 text-sm">
-          <Clock className="w-4 h-4" />
-          <span className={hoursStatus.color}>
-            {hoursStatus.text}
-          </span>
+        {/* Intel Metrics */}
+        <div className="grid grid-cols-2 gap-4 mb-8 relative z-10">
+           <div className="p-4 bg-white/5 border border-white/10 rounded-3xl">
+              <div className="flex items-center gap-2 mb-1">
+                 <Star className="w-3.5 h-3.5 text-primary-400 fill-primary-400" />
+                 <span className="text-xl font-black text-white">{business.rating || '5.0'}</span>
+              </div>
+              <p className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Network Rating</p>
+           </div>
+           <div className="p-4 bg-white/5 border border-white/10 rounded-3xl">
+              <div className="flex items-center gap-2 mb-1">
+                 <Activity className="w-3.5 h-3.5 text-primary-400" />
+                 <span className="text-xl font-black text-white">{business.distance || '0.0'}km</span>
+              </div>
+              <p className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Proximity</p>
+           </div>
         </div>
-      )}
 
-      {/* Service Categories */}
-      {business.serviceCategories && business.serviceCategories.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-4">
-          {business.serviceCategories.slice(0, 3).map((category, index) => (
-            <span
-              key={index}
-              className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full font-medium"
+        {/* Status & Categories */}
+        <div className="space-y-4 mb-8 relative z-10">
+           {hoursStatus && (
+             <div className="flex items-center gap-2">
+                <div className={`w-1.5 h-1.5 rounded-full ${hoursStatus.status === 'open' ? 'bg-emerald-500' : 'bg-red-500'} animate-pulse`}></div>
+                <span className={`text-[10px] font-black tracking-[0.2em] ${hoursStatus.color}`}>
+                  {hoursStatus.text}
+                </span>
+             </div>
+           )}
+
+           <div className="flex flex-wrap gap-2">
+              {business.serviceCategories?.slice(0, 3).map((category, index) => (
+                <span
+                  key={index}
+                  className="px-4 py-1.5 bg-white/5 border border-white/10 text-[10px] font-black text-neutral-400 rounded-full uppercase tracking-widest group-hover:border-primary-500/20 group-hover:text-white transition-all"
+                >
+                  {category}
+                </span>
+              ))}
+           </div>
+        </div>
+
+        {/* Quick Sync Protocol */}
+        <div className="flex gap-3 pt-6 border-t border-white/5 relative z-10">
+          {business.contact?.phone && (
+            <a
+              href={`tel:${business.contact.phone}`}
+              className="flex-1 flex items-center justify-center gap-3 py-4 bg-primary-600 rounded-2xl text-[10px] font-black text-white uppercase tracking-widest hover:bg-primary-500 transition-all shadow-xl shadow-primary-600/20"
+              onClick={(e) => e.stopPropagation()}
             >
-              {category.charAt(0).toUpperCase() + category.slice(1)}
-            </span>
-          ))}
-          {business.serviceCategories.length > 3 && (
-            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-              +{business.serviceCategories.length - 3} more
-            </span>
+              <Phone className="w-4 h-4" />
+              Voice
+            </a>
           )}
+
+          {business.contact?.whatsapp && (
+            <a
+              href={`https://wa.me/${business.contact.whatsapp.replace(/\D/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-3 py-4 bg-emerald-600/20 border border-emerald-500/30 rounded-2xl text-[10px] font-black text-emerald-400 uppercase tracking-widest hover:bg-emerald-600/40 transition-all"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MessageCircle className="w-4 h-4" />
+              Relay
+            </a>
+          )}
+
+          <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white/10 transition-all">
+             <Zap className="w-5 h-5 text-primary-400" />
+          </div>
         </div>
-      )}
-
-      {/* Price Range */}
-      {(business.priceRange || business.avgServicePrice) && (
-        <div className="text-sm text-gray-600 mb-4">
-          <span className="font-medium">Price: </span>
-          <span className="text-green-600 font-semibold">
-            {getPriceDisplay(business.priceRange, business.avgServicePrice)}
-          </span>
-        </div>
-      )}
-
-      {/* Contact Actions */}
-      <div className="flex gap-2 pt-4 border-t border-gray-100">
-        {business.contact?.phone && (
-          <a
-            href={`tel:${business.contact.phone}`}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors flex-1 justify-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Phone className="w-4 h-4" />
-            Call
-          </a>
-        )}
-
-        {business.contact?.whatsapp && (
-          <a
-            href={`https://wa.me/${business.contact.whatsapp.replace(/\D/g, '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors flex-1 justify-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <MessageCircle className="w-4 h-4" />
-            WhatsApp
-          </a>
-        )}
-
-        <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium group-hover:bg-gray-100 transition-colors flex-1 justify-center">
-          <Globe className="w-4 h-4" />
-          View Profile
-          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-      </div>
-    </Link>
+      </Link>
+    </motion.div>
   );
-}
+}

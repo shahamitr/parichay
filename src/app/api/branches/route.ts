@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { canAddBranch } from '@/lib/subscription-limits';
+import { withApiHandler, apiError } from '@/lib/api-handler';
 import { z } from 'zod';
 
 const createBranchSchema = z.object({
@@ -33,49 +34,36 @@ const createBranchSchema = z.object({
   micrositeConfig: z.any().optional(),
 });
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withApiHandler(
+  { auth: true, rateLimit: 'api' },
+  async (request, _context, user) => {
     const body = await request.json();
-    const data = createBranchSchema.parse(body);
+    const data = createBranchSchema.parse(body); // Throws ZodError → caught by wrapper
 
     // Check subscription limits
     const limitCheck = await canAddBranch(data.brandId);
     if (!limitCheck.allowed) {
-      return NextResponse.json(
-        { error: limitCheck.reason },
-        { status: 403 }
-      );
+      return apiError(limitCheck.reason || 'Branch limit reached', 403);
     }
 
     // Check slug uniqueness within brand
     const existing = await prisma.branch.findFirst({
-      where: {
-        brandId: data.brandId,
-        slug: data.slug,
-      },
+      where: { brandId: data.brandId, slug: data.slug },
     });
 
     if (existing != null) {
-      return NextResponse.json(
-        { error: 'Branch slug already exists for this brand' },
-        { status: 409 }
-      );
+      return apiError('Branch slug already exists for this brand', 409);
     }
 
-    // Default microsite config
     const defaultMicrositeConfig = {
       templateId: 'modern-business',
       sections: {
         hero: { enabled: true, title: data.name, subtitle: '' },
         about: { enabled: true, content: `Welcome to ${data.name}` },
         services: { enabled: true, items: [] },
-        contact: { enabled: true, showMap: true, leadForm: { enabled: true, fields: ['name', 'phone'] } }
+        contact: { enabled: true, showMap: true, leadForm: { enabled: true, fields: ['name', 'phone'] } },
       },
-      seoSettings: {
-        title: data.name,
-        description: '',
-        keywords: []
-      }
+      seoSettings: { title: data.name, description: '', keywords: [] },
     };
 
     const branch = await prisma.branch.create({
@@ -92,32 +80,17 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(branch, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
-        { status: 400 }
-      );
-    }
-
-    console.error('Error creating branch:', error);
-    return NextResponse.json(
-      { error: 'Failed to create branch' },
-      { status: 500 }
-    );
   }
-}
+);
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler(
+  { auth: true, rateLimit: 'api' },
+  async (request, _context, user) => {
     const { searchParams } = new URL(request.url);
     const brandId = searchParams.get('brandId');
 
     if (!brandId) {
-      return NextResponse.json(
-        { error: 'brandId is required' },
-        { status: 400 }
-      );
+      return apiError('brandId is required', 400);
     }
 
     const branches = await prisma.branch.findMany({
@@ -125,25 +98,12 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
       include: {
         brand: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            colorTheme: true,
-          },
+          select: { id: true, name: true, slug: true, colorTheme: true },
         },
-        _count: {
-          select: { leads: true },
-        },
+        _count: { select: { leads: true } },
       },
     });
 
     return NextResponse.json(branches);
-  } catch (error) {
-    console.error('Error fetching branches:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch branches' },
-      { status: 500 }
-    );
   }
-}
+);

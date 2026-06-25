@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import { Inter, Noto_Sans_Devanagari, Noto_Sans_Gujarati } from 'next/font/google';
 import './globals.css';
+import '../styles/cinematic.css';
+
 import { ToastContainer } from '@/components/ui/Toast';
 import { ClientLayoutWrappers } from '@/components/layout/ClientLayoutWrappers';
+import CookieConsent from '@/components/CookieConsent';
 
 
 // Latin/English font - Inter fallback
@@ -53,13 +56,38 @@ export default function RootLayout({
       <head>
         <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400&display=swap" rel="stylesheet" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#3B82F6" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Parichay" />
       </head>
       <body className={`${inter.variable} ${notoDevanagari.variable} ${notoGujarati.variable} font-sans`}>
         <ClientLayoutWrappers>
           {children}
         </ClientLayoutWrappers>
         <ToastContainer />
+        <CookieConsent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    function(registration) {
+                      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    },
+                    function(err) {
+                      console.log('ServiceWorker registration failed: ', err);
+                    }
+                  );
+                });
+              }
+            `,
+          }}
+        />
       </body>
+
 
     </html>
   );

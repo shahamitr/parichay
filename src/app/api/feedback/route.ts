@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { validateFormSubmission } from '@/lib/bot-protection';
+import { rateLimiters } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    // Rate limit
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    const rl = await rateLimiters.formSubmission.checkLimit(`feedback:${ip}`);
+    if (!rl.allowed) {
+      return NextResponse.json({ success: true, message: 'Thank you for your feedback!' });
+    }
+
+    // Bot protection: validate before processing
+    const botCheck = validateFormSubmission(request, body);
+    if (!botCheck.allowed) {
+      // Silent reject — return fake success so bots don't retry
+      return NextResponse.json({ success: true, message: 'Thank you for your feedback!' });
+    }
+
     const { branchId, brandId, rating, feedback, name, photo } = body;
 
     // Get branch to get brandId if not provided

@@ -127,6 +127,24 @@ export class MFAService {
       ]
     ).join('');
   }
+
+  /**
+   * Check if an operation is sensitive and requires MFA re-verification
+   */
+  static isSensitiveOperation(operation: string): boolean {
+    const sensitiveOperations = [
+      'DELETE_ACCOUNT',
+      'CHANGE_PASSWORD',
+      'CHANGE_EMAIL',
+      'DISABLE_MFA',
+      'CHANGE_ROLE',
+      'DELETE_BRAND',
+      'CANCEL_SUBSCRIPTION',
+      'EXPORT_DATA',
+      'BULK_DELETE',
+    ];
+    return sensitiveOperations.includes(operation.toUpperCase());
+  }
 }
 
 export default MFAService;

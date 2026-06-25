@@ -49,7 +49,7 @@ export const translations = {
     landing: {
       hero: {
         title: 'Put Your Business on the Digital Map',
-        subtitle: 'Turn every interaction into a lasting customer connection. No website. No complexity.',
+        subtitle: 'Most businesses are forgotten after a meeting. We make sure customers remember, find, and return to you.',
         cta: 'Get Your Digital Presence',
         watchDemo: 'See How It Works',
       },
@@ -126,6 +126,7 @@ export const translations = {
         contact: 'Contact Us',
         reviews: 'Customer Reviews',
         payment: 'Payment Options',
+        tiffin: 'Tiffin Service',
       },
       contact: {
         sendMessage: 'Send us a Message',
@@ -235,8 +236,8 @@ export const translations = {
     // Landing Page - Hindi
     landing: {
       hero: {
-        title: 'अपने व्यवसाय को डिजिटल परिचय दें',
-        subtitle: 'हर मीटिंग को लीड में बदलें। बिना वेबसाइट, बिना किसी जटिलता के।',
+        title: 'अपने व्यवसाय को डिजिटल दुनिया में लाएं',
+        subtitle: 'अधिकांश व्यवसाय मीटिंग के बाद भुला दिए जाते हैं। हम सुनिश्चित करते हैं कि ग्राहक आपको याद रखें, खोजें और आपके पास वापस आएं।',
         cta: 'अपनी डिजिटल उपस्थिति प्राप्त करें',
         watchDemo: 'डेमो देखें',
       },
@@ -313,6 +314,7 @@ export const translations = {
         contact: 'संपर्क करें',
         reviews: 'ग्राहक समीक्षाएं',
         payment: 'भुगतान विकल्प',
+        tiffin: 'टिफिन सर्विस',
       },
       contact: {
         sendMessage: 'हमें संदेश भेजें',
@@ -422,8 +424,8 @@ export const translations = {
     // Landing Page - Gujarati
     landing: {
       hero: {
-        title: 'તમારા વ્યાપારને ડિજિટલ નકશા પર મૂકો',
-        subtitle: 'દરેક વાતચીતને કાયમી ગ્રાહક જોડાણમાં બદલો. કોઈ વેબસાઇટ નહીં. કોઈ જટિલતા નહીં.',
+        title: 'તમારા વ્યવસાયને ડિજિટલ બનાવો',
+        subtitle: 'મીટિંગ પછી મોટાભાગના વ્યવસાયો ભુલાઈ જાય છે. અમે સુનિશ્ચિત કરીએ છીએ કે ગ્રાહકો તમને યાદ રાખે, શોધે અને તમારી પાસે પાછા આવે.',
         cta: 'તમારી ડિજિટલ હાજરી મેળવો',
         watchDemo: 'તે કેવી રીતે કાર્ય કરે છે તે જુઓ',
       },
@@ -500,6 +502,7 @@ export const translations = {
         contact: 'અમારો સંપર્ક કરો',
         reviews: 'ગ્રાહક સમીક્ષાઓ',
         payment: 'ચુકવણી વિકલ્પો',
+        tiffin: 'ટિફિન સર્વિસ',
       },
       contact: {
         sendMessage: 'અમને સંદેશ મોકલો',

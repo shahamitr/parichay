@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: 'Executive Portal - Parichay',
@@ -6,10 +7,6 @@ export const metadata = {
 };
 
 export default function ExecutiveLayout({ children }: { children: ReactNode }) {
-  // Redirect to admin - executive has dedicated section in admin
-  if (typeof window !== 'undefined') {
-    window.location.href = '/admin';
-    return null;
-  }
-  return children;
+  // Executive section is within admin panel
+  redirect('/admin');
 }

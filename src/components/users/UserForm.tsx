@@ -27,7 +27,7 @@ export default function UserForm({ user, onSave, onCancel }: UserFormProps) {
     email: '',
     firstName: '',
     lastName: '',
-    role: 'USER',
+    role: 'BRANCH_ADMIN',
     password: '',
     brandId: '',
   });
@@ -197,8 +197,7 @@ export default function UserForm({ user, onSave, onCancel }: UserFormProps) {
             onChange={(e) => handleInputChange('role', e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="USER">User</option>
-            <option value="BRAND_ADMIN">Brand Admin</option>
+            <option value="BRANCH_ADMIN">Branch Admin</option>
             <option value="BRAND_MANAGER">Brand Manager</option>
             <option value="EXECUTIVE">Executive</option>
             <option value="SUPER_ADMIN">Super Admin</option>

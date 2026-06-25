@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
       .slice(0, 10)
       .map(([location, count]) => ({ location, count }));
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       summary: {
         pageViews,
         clicks,
@@ -121,6 +121,11 @@ export async function GET(request: NextRequest) {
       clickBreakdown,
       topLocations,
     });
+
+    // Analytics data can be cached briefly — 60s server, 30s client
+    response.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=60');
+
+    return response;
   } catch (error) {
     console.error('Analytics dashboard error:', error);
     return NextResponse.json(

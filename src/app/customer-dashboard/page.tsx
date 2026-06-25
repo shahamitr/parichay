@@ -54,72 +54,19 @@ export default function CustomerDashboard() {
     try {
       setLoading(true);
 
-      // Fetch favorites (mock data for demo)
-      const mockFavorites: FavoriteBusiness[] = [
-        {
-          id: '1',
-          name: 'Elite Hair Studio',
-          businessType: 'beauty',
-          rating: 4.8,
-          distance: 1.2,
-          imageUrl: '/api/placeholder/100/100',
-          slug: 'elite-hair-studio',
-          brandSlug: 'elite-salon'
+      const response = await fetch('/api/user/dashboard', {
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          id: '2',
-          name: 'QuickFix Plumbing',
-          businessType: 'service',
-          rating: 4.6,
-          distance: 2.1,
-          slug: 'quickfix-plumbing',
-          brandSlug: 'quickfix-services'
-        },
-        {
-          id: '3',
-          name: 'Fitness First Gym',
-          businessType: 'fitness',
-          rating: 4.7,
-          distance: 0.8,
-          slug: 'fitness-first',
-          brandSlug: 'fitness-first-chain'
-        }
-      ];
+      });
 
-      // Fetch service history (mock data for demo)
-      const mockHistory: ServiceHistoryItem[] = [
-        {
-          id: '1',
-          businessId: '1',
-          businessName: 'Elite Hair Studio',
-          serviceType: 'Haircut & Styling',
-          date: '2024-01-20T10:00:00Z',
-          status: 'completed',
-          rating: 5,
-          notes: 'Excellent service, very professional'
-        },
-        {
-          id: '2',
-          businessId: '2',
-          businessName: 'QuickFix Plumbing',
-          serviceType: 'Pipe Repair',
-          date: '2024-01-15T14:30:00Z',
-          status: 'completed',
-          rating: 4,
-          notes: 'Quick and efficient repair'
-        },
-        {
-          id: '3',
-          businessId: '4',
-          businessName: 'TechCare Solutions',
-          serviceType: 'Laptop Repair',
-          date: '2024-01-25T11:00:00Z',
-          status: 'pending'
-        }
-      ];
-
-      setFavorites(mockFavorites);
-      setServiceHistory(mockHistory);
+      if (response.ok) {
+        const data = await response.json();
+        setFavorites(data.favorites || []);
+        setServiceHistory(data.serviceHistory || []);
+      } else {
+        console.error('Failed to fetch dashboard data');
+      }
     } catch (error) {
       console.error('Error fetching customer data:', error);
     } finally {

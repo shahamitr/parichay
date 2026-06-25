@@ -2,153 +2,120 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { XCircle, CheckCircle2, AlertTriangle, Zap, Users, Share2, EyeOff, Search } from 'lucide-react';
-import { useTranslation } from '@/lib/i18n/context';
+import { 
+  AlertCircle, 
+  Target, 
+  TrendingUp,
+  XCircle,
+  CheckCircle2
+} from 'lucide-react';
 
 export default function EmotionalProblemSection() {
-  const { t } = useTranslation();
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2
-      }
+  const painPoints = [
+    {
+      title: 'Digital Invisibility',
+      desc: 'Customers searching for your services find your competitors because you don’t have a verified digital presence.',
+      icon: <XCircle className="w-6 h-6 text-red-400" />
+    },
+    {
+      title: 'Broken Connections',
+      desc: 'Paper cards are lost or forgotten. 80% of business leads are lost within the first 48 hours of a meeting.',
+      icon: <AlertCircle className="w-6 h-6 text-orange-400" />
     }
-  };
+  ];
 
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0 }
-  };
+  const solutions = [
+    {
+      title: 'Instant Authority',
+      desc: 'A professional profile that syncs across global networks, giving you immediate trust and visibility.',
+      icon: <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+    },
+    {
+      title: 'Seamless Leads',
+      desc: 'Capture and convert interest instantly through your digital identity. Never lose a customer again.',
+      icon: <Target className="w-6 h-6 text-indigo-400" />
+    }
+  ];
 
   return (
-    <section className="py-24 bg-white dark:bg-[#050510] overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-3xl sm:text-5xl font-bold text-neutral-900 dark:text-white"
+    <section className="py-32 relative bg-[#080809] overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+        <div className="text-center mb-24">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full mb-8"
           >
-            {t.landing.problem.title}
-          </motion.h2>
+            <AlertCircle className="w-4 h-4 text-red-400" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-200">The Growth Barrier</span>
+          </motion.div>
+          <h2 className="text-5xl lg:text-7xl font-black tracking-tight text-white mb-8">
+            Stop Being <span className="text-red-400">Invisible</span>. <br />
+            Start Being <span className="text-emerald-400">Found</span>.
+          </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12 items-stretch">
-          {/* BEFORE: The Pain */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="relative p-8 rounded-3xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800"
-          >
-            <div className="absolute top-4 right-4 text-neutral-300 dark:text-neutral-700 font-black text-6xl opacity-20 pointer-events-none">
-              BEFORE
-            </div>
-            
-            <h3 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-8 flex items-center gap-3">
-              <AlertTriangle className="text-red-600 dark:text-red-500 w-6 h-6" />
-              Impact of Being Invisible
-            </h3>
-
-            <div className="space-y-6">
-              {[
-                { icon: EyeOff, label: t.landing.problem.before.invisible },
-                { icon: XCircle, label: t.landing.problem.before.lostCards },
-                { icon: Search, label: t.landing.problem.before.noFollowups },
-                { icon: Users, label: t.landing.problem.before.forgotten },
-              ].map((item, idx) => (
-                <motion.div 
-                  key={idx} 
-                  variants={itemVariants}
-                  className="flex items-center gap-4 p-5 rounded-2xl bg-white dark:bg-neutral-800 shadow-md border border-neutral-200 dark:border-neutral-700 hover:shadow-lg transition-shadow"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-red-600 dark:text-red-400">
-                    <item.icon className="w-6 h-6" />
-                  </div>
-                  <span className="text-neutral-800 dark:text-neutral-200 font-bold">{item.label}</span>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Visual breakdown effect */}
-            <div className="mt-8 flex justify-center">
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Pain Points */}
+          <div className="space-y-6">
+            <div className="text-xs font-black uppercase tracking-[0.4em] text-slate-500 mb-8 pl-4 border-l-2 border-red-500/30">The Current Reality</div>
+            {painPoints.map((item, i) => (
               <motion.div
-                animate={{ rotate: [0, -1, 1, -1, 0], scale: [1, 0.98, 1] }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="w-full h-1 bg-red-500/20 rounded-full"
-              />
-            </div>
-          </motion.div>
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="p-8 bg-white/5 border border-white/5 rounded-[2rem] group hover:bg-red-500/5 hover:border-red-500/20 transition-all"
+              >
+                <div className="flex gap-6">
+                   <div className="shrink-0">{item.icon}</div>
+                   <div>
+                      <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
+                      <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+                   </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
 
-          {/* AFTER: The Transformation */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="relative p-8 rounded-3xl bg-primary-600 shadow-2xl shadow-primary-600/20 overflow-hidden"
-          >
-            {/* Animated particles background */}
-            <div className="absolute inset-0 opacity-20">
-              {[...Array(6)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  animate={{ 
-                    y: [0, -100], 
-                    opacity: [0, 1, 0],
-                    x: Math.random() * 400 
-                  }}
-                  transition={{ duration: 3 + i, repeat: Infinity, delay: i }}
-                  className="absolute bottom-0 w-1 h-1 bg-white rounded-full"
-                />
-              ))}
-            </div>
-
-            <div className="absolute top-4 right-4 text-white font-black text-6xl opacity-10 pointer-events-none">
-              AFTER
-            </div>
-            
-            <h3 className="text-2xl font-bold text-white mb-8 flex items-center gap-3 relative z-10">
-              <Zap className="text-yellow-300 w-6 h-6 fill-yellow-300" />
-              Connected & Discoverable
-            </h3>
-
-            <div className="space-y-6 relative z-10">
-              {[
-                { icon: Share2, label: t.landing.problem.after.instantShare },
-                { icon: CheckCircle2, label: t.landing.problem.after.leadCapture },
-                { icon: Zap, label: t.landing.problem.after.reachable },
-                { icon: Users, label: t.landing.problem.after.repeatBusiness },
-              ].map((item, idx) => (
-                <motion.div 
-                  key={idx} 
-                  variants={itemVariants}
-                  whileHover={{ x: 5, backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-                  className="flex items-center gap-4 p-5 rounded-2xl bg-white/20 backdrop-blur-xl border border-white/30 shadow-xl"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-white/30 flex items-center justify-center text-white shadow-inner">
-                    <item.icon className="w-6 h-6" />
-                  </div>
-                  <span className="text-white font-black text-lg drop-shadow-md">{item.label}</span>
-                </motion.div>
-              ))}
-            </div>
-
-            <motion.div 
-              initial={{ scale: 0 }}
-              whileInView={{ scale: 1 }}
-              transition={{ delay: 1, type: "spring" }}
-              className="mt-8 p-4 bg-yellow-400 rounded-2xl text-primary-900 font-black text-center uppercase tracking-tighter text-xl shadow-xl shadow-yellow-400/30"
-            >
-              10x More Engagement
-            </motion.div>
-          </motion.div>
+          {/* Solutions */}
+          <div className="space-y-6">
+            <div className="text-xs font-black uppercase tracking-[0.4em] text-slate-500 mb-8 pl-4 border-l-2 border-emerald-500/30">The Parichay Impact</div>
+            {solutions.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="p-8 bg-white/5 border border-white/5 rounded-[2rem] group hover:bg-emerald-500/5 hover:border-emerald-500/20 transition-all"
+              >
+                <div className="flex gap-6">
+                   <div className="shrink-0">{item.icon}</div>
+                   <div>
+                      <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
+                      <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+                   </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
+
+        {/* ROI Spotlight */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          className="mt-20 p-12 bg-indigo-600 rounded-[3rem] text-center relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[100px] rounded-full"></div>
+          <div className="relative z-10">
+            <div className="flex justify-center mb-6">
+               <TrendingUp className="w-12 h-12 text-white" />
+            </div>
+            <h3 className="text-3xl font-black text-white mb-4 italic">"Businesses with a digital presence grow 4x faster."</h3>
+            <p className="text-indigo-100 font-bold uppercase tracking-widest text-sm">Empower your grassroots economy now.</p>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

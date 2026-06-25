@@ -2,12 +2,44 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { AuthService } from '@/lib/auth';
 import { registerSchema } from '@/lib/validations';
+import { rateLimiters } from '@/lib/rate-limiter';
+import { validateFormSubmission } from '@/lib/bot-protection';
 import logger from '@/lib/logger';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit registration attempts by IP
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    const rlResult = await rateLimiters.auth.checkLimit(`register:${ip}`);
+
+    if (!rlResult.allowed) {
+      const retryAfter = Math.ceil((rlResult.resetTime - Date.now()) / 1000);
+      logger.warn({ ip }, 'Registration rate limit exceeded');
+      return NextResponse.json(
+        { error: `Too many registration attempts. Please try again in ${Math.ceil(retryAfter / 60)} minute(s).` },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Remaining': '0',
+          },
+        }
+      );
+    }
+
     const body = await request.json();
+
+    // Bot protection (honeypot + timing)
+    const botCheck = validateFormSubmission(request, body);
+    if (!botCheck.allowed) {
+      logger.warn({ ip }, 'Registration bot detected');
+      return NextResponse.json(
+        { error: 'Registration failed. Please try again.' },
+        { status: 400 }
+      );
+    }
 
     // Validate input
     const validatedData = registerSchema.parse(body);
@@ -93,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     // Send verification email (in production, use email service)
     const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${result.emailVerificationToken}`;
-    
+
     if (process.env.NODE_ENV === 'development') {
       logger.info({ email: result.user.email, verificationUrl }, 'Verification email details (Dev only)');
     } else {
@@ -132,7 +164,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 15 * 60, // 15 minutes
     });
 
     response.cookies.set('refreshToken', refreshToken, {

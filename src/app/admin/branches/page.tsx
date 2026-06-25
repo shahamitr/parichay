@@ -48,8 +48,14 @@ export default function BranchesPage() {
   usePageHelp({ pageContext: 'Branches' });
 
   useEffect(() => {
+    // If user is a branch admin and has exactly one branch, redirect to its management page
+    if (user?.role === 'BRANCH_ADMIN' && user.branches && user.branches.length === 1) {
+      router.replace(`/admin/branches/${user.branches[0].id}/edit`);
+      return;
+    }
     fetchBranches();
-  }, [selectedBrand]);
+  }, [selectedBrand, user]);
+
 
   const fetchBranches = async () => {
     try {

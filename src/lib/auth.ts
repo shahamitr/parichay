@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { JWTService } from './jwt';
 import type { JWTPayload } from './jwt';
 
@@ -34,11 +34,11 @@ export class AuthService {
  */
 export async function verifyToken(request: Request | string): Promise<JWTPayload | null> {
   try {
-    const token = typeof request === 'string' 
-      ? request 
-      : request.headers.get('authorization')?.substring(7) || 
+    const token = typeof request === 'string'
+      ? request
+      : request.headers.get('authorization')?.substring(7) ||
         request.headers.get('cookie')?.match(/token=([^;]+)/)?.[1];
-        
+
     if (!token) return null;
     return AuthService.verifyToken(token);
   } catch (error) {

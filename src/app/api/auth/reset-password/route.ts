@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { AuthService } from '@/lib/auth';
 import { z } from 'zod';
+import { rateLimiters } from '@/lib/rate-limiter';
+import { logAuditEvent, AuditEventType, getIpAddress } from '@/lib/audit-trail';
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Reset token is required'),
@@ -10,6 +12,22 @@ const resetPasswordSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit password reset attempts
+    const ip = getIpAddress(request.headers);
+    const rlResult = await rateLimiters.passwordReset.checkLimit(`pwd-reset-submit:${ip}`);
+
+    if (!rlResult.allowed) {
+      return NextResponse.json(
+        { error: 'Too many password reset attempts. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((rlResult.resetTime - Date.now()) / 1000).toString(),
+          },
+        }
+      );
+    }
+
     const body = await request.json();
     const validatedData = resetPasswordSchema.parse(body);
 
@@ -43,7 +61,19 @@ export async function POST(request: NextRequest) {
         passwordHash: hashedPassword,
         resetToken: null,
         resetTokenExpiry: null,
+        failedLoginAttempts: 0,
+        lockedUntil: null,
       },
+    });
+
+    // Audit log
+    await logAuditEvent({
+      eventType: AuditEventType.PASSWORD_RESET,
+      userId: user.id,
+      resourceId: user.id,
+      resourceType: 'User',
+      ipAddress: ip,
+      userAgent: request.headers.get('user-agent') || undefined,
     });
 
     return NextResponse.json({

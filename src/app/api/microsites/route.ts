@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { micrositeConfigSchema } from '@/lib/validations';
 import { verifyToken } from '@/lib/auth-utils';
 import { AppError } from '@/lib/errors';
+import { isDemoBrand } from '@/lib/demo-utils';
 
 // GET /api/microsites - Get microsite by brand and branch slugs
 export async function GET(request: NextRequest) {
@@ -106,12 +107,23 @@ export async function POST(request: NextRequest) {
           { admins: { some: { id: user.id } } },
         ],
       },
+      include: {
+        brand: { select: { slug: true } },
+      },
     });
 
     if (!branch) {
       return NextResponse.json(
         { error: 'Branch not found or access denied' },
         { status: 404 }
+      );
+    }
+
+    // Guard: prevent non-SUPER_ADMIN users from modifying demo microsites
+    if (isDemoBrand(branch.brand.slug) && user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json(
+        { error: 'Demo microsites cannot be modified' },
+        { status: 403 }
       );
     }
 

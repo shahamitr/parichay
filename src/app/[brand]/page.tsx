@@ -2,7 +2,10 @@ import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import MicrositeRenderer from '@/components/microsites/MicrositeRenderer';
+import DemoBadge from '@/components/microsites/DemoBadge';
 import { generateMicrositeSEO, generateStructuredData } from '@/lib/seo-utils';
+import { isDemoBrand, getCategoryFromDemoSlug } from '@/lib/demo-utils';
+import { industryCategories } from '@/data/categories';
 
 interface BrandPageProps {
   params: Promise<{
@@ -143,12 +146,31 @@ export default async function BrandPage({ params }: BrandPageProps) {
 
     const structuredData = generateStructuredData(micrositeData as any);
 
+    // Check if this is a demo brand and resolve category name
+    const isDemo = isDemoBrand(brandSlug);
+    let demoCategoryName: string | undefined;
+    if (isDemo) {
+      const categorySlug = getCategoryFromDemoSlug(brandSlug);
+      if (categorySlug) {
+        const category = industryCategories.find((c) => c.slug === categorySlug);
+        demoCategoryName = category?.name;
+      }
+    }
+
     return (
       <>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
+
+        {isDemo && demoCategoryName && (
+          <DemoBadge
+            brandName={brand.name}
+            categoryName={demoCategoryName}
+          />
+        )}
+
         <MicrositeRenderer data={micrositeData as any} />
       </>
     );

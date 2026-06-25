@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { validateFormSubmission } from '@/lib/bot-protection';
+import { rateLimiters } from '@/lib/rate-limiter';
+import { encryptPhone, encryptEmail } from '@/lib/encryption';
+import { z } from 'zod';
 
 // Mock leads data
 const mockLeads = [
@@ -132,6 +137,97 @@ export async function GET(request: NextRequest) {
     console.error('Failed to fetch leads:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch leads' },
+      { status: 500 }
+    );
+  }
+}
+
+// =============================================================================
+// POST /api/leads — Public lead submission from microsite contact forms
+// =============================================================================
+const leadSchema = z.object({
+  branchId: z.string().min(1),
+  brandId: z.string().min(1),
+  name: z.string().min(1).max(200),
+  email: z.string().email().optional().or(z.literal('')),
+  phone: z.string().max(20).optional().or(z.literal('')),
+  message: z.string().max(2000).optional().or(z.literal('')),
+  source: z.string().default('microsite_form'),
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    // Rate limit public form submissions
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+    const rl = await rateLimiters.formSubmission.checkLimit(`lead:${ip}`);
+    if (!rl.allowed) {
+      return NextResponse.json({ success: true, message: 'Thank you! We will contact you soon.' });
+    }
+
+    // Bot protection — silently reject bots with fake success
+    const botCheck = validateFormSubmission(request, body);
+    if (!botCheck.allowed) {
+      return NextResponse.json({ success: true, message: 'Thank you! We will contact you soon.' });
+    }
+
+    // Validate
+    const data = leadSchema.parse(body);
+
+    // Verify branch exists
+    const branch = await prisma.branch.findUnique({
+      where: { id: data.branchId },
+      select: { id: true, brandId: true },
+    });
+
+    if (!branch) {
+      return NextResponse.json({ error: 'Invalid branch' }, { status: 400 });
+    }
+
+    // Create lead (encrypt PII at rest)
+    const lead = await prisma.lead.create({
+      data: {
+        name: data.name,
+        email: data.email || null,
+        phone: encryptPhone(data.phone) || null,
+        message: data.message || null,
+        source: data.source,
+        status: 'NEW',
+        branchId: data.branchId,
+        brandId: branch.brandId,
+      },
+    });
+
+    // Track analytics event
+    await prisma.analyticsEvent.create({
+      data: {
+        eventType: 'LEAD_SUBMIT',
+        branchId: data.branchId,
+        brandId: branch.brandId,
+        metadata: {
+          leadId: lead.id,
+          source: data.source,
+        },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      leadId: lead.id,
+      message: 'Thank you! We will contact you soon.',
+    }, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Please fill in all required fields correctly.' },
+        { status: 400 }
+      );
+    }
+    console.error('Error creating lead:', error);
+    return NextResponse.json(
+      { error: 'Something went wrong. Please try again.' },
       { status: 500 }
     );
   }

@@ -5,6 +5,8 @@ import { Phone, Mail, MapPin, Download, MessageCircle, Share2, Briefcase, Award,
 import Image from 'next/image';
 import { getImageWithFallback } from '@/lib/placeholder-utils';
 import BusinessCardDownload from '../BusinessCardDownload';
+import ShareAction from '../ShareAction';
+
 
 interface ProfileSectionProps {
   branch: any;
@@ -50,9 +52,9 @@ export default function ProfileSection({ branch, brand }: ProfileSectionProps) {
     <div className="relative min-h-screen overflow-hidden">
       {/* Animated Gradient Background */}
       <div
-        className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
+        className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100"
         style={{
-          background: `linear-gradient(135deg, ${primaryColor}15 0%, transparent 50%, ${primaryColor}10 100%)`,
+          background: `linear-gradient(135deg, ${primaryColor}08 0%, #f8fafc 40%, ${primaryColor}05 100%)`,
         }}
       />
 
@@ -158,13 +160,13 @@ export default function ProfileSection({ branch, brand }: ProfileSectionProps) {
               <Download className="w-5 h-5" />
               <span>Save Contact</span>
             </button>
-            <button
-              onClick={handleShare}
-              className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gray-100 hover:bg-gray-200 rounded-2xl text-gray-700 font-medium transition-all duration-300"
-            >
-              <Share2 className="w-5 h-5" />
-              <span>{copied ? 'Copied!' : 'Share'}</span>
-            </button>
+            <ShareAction
+              title={`${brand.name} - ${branch.name}`}
+              text={brand.tagline || `Check out ${brand.name}`}
+              url={typeof window !== 'undefined' ? window.location.href : ''}
+              brandColor={primaryColor}
+            />
+
           </div>
         </div>
 
@@ -173,7 +175,7 @@ export default function ProfileSection({ branch, brand }: ProfileSectionProps) {
           {contact.phone && (
             <a
               href={`tel:${contact.phone}`}
-              className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 group"
+              className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-lg border border-gray-200 hover:border-gray-300 transition-all duration-300 group"
             >
               <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primaryColor}15` }}>
                 <Phone className="w-5 h-5" style={{ color: primaryColor }} />
@@ -188,7 +190,7 @@ export default function ProfileSection({ branch, brand }: ProfileSectionProps) {
           {contact.email && (
             <a
               href={`mailto:${contact.email}`}
-              className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 group"
+              className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-lg border border-gray-200 hover:border-gray-300 transition-all duration-300 group"
             >
               <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                 <Mail className="w-5 h-5 text-purple-600" />
@@ -205,7 +207,7 @@ export default function ProfileSection({ branch, brand }: ProfileSectionProps) {
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${address.street}, ${address.city}`)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 group"
+              className="flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm hover:shadow-lg border border-gray-200 hover:border-gray-300 transition-all duration-300 group"
             >
               <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
                 <MapPin className="w-5 h-5 text-orange-600" />

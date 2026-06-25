@@ -200,6 +200,9 @@ export default function EnhancedFeedbackSection({
   const [reviews, setReviews] = useState<FeedbackItem[]>(existingReviews);
   const [loadingReviews, setLoadingReviews] = useState(true);
   const sectionRef = useRef<HTMLDivElement>(null);
+  // Anti-bot: honeypot + timing
+  const [honeypot, setHoneypot] = useState('');
+  const [formLoadedAt] = useState(() => Date.now());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const colorTheme = brand?.colorTheme as any;
@@ -289,6 +292,13 @@ export default function EnhancedFeedbackSection({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Bot detection: honeypot and timing check
+    if (honeypot || Date.now() - formLoadedAt < 3000) {
+      setSubmitted(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -492,6 +502,20 @@ export default function EnhancedFeedbackSection({
 
               {/* Captcha */}
               <MathCaptcha onVerify={setCaptchaValid} />
+
+              {/* Honeypot — hidden from users, traps bots */}
+              <div className="absolute -left-[9999px] opacity-0 h-0 w-0 overflow-hidden" aria-hidden="true" tabIndex={-1}>
+                <label htmlFor="feedback_website">Website</label>
+                <input
+                  id="feedback_website"
+                  name="feedback_website"
+                  type="text"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  autoComplete="off"
+                  tabIndex={-1}
+                />
+              </div>
 
               {/* Submit Button */}
               <button

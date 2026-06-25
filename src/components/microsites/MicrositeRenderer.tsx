@@ -183,8 +183,8 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
   };
 
   const mainContent = (
-    // Mobile-app style layout container
-    <div className="microsite-container bg-white max-w-[480px] mx-auto min-h-screen shadow-2xl relative">
+    // Responsive layout container — mobile-first with wider tablet/desktop support
+    <div className="microsite-container bg-white w-full max-w-[480px] sm:max-w-[540px] md:max-w-[680px] lg:max-w-[780px] mx-auto min-h-screen shadow-2xl relative">
       {/* ARIA Live Regions for dynamic content announcements */}
       <AriaLiveRegion />
 

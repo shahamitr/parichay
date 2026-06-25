@@ -44,12 +44,21 @@ export default function BusinessHoursSection({ branch, brand }: BusinessHoursSec
     const todayHours = businessHours[currentDay];
 
     if (!todayHours || todayHours.closed) return false;
+    if (!todayHours.open || !todayHours.close) return false;
 
     const now = new Date();
     const currentTime = now.getHours() * 60 + now.getMinutes();
 
-    const [openHour, openMin] = todayHours.open.split(':').map(Number);
-    const [closeHour, closeMin] = todayHours.close.split(':').map(Number);
+    const openParts = todayHours.open.split(':');
+    const closeParts = todayHours.close.split(':');
+    const openHour = parseInt(openParts[0], 10);
+    const openMin = parseInt(openParts[1], 10);
+    const closeHour = parseInt(closeParts[0], 10);
+    const closeMin = parseInt(closeParts[1], 10);
+
+    if (isNaN(openHour) || isNaN(openMin) || isNaN(closeHour) || isNaN(closeMin)) {
+      return false;
+    }
 
     const openTime = openHour * 60 + openMin;
     const closeTime = closeHour * 60 + closeMin;
@@ -58,7 +67,15 @@ export default function BusinessHoursSection({ branch, brand }: BusinessHoursSec
   };
 
   const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':').map(Number);
+    if (!time || !time.includes(':')) {
+      return time || '--:--';
+    }
+    const parts = time.split(':');
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    if (isNaN(hours) || isNaN(minutes)) {
+      return time; // Return as-is if unparseable
+    }
     const period = hours >= 12 ? 'PM' : 'AM';
     const displayHours = hours % 12 || 12;
     return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;

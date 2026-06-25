@@ -1,107 +1,130 @@
 'use client';
 
 import { useState } from 'react';
-import Link from "next/link";
-import CommonHeader from "@/components/layout/CommonHeader";
-import CommonFooter from "@/components/layout/CommonFooter";
+import PublicPageLayout from '@/components/layout/PublicPageLayout';
+import { Mail, MessageCircle, MapPin, Send, CheckCircle } from 'lucide-react';
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('sending');
-
-    // Simulate API call
-    setTimeout(() => {
-      setStatus('success');
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 1000);
+    // In production, this would POST to /api/contact
+    await new Promise(r => setTimeout(r, 1000));
+    setStatus('success');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
-      <CommonHeader />
-      <nav className="bg-white dark:bg-neutral-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-primary-600 dark:text-primary-400">Parichay</Link>
-            <div className="flex items-center space-x-4">
-              <Link href="/login" className="text-neutral-700 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2">Sign In</Link>
-              <Link href="/register" className="bg-primary-600 dark:bg-primary-500 text-white px-4 py-2 rounded-md hover:bg-primary-700 dark:hover:bg-primary-600">Get Started</Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h1 className="text-5xl font-bold text-neutral-900 dark:text-neutral-100 mb-4 text-center">Contact Us</h1>
-        <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-12 text-center">We'd love to hear from you</p>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          <div>
-            <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-6">Get in Touch</h2>
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <span className="text-2xl mr-4">📧</span>
-                <div>
-                  <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Email</h3>
-                  <p className="text-neutral-600 dark:text-neutral-400">support@onetouchbizcard.in</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <span className="text-2xl mr-4">📱</span>
-                <div>
-                  <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Phone</h3>
-                  <p className="text-neutral-600 dark:text-neutral-400">+91 1234567890</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <span className="text-2xl mr-4">🏢</span>
-                <div>
-                  <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Office</h3>
-                  <p className="text-neutral-600 dark:text-neutral-400">Mumbai, Maharashtra, India</p>
-                </div>
-              </div>
-            </div>
+    <PublicPageLayout>
+      <section className="py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-14">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">Get in touch</h1>
+            <p className="mt-4 text-[15px] text-gray-500 max-w-lg mx-auto">
+              Have a question about Parichay? Want a demo for your team? We'd love to hear from you.
+            </p>
           </div>
 
-          <div className="bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-8">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {status === 'success' && (
-                <div className="bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-700 text-success-700 dark:text-success-400 px-4 py-3 rounded-lg">
-                  Message sent successfully! We'll get back to you soon.
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+            {/* Contact Info */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-5 h-5 text-indigo-600" />
                 </div>
+                <div>
+                  <h3 className="text-[14px] font-semibold text-gray-900">Email us</h3>
+                  <p className="text-[13px] text-gray-500 mt-1">hello@parichay.com</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <MessageCircle className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <h3 className="text-[14px] font-semibold text-gray-900">WhatsApp</h3>
+                  <p className="text-[13px] text-gray-500 mt-1">+91 98765 43210</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-[14px] font-semibold text-gray-900">Office</h3>
+                  <p className="text-[13px] text-gray-500 mt-1">Pune, Maharashtra, India</p>
+                </div>
+              </div>
+
+              <div className="mt-8 p-5 bg-indigo-50/50 border border-indigo-100 rounded-xl">
+                <p className="text-[13px] text-indigo-800 leading-relaxed">
+                  <strong>Response time:</strong> We typically respond within 4 hours during business hours (Mon-Sat, 9 AM - 7 PM IST).
+                </p>
+              </div>
+            </div>
+
+            {/* Form */}
+            <div className="lg:col-span-3">
+              {status === 'success' ? (
+                <div className="text-center py-12">
+                  <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-7 h-7 text-green-600" />
+                  </div>
+                  <h3 className="text-[18px] font-semibold text-gray-900">Message sent!</h3>
+                  <p className="text-[14px] text-gray-500 mt-2">We'll get back to you within a few hours.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                    <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Your name</label>
+                    <input
+                      required
+                      value={formData.name}
+                      onChange={e => setFormData({...formData, name: e.target.value})}
+                      className="w-full h-11 px-4 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+                      placeholder="Amit Shah"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Email address</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={e => setFormData({...formData, email: e.target.value})}
+                      className="w-full h-11 px-4 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all"
+                      placeholder="amit@business.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Message</label>
+                    <textarea
+                      required
+                      rows={5}
+                      value={formData.message}
+                      onChange={e => setFormData({...formData, message: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all resize-none"
+                      placeholder="Tell us how we can help..."
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={status === 'sending'}
+                    className="h-11 px-6 flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[14px] font-medium rounded-xl shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                  >
+                    <Send className="w-4 h-4" />
+                    {status === 'sending' ? 'Sending...' : 'Send Message'}
+                  </button>
+                </form>
               )}
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Name</label>
-                <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Email</label>
-                <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Subject</label>
-                <input type="text" required value={formData.subject} onChange={(e) => setFormData({...formData, subject: e.target.value})} className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Message</label>
-                <textarea required rows={4} value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-100 rounded-lg focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"></textarea>
-              </div>
-
-              <button type="submit" disabled={status === 'sending'} className="w-full bg-primary-600 dark:bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50">
-                {status === 'sending' ? 'Sending...' : 'Send Message'}
-              </button>
-            </form>
+            </div>
           </div>
         </div>
-      </main>
-    </div>
+      </section>
+    </PublicPageLayout>
   );
 }

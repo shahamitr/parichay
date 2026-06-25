@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Phone, 
-    MessageCircle, 
-    MapPin, 
-    Image as ImageIcon, 
-    Share2, 
-    ChevronRight, 
+import {
+    Phone,
+    MessageCircle,
+    MapPin,
+    Image as ImageIcon,
+    Share2,
+    ChevronRight,
     ArrowLeft,
     ShieldCheck,
     Star,
@@ -200,10 +200,15 @@ END:VCARD`;
                     <p className="text-primary-100 text-lg font-medium max-w-2xl mx-auto">
                         Explore how different industries use Parichay to transform their customer interactions. Save a contact to see the magic.
                     </p>
+                    <div className="pt-4">
+                        <Link href="/demo/industries" className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold text-sm rounded-xl hover:bg-white/20 transition-all">
+                            Browse all 11 live industry demos →
+                        </Link>
+                    </div>
                 </div>
-                
+
                 {/* Floating Elements */}
-                <motion.div 
+                <motion.div
                     animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
                     transition={{ duration: 6, repeat: Infinity }}
                     className="absolute top-10 right-[10%] opacity-20 hidden md:block"
@@ -233,7 +238,7 @@ END:VCARD`;
                         })}
                     </div>
                 </div>
-                
+
                 <div className="p-6 bg-primary-600 rounded-[2rem] text-white space-y-4 shadow-xl shadow-primary-600/30">
                     <p className="text-xs font-black italic">Tip: Tap "SAVE TO CONTACTS" to see the vCard magic in action!</p>
                 </div>
@@ -258,7 +263,7 @@ END:VCARD`;
 
             {/* Mobile Mockup Wrapper */}
             <div className="w-full max-w-md bg-white dark:bg-[#0A0A1F] shadow-2xl overflow-hidden relative md:rounded-[3rem] border-x-0 md:border-x-[12px] md:border-y-[12px] border-neutral-900 flex flex-col transition-all duration-500">
-                
+
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={selectedId}
@@ -269,17 +274,17 @@ END:VCARD`;
                     >
                         {/* Header / Banner */}
                         <div className="relative h-48 sm:h-56 overflow-hidden">
-                            <img 
-                                src={data.banner} 
-                                className="w-full h-full object-cover grayscale-[20%]" 
+                            <img
+                                src={data.banner}
+                                className="w-full h-full object-cover grayscale-[20%]"
                                 alt="Banner"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A1F] via-[#0A0A1F]/40 to-transparent"></div>
-                            
+
                             <Link href="/" className="absolute top-6 left-6 p-2 bg-white/20 backdrop-blur-md rounded-full text-white">
                                 <ArrowLeft className="w-5 h-5" />
                             </Link>
-                            
+
                             <div className="absolute bottom-6 left-6 right-6">
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className={`text-white font-black text-[10px] tracking-widest uppercase ${data.color} px-2 py-0.5 rounded-full`}>
@@ -302,7 +307,7 @@ END:VCARD`;
 
                                 {/* Action Buttons */}
                                 <div className="space-y-4">
-                                    <motion.button 
+                                    <motion.button
                                         whileTap={{ scale: 0.95 }}
                                         onClick={downloadVCard}
                                         className="w-full py-5 bg-primary-600 text-white rounded-2xl font-black shadow-xl shadow-primary-500/30 flex items-center justify-center gap-3"
@@ -390,7 +395,7 @@ END:VCARD`;
                         Try different industries on the left. See how Parichay adapts to your brand colors, services, and business goals instantly.
                     </p>
                 </div>
-                
+
                 <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-8 rounded-[3rem] shadow-2xl">
                     <h3 className="text-xl font-bold mb-6 dark:text-white">Why Professionals Choose Parichay</h3>
                     <div className="space-y-4">

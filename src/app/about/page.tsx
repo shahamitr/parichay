@@ -1,73 +1,94 @@
-import Link from "next/link";
-import CommonHeader from "@/components/layout/CommonHeader";
-import CommonFooter from "@/components/layout/CommonFooter";
+import PublicPageLayout from '@/components/layout/PublicPageLayout';
+import Link from 'next/link';
+import { ArrowRight, Target, Users, Globe, Zap } from 'lucide-react';
+
+export const metadata = {
+  title: 'About Parichay | Business Growth Platform',
+  description: 'Parichay helps businesses, professionals, and individuals build a professional digital presence and grow online.',
+};
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
-      <CommonHeader />
-      <nav className="bg-white dark:bg-neutral-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-primary-600 dark:text-primary-400">Parichay</Link>
-            <div className="flex items-center space-x-4">
-              <Link href="/login" className="text-neutral-700 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400 px-3 py-2">Sign In</Link>
-              <Link href="/register" className="bg-primary-600 dark:bg-primary-500 text-white px-4 py-2 rounded-md hover:bg-primary-700 dark:hover:bg-primary-600">Get Started</Link>
-            </div>
+    <PublicPageLayout>
+      {/* Hero */}
+      <section className="py-20 px-6 bg-gradient-to-b from-indigo-50/40 to-white">
+        <div className="max-w-3xl mx-auto text-center">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
+            Helping every business build a professional digital presence
+          </h1>
+          <p className="mt-5 text-[16px] text-gray-500 leading-relaxed max-w-2xl mx-auto">
+            Parichay is a business growth platform that gives individuals, professionals, small businesses, and local service providers the tools to get discovered online, build trust, and capture customers — without needing technical skills or expensive agencies.
+          </p>
+        </div>
+      </section>
+
+      {/* Mission */}
+      <section className="py-16 px-6">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Our Mission</h2>
+            <p className="mt-4 text-[15px] text-gray-500 leading-relaxed">
+              Millions of businesses in India exist physically but are invisible online. A doctor with 20 years of experience, a restaurant with amazing food, a consultant with deep expertise — none of them show up when customers search online.
+            </p>
+            <p className="mt-4 text-[15px] text-gray-500 leading-relaxed">
+              We're changing that. Parichay gives every business — from a solo freelancer to a multi-branch chain — a professional digital presence they can create in 5 minutes and share anywhere.
+            </p>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">What We Believe</h2>
+            <ul className="mt-4 space-y-4">
+              {[
+                { icon: Target, text: 'Every business deserves to be found by the customers looking for them' },
+                { icon: Zap, text: 'Getting online should take minutes, not weeks' },
+                { icon: Users, text: 'You shouldn\'t need a developer to have a professional presence' },
+                { icon: Globe, text: 'Your digital identity should work everywhere — WhatsApp, Google, social media' },
+              ].map((item) => (
+                <li key={item.text} className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <item.icon className="w-4 h-4 text-indigo-600" />
+                  </div>
+                  <span className="text-[14px] text-gray-600 leading-relaxed">{item.text}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-      </nav>
+      </section>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h1 className="text-5xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">About Parichay</h1>
-
-        <div className="prose prose-lg max-w-none">
-          <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-6">
-            Parichay is a modern platform for creating and managing digital business cards.
-            We help businesses, professionals, and entrepreneurs create stunning microsites that showcase
-            their brand and capture leads effectively.
-          </p>
-
-          <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mt-12 mb-4">Our Mission</h2>
-          <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-            To revolutionize the way businesses share their information by providing an easy-to-use,
-            powerful platform for creating professional digital business cards that work seamlessly
-            across all devices.
-          </p>
-
-          <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mt-12 mb-4">Why Choose Us?</h2>
-          <ul className="space-y-3 text-neutral-600 dark:text-neutral-400">
-            <li className="flex items-start">
-              <span className="text-primary-600 dark:text-primary-400 mr-2">✓</span>
-              <span>Easy to use - No technical knowledge required</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-primary-600 dark:text-primary-400 mr-2">✓</span>
-              <span>Professional templates designed by experts</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-primary-600 dark:text-primary-400 mr-2">✓</span>
-              <span>Powerful analytics to track your performance</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-primary-600 dark:text-primary-400 mr-2">✓</span>
-              <span>Secure and reliable infrastructure</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-primary-600 dark:text-primary-400 mr-2">✓</span>
-              <span>Excellent customer support</span>
-            </li>
-          </ul>
-
-          <div className="mt-12 bg-primary-600 dark:bg-primary-700 rounded-xl p-8 text-white text-center">
-            <h3 className="text-2xl font-bold mb-4">Ready to Get Started?</h3>
-            <p className="mb-6">Join businesses using Parichay</p>
-            <Link href="/register" className="inline-block bg-white dark:bg-neutral-100 text-primary-600 dark:text-primary-700 px-8 py-3 rounded-lg font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-200">
-              Create Your Free Account
-            </Link>
+      {/* Who uses Parichay */}
+      <section className="py-16 px-6 bg-gray-50/50">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">Who uses Parichay?</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              'Doctors & Clinics',
+              'Restaurants & Cafes',
+              'Real Estate Agents',
+              'Freelancers & Consultants',
+              'Coaches & Trainers',
+              'Salons & Spas',
+              'Architects & Designers',
+              'Retail Shop Owners',
+              'Agencies & Firms',
+            ].map((item) => (
+              <div key={item} className="px-5 py-4 bg-white border border-gray-100 rounded-xl text-[14px] text-gray-700 font-medium">
+                {item}
+              </div>
+            ))}
           </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16 px-6">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-2xl font-bold text-gray-900">Ready to bring your business online?</h2>
+          <p className="mt-3 text-gray-500 text-[15px]">Create your profile in 5 minutes. Free for 14 days.</p>
+          <Link href="/register" className="mt-6 inline-flex items-center gap-2 h-11 px-7 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[14px] font-medium rounded-xl shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all">
+            Create My Business Profile <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </section>
+    </PublicPageLayout>
   );
 }

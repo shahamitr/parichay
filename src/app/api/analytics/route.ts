@@ -131,19 +131,21 @@ export async function GET(request: NextRequest) {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5);
 
-        // Fetch branch names
-        const topBranches = await Promise.all(
-            sortedBranches.map(async ([branchId, views]) => {
-                const branch = await prisma.branch.findUnique({
-                    where: { id: branchId },
-                    select: { name: true },
-                });
-                return {
-                    name: branch?.name || 'Unknown',
-                    views,
-                };
-            })
-        );
+        // Fetch branch names in a single query instead of N+1
+        const branchIds = sortedBranches.map(([branchId]) => branchId);
+        const branchRecords = await prisma.branch.findMany({
+          where: { id: { in: branchIds } },
+          select: { id: true, name: true },
+        });
+        const branchNameMap: Record<string, string> = {};
+        for (const b of branchRecords) {
+          branchNameMap[b.id] = b.name;
+        }
+
+        const topBranches = sortedBranches.map(([branchId, views]) => ({
+          name: branchNameMap[branchId] || 'Unknown',
+          views,
+        }));
 
         // 4. Recent Leads
         const recentLeads = await prisma.lead.findMany({

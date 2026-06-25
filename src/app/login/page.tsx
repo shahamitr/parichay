@@ -1,120 +1,100 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { AlertCircle, CheckCircle, XCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Shield } from 'lucide-react';
 import AuthLayout from '@/components/layout/AuthLayout';
 
-// Toast notification component
-function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'warning'; onClose: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 5000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  const icons = {
-    error: <XCircle className="w-5 h-5" />,
-    success: <CheckCircle className="w-5 h-5" />,
-    warning: <AlertCircle className="w-5 h-5" />,
-  };
-
-  const colors = {
-    error: 'bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800 text-error-800 dark:text-error-200',
-    success: 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800 text-success-800 dark:text-success-200',
-    warning: 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800 text-warning-800 dark:text-warning-200',
-  };
-
-  return (
-    <div className="fixed top-4 right-4 z-50 animate-slide-in">
-      <div className={`flex items-start gap-3 px-4 py-3 rounded-lg border shadow-lg max-w-md ${colors[type]}`}>
-        <div className="flex-shrink-0 mt-0.5">{icons[type]}</div>
-        <div className="flex-1">
-          <p className="text-sm font-medium">{message}</p>
-        </div>
-        <button
-          onClick={onClose}
-          className="flex-shrink-0 ml-2 hover:opacity-70 transition-opacity"
-        >
-          <XCircle className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
+// Role-based redirect mapping
+const ROLE_REDIRECTS: Record<string, string> = {
+  SUPER_ADMIN: '/admin/dashboard',
+  BRAND_MANAGER: '/admin/dashboard',
+  BRANCH_ADMIN: '/admin/dashboard',
+  EXECUTIVE: '/admin/dashboard',
+  BUSINESS_OWNER: '/business-owner/dashboard',
+  CUSTOMER: '/customer-dashboard',
+};
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'warning' } | null>(null);
 
-  const showToast = (message: string, type: 'error' | 'success' | 'warning') => {
-    setToast({ message, type });
+  // MFA state
+  const [requiresMFA, setRequiresMFA] = useState(false);
+  const [mfaToken, setMfaToken] = useState('');
+  const [mfaUserId, setMfaUserId] = useState('');
+
+  const getRedirectPath = (role: string): string => {
+    // Check for explicit redirect param first
+    const redirectParam = searchParams.get('redirect');
+    if (redirectParam) return redirectParam;
+    return ROLE_REDIRECTS[role] || '/admin/dashboard';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setToast(null);
 
     try {
+      const body: Record<string, string> = { email, password };
+      if (requiresMFA && mfaToken) {
+        body.mfaToken = mfaToken;
+      }
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
 
+      if (response.status === 403 && data.requiresMFA) {
+        setRequiresMFA(true);
+        setMfaUserId(data.userId);
+        setLoading(false);
+        return;
+      }
+
       if (response.ok && data.success) {
-        showToast('Login successful! Redirecting...', 'success');
-        const redirectPath = data.user.role === 'EXECUTIVE' ? '/executive' : '/admin';
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const redirectPath = getRedirectPath(data.user.role);
         window.location.href = redirectPath;
       } else {
-        showToast(data.error || 'Login failed. Please check your credentials.', 'error');
-        setError(data.error || 'Login failed. Please try again.');
+        setError(data.error || 'Invalid email or password.');
+        if (requiresMFA) {
+          setMfaToken('');
+        }
       }
-    } catch (err) {
-      showToast('⚠️ An unexpected error occurred. Please try again.', 'error');
-      setError('An error occurred. Please try again.');
+    } catch {
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthLayout 
-        title="Welcome Back" 
-        subtitle="Sign in to your account and manage your digital identity"
-    >
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <AuthLayout title="Welcome back" subtitle="Sign in to manage your business profile">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
-          <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 text-error-700 dark:text-error-200 px-4 py-3 rounded-lg">
-            {error}
+          <div className="px-4 py-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-[13px] flex items-start gap-2">
+            <Shield className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
-        <div className="space-y-4">
+        {!requiresMFA ? (
+          <>
             <div>
-              <label htmlFor="email" className="block text-sm font-bold text-neutral-700 dark:text-neutral-300 mb-2">
-                Email Address
+              <label htmlFor="email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                Email
               </label>
               <input
                 id="email"
@@ -122,82 +102,93 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-5 py-4 border-2 border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 text-neutral-900 dark:text-white rounded-2xl focus:border-primary-500 outline-none transition-all"
-                placeholder="you@email.com"
+                className="w-full h-11 px-4 border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all"
+                placeholder="you@business.com"
+                autoComplete="email"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-bold text-neutral-700 dark:text-neutral-300 mb-2">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="password" className="text-[13px] font-medium text-gray-700">
+                  Password
+                </label>
+                <Link href="/forgot-password" className="text-[12px] text-primary-600 hover:text-primary-700 font-medium">
+                  Forgot?
+                </Link>
+              </div>
               <div className="relative">
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-5 py-4 border-2 border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 text-neutral-900 dark:text-white rounded-2xl focus:border-primary-500 outline-none transition-all"
-                    placeholder="••••••••"
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-primary-500 transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full h-11 px-4 pr-11 border border-gray-200 rounded-xl text-[14px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <input
-              id="remember"
-              type="checkbox"
-              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 dark:border-neutral-600 rounded"
-            />
-            <label htmlFor="remember" className="ml-2 block text-sm text-neutral-600 dark:text-neutral-400 font-medium cursor-pointer">
-              Remember me
+          </>
+        ) : (
+          <div>
+            <div className="px-4 py-3 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-xl text-[13px] mb-4">
+              Enter the 6-digit code from your authenticator app.
+            </div>
+            <label htmlFor="mfaToken" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              Verification Code
             </label>
+            <input
+              id="mfaToken"
+              type="text"
+              required
+              value={mfaToken}
+              onChange={(e) => setMfaToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className="w-full h-12 px-4 border border-gray-200 rounded-xl text-[18px] text-center text-gray-900 tracking-[0.3em] placeholder:text-gray-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all font-mono"
+              placeholder="000000"
+              maxLength={6}
+              autoFocus
+              autoComplete="one-time-code"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setRequiresMFA(false);
+                setMfaToken('');
+                setError('');
+              }}
+              className="mt-3 text-[12px] text-gray-500 hover:text-gray-700 font-medium"
+            >
+              ← Back to login
+            </button>
           </div>
-          <Link
-            href="/forgot-password"
-            className="text-sm text-primary-600 dark:text-primary-400 hover:underline font-bold"
-          >
-            Forgot password?
-          </Link>
-        </div>
+        )}
 
         <button
           type="submit"
-          disabled={loading}
-          className="w-full bg-primary-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          disabled={loading || (requiresMFA && mfaToken.length < 6)}
+          className="w-full h-11 flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-[14px] font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-primary-600/10"
         >
-          {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-          {loading ? 'AUTHENTICATING...' : 'SIGN IN'}
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          {loading ? 'Signing in...' : requiresMFA ? 'Verify & Sign in' : 'Sign in'}
         </button>
-      </form>
 
-      <div className="mt-10 text-center">
-        <p className="text-neutral-600 dark:text-neutral-400 font-medium">
-          Don't have an account?{' '}
-          <Link
-            href="/register"
-            className="text-primary-600 dark:text-primary-400 hover:underline font-black"
-          >
-            CREATE ACCOUNT
+        <p className="text-center text-[13px] text-gray-500 pt-2">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="text-primary-600 font-medium hover:text-primary-700">
+            Create one
           </Link>
         </p>
-      </div>
-
-      <div className="mt-10 pt-8 border-t border-neutral-100 dark:border-neutral-800 text-center">
-        <Link href="/" className="text-sm font-bold text-neutral-400 hover:text-primary-500 transition-colors uppercase tracking-widest">
-          ← Return to Landing
-        </Link>
-      </div>
+      </form>
     </AuthLayout>
   );
 }

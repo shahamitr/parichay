@@ -127,8 +127,26 @@ export default function ContactSection({ config, brand, branch }: ContactSection
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Honeypot field for bot detection
+  const [honeypot, setHoneypot] = useState('');
+  // Timestamp to detect instant submissions (bots submit too fast)
+  const [formLoadedAt] = useState(() => Date.now());
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Bot detection: honeypot field should be empty
+    if (honeypot) {
+      // Silently reject — don't alert bots
+      setSubmitStatus('success');
+      return;
+    }
+
+    // Bot detection: form submitted too fast (< 3 seconds)
+    if (Date.now() - formLoadedAt < 3000) {
+      setSubmitStatus('success');
+      return;
+    }
 
     // Validate required fields
     if (!formData.name || !formData.name.trim()) {
@@ -456,6 +474,20 @@ export default function ContactSection({ config, brand, branch }: ContactSection
                     )}
                   </div>
                 ))}
+
+                {/* Honeypot field — hidden from users, traps bots */}
+                <div className="absolute -left-[9999px] opacity-0 h-0 w-0 overflow-hidden" aria-hidden="true" tabIndex={-1}>
+                  <label htmlFor="website_url">Website</label>
+                  <input
+                    id="website_url"
+                    name="website_url"
+                    type="text"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    autoComplete="off"
+                    tabIndex={-1}
+                  />
+                </div>
 
                 <MathCaptcha onVerify={setCaptchaValid} />
 

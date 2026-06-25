@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
 
     if (!user) {
-      logger.warn({ userId: payload.userId }, 'User not found');
+      logger.warn('User not found or unauthenticated');
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }

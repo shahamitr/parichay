@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { emailService } from '@/lib/email-service';
 import crypto from 'crypto';
 import { z } from 'zod';
+import { rateLimiters } from '@/lib/rate-limiter';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -10,6 +11,23 @@ const forgotPasswordSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit password reset requests
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = forwarded ? forwarded.split(',')[0].trim() : request.ip || 'unknown';
+    const rlResult = await rateLimiters.passwordReset.checkLimit(`pwd-reset:${ip}`);
+
+    if (!rlResult.allowed) {
+      return NextResponse.json(
+        { error: 'Too many password reset requests. Please try again later.', type: 'RATE_LIMIT' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((rlResult.resetTime - Date.now()) / 1000).toString(),
+          },
+        }
+      );
+    }
+
     const body = await request.json();
     const validatedData = forgotPasswordSchema.parse(body);
 

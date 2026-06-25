@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth-utils';
 import { brandCreateSchema } from '@/lib/validations';
 import { generateSlug } from '@/lib/utils';
+import { withCache, cacheDelPattern } from '@/lib/cache';
 
 /**
  * @swagger
@@ -467,43 +468,65 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Fetch real stats for each brand
-    const brandsWithStats = await Promise.all(
-      brands.map(async (brand) => {
-        // Calculate total leads across all branches
-        const totalLeads = brand.branches.reduce(
-          (sum: number, branch: any) => sum + (branch._count?.leads || 0),
-          0
-        );
-
-        // Get view count from analytics (if table exists)
-        let totalViews = 0;
-        try {
-          const branchIds = brand.branches.map((b: any) => b.id);
-          if (branchIds.length > 0) {
-            totalViews = await prisma.analyticsEvent.count({
-              where: {
-                branchId: { in: branchIds },
-                eventType: 'PAGE_VIEW',
-              },
-            });
-          }
-        } catch {
-          // Analytics table might not exist
-        }
-
-        return {
-          ...brand,
-          branches: brand.branches.slice(0, 1), // Only return first branch
-          stats: {
-            views: totalViews,
-            leads: totalLeads,
-          },
-        };
-      })
+    // Fetch view counts for all brands in a single query instead of N+1
+    const allBranchIds = brands.flatMap((brand: any) =>
+      brand.branches.map((b: any) => b.id)
     );
 
-    return NextResponse.json({ brands: brandsWithStats });
+    let viewCountsByBrand: Record<string, number> = {};
+    if (allBranchIds.length > 0) {
+      try {
+        const viewCounts = await prisma.analyticsEvent.groupBy({
+          by: ['branchId'],
+          where: {
+            branchId: { in: allBranchIds },
+            eventType: 'PAGE_VIEW',
+          },
+          _count: { id: true },
+        });
+
+        // Build a branchId -> count map
+        const branchViewMap: Record<string, number> = {};
+        for (const vc of viewCounts) {
+          if (vc.branchId) {
+            branchViewMap[vc.branchId] = vc._count.id;
+          }
+        }
+
+        // Aggregate by brand
+        for (const brand of brands) {
+          let total = 0;
+          for (const branch of (brand as any).branches) {
+            total += branchViewMap[branch.id] || 0;
+          }
+          viewCountsByBrand[(brand as any).id] = total;
+        }
+      } catch {
+        // Analytics table might not exist
+      }
+    }
+
+    const brandsWithStats = brands.map((brand: any) => {
+      const totalLeads = brand.branches.reduce(
+        (sum: number, branch: any) => sum + (branch._count?.leads || 0),
+        0
+      );
+
+      return {
+        ...brand,
+        branches: brand.branches.slice(0, 1),
+        stats: {
+          views: viewCountsByBrand[brand.id] || 0,
+          leads: totalLeads,
+        },
+      };
+    });
+
+    return NextResponse.json({ brands: brandsWithStats }, {
+      headers: {
+        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
+      },
+    });
   } catch (error) {
     console.error('Error fetching brands:', error);
     return NextResponse.json(

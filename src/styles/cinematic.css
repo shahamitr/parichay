@@ -1,47 +1,49 @@
-/* Cinematic effects for Hollywood Armageddon aesthetic */
+/* Premium background effects for modern Parichay aesthetic */
 
-@keyframes ember-rise {
-  0% {
-    transform: translateY(0) scale(1);
-    opacity: 0;
+@keyframes aura-pulse {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
   }
-  20% {
-    opacity: 0.8;
+  33% {
+    transform: translate(2%, 2%) scale(1.1);
+    opacity: 0.5;
   }
-  100% {
-    transform: translateY(-200px) scale(0.5);
-    opacity: 0;
+  66% {
+    transform: translate(-1%, 3%) scale(0.9);
+    opacity: 0.4;
   }
 }
 
-.ember-container {
+.premium-aura {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.aura-blob {
+  position: absolute;
+  filter: blur(120px);
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: aura-pulse 10s ease-in-out infinite;
+}
+
+.aura-1 { width: 60%; height: 60%; top: -10%; left: -10%; background: radial-gradient(circle, var(--color-primary), transparent); }
+.aura-2 { width: 50%; height: 50%; bottom: -10%; right: -10%; background: radial-gradient(circle, var(--color-accent), transparent); animation-delay: -2s; }
+.aura-3 { width: 40%; height: 40%; top: 30%; right: 20%; background: radial-gradient(circle, #8b5cf6, transparent); animation-delay: -5s; }
+
+/* Subtle Grain Texture */
+.grain-overlay {
   position: absolute;
   inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
   pointer-events: none;
-  z-index: 15;
+  z-index: 1;
 }
-
-.ember {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  background: #fb923c;
-  border-radius: 50%;
-  box-shadow: 0 0 4px #fb923c;
-  opacity: 0;
-  animation: ember-rise linear infinite;
-}
-
-/* Generate multiple embers with different delays and positions */
-.ember:nth-child(1) { left: 10%; bottom: -10px; animation-duration: 4s; animation-delay: 0s; }
-.ember:nth-child(2) { left: 20%; bottom: -10px; animation-duration: 6s; animation-delay: 1s; }
-.ember:nth-child(3) { left: 35%; bottom: -10px; animation-duration: 5s; animation-delay: 2s; }
-.ember:nth-child(4) { left: 50%; bottom: -10px; animation-duration: 7s; animation-delay: 0.5s; }
-.ember:nth-child(5) { left: 65%; bottom: -10px; animation-duration: 4.5s; animation-delay: 1.5s; }
-.ember:nth-child(6) { left: 80%; bottom: -10px; animation-duration: 6.5s; animation-delay: 2.5s; }
-.ember:nth-child(7) { left: 15%; bottom: -10px; animation-duration: 5.5s; animation-delay: 3s; }
-.ember:nth-child(8) { left: 45%; bottom: -10px; animation-duration: 4.2s; animation-delay: 0.2s; }
-.ember:nth-child(9) { left: 75%; bottom: -10px; animation-duration: 5.8s; animation-delay: 1.2s; }
-.ember:nth-child(10) { left: 95%; bottom: -10px; animation-duration: 6.2s; animation-delay: 0.8s; }
-.ember:nth-child(11) { left: 5%; bottom: -10px; animation-duration: 4.8s; animation-delay: 2.2s; }
-.ember:nth-child(12) { left: 55%; bottom: -10px; animation-duration: 5.2s; animation-delay: 1.8s; }
