@@ -33,6 +33,13 @@ const WhatsAppCatalogueSection = dynamic(() => import('./sections/WhatsAppCatalo
 const SocialProofBadgesDisplay = dynamic(() => import('./sections/SocialProofBadgesDisplay'), { ssr: true });
 const VideoTestimonialsDisplay = dynamic(() => import('./sections/VideoTestimonialsDisplay'), { ssr: true });
 const VoiceIntroDisplay = dynamic(() => import('./VoiceIntroDisplay'), { ssr: true });
+// New feature sections
+const DocumentsSection = dynamic(() => import('./sections/DocumentsSection'), { ssr: true });
+const QuoteRequestSection = dynamic(() => import('./sections/QuoteRequestSection'), { ssr: true });
+const QASection = dynamic(() => import('./sections/QASection'), { ssr: true });
+const BestTimeToVisit = dynamic(() => import('./sections/BestTimeToVisit'), { ssr: true });
+const StaffCardsSection = dynamic(() => import('./sections/StaffCardsSection'), { ssr: true });
+const WhatsAppShare = dynamic(() => import('./WhatsAppShare'), { ssr: false });
 import ThemeToggle from './ThemeToggle';
 import MicrositeFooter from './MicrositeFooter';
 import FixedBottomBar from './FixedBottomBar';
@@ -74,6 +81,13 @@ const DEFAULT_SECTION_ORDER: SectionOrderItem[] = [
   { id: 'faq', enabled: false },
   { id: 'team', enabled: false },
   { id: 'booking', enabled: false },
+  // New sections
+  { id: 'documents', enabled: false },
+  { id: 'quoteRequest', enabled: false },
+  { id: 'questionsAnswers', enabled: false },
+  { id: 'bestTimeToVisit', enabled: false },
+  { id: 'staffCards', enabled: false },
+  { id: 'whatsappShare', enabled: false },
   // Premium Features (DB-backed)
   { id: 'videoTestimonials', enabled: false },
   { id: 'voiceIntro', enabled: false },
@@ -180,6 +194,18 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
       default:
         return <ModernBusinessTemplate data={data}>{content}</ModernBusinessTemplate>;
     }
+  };
+
+  // Generate traffic pattern data for BestTimeToVisit (based on business hours)
+  const generateTrafficData = () => {
+    const levels: ('quiet' | 'moderate' | 'busy')[] = [];
+    for (let h = 0; h < 24; h++) {
+      if (h < 7 || h > 21) levels.push('quiet');
+      else if (h >= 10 && h <= 13) levels.push('busy');
+      else if (h >= 17 && h <= 19) levels.push('busy');
+      else levels.push('moderate');
+    }
+    return levels.map((level, hour) => ({ hour, level }));
   };
 
   const mainContent = (
@@ -555,6 +581,88 @@ export default function MicrositeRenderer({ data }: MicrositeRendererProps) {
                   <section id="social-proof-badges" aria-labelledby="social-proof-badges-heading">
                     <SocialProofBadgesDisplay branchId={branch.id} position="inline" />
                   </section>
+                </div>
+              );
+
+            // ─── New Feature Sections ───
+            case 'documents':
+              if (!config.sections.documents) return null;
+              return (
+                <div key="documents">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="documents">
+                    <DocumentsSection
+                      documents={(config.sections.documents as any)?.items || []}
+                      primaryColor={(brand.colorTheme as any)?.primary}
+                    />
+                  </section>
+                </div>
+              );
+
+            case 'quoteRequest':
+              return (
+                <div key="quoteRequest">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="quote-request">
+                    <QuoteRequestSection
+                      branchId={branch.id}
+                      brandId={brand.id}
+                      services={config.sections.services?.items?.map((s: any) => s.name) || []}
+                      primaryColor={(brand.colorTheme as any)?.primary}
+                      businessName={brand.name}
+                    />
+                  </section>
+                </div>
+              );
+
+            case 'questionsAnswers':
+              return (
+                <div key="questionsAnswers">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="questions-answers">
+                    <QASection
+                      branchId={branch.id}
+                      primaryColor={(brand.colorTheme as any)?.primary}
+                    />
+                  </section>
+                </div>
+              );
+
+            case 'bestTimeToVisit':
+              return (
+                <div key="bestTimeToVisit">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="best-time-to-visit">
+                    <BestTimeToVisit
+                      data={generateTrafficData()}
+                      primaryColor={(brand.colorTheme as any)?.primary}
+                      businessName={brand.name}
+                    />
+                  </section>
+                </div>
+              );
+
+            case 'staffCards':
+              return (
+                <div key="staffCards">
+                  {showSeparator && <SectionSeparator variant="gradient" />}
+                  <section id="staff-cards">
+                    <StaffCardsSection
+                      branchId={branch.id}
+                      primaryColor={(brand.colorTheme as any)?.primary}
+                    />
+                  </section>
+                </div>
+              );
+
+            case 'whatsappShare':
+              return (
+                <div key="whatsappShare" className="py-6 flex justify-center">
+                  <WhatsAppShare
+                    businessName={brand.name}
+                    tagline={(brand as any).tagline}
+                    profileUrl={typeof window !== 'undefined' ? window.location.href : ''}
+                  />
                 </div>
               );
 

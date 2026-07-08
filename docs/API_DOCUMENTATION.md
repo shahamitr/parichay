@@ -414,6 +414,51 @@ Check system health status.
 }
 ```
 
+## 🎯 Demo Microsites Endpoints
+
+### GET /demo/microsites
+
+List all available industry demo microsites. No authentication required.
+
+**Query Parameters:**
+- `category` (optional): Filter by industry category slug (e.g., `healthcare-professionals`, `restaurants-cafes`)
+
+**Example:**
+```bash
+# Get all demo microsites
+curl -X GET http://localhost:3000/api/demo/microsites
+
+# Filter by category
+curl -X GET "http://localhost:3000/api/demo/microsites?category=healthcare-professionals"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "brandId": "abc123",
+      "brandName": "CareFirst Medical Center",
+      "brandSlug": "demo-healthcare-professionals",
+      "branchSlug": "main",
+      "industryCategory": "healthcare-professionals",
+      "colorTheme": {
+        "primary": "#059669",
+        "secondary": "#10B981",
+        "accent": "#34D399"
+      },
+      "demoUrl": "/demo-healthcare-professionals/main"
+    }
+  ]
+}
+```
+
+**Notes:**
+- Unknown/invalid category returns empty array (not an error)
+- Returns all 11 industry demos when no filter applied
+- Demo microsites are read-only — config modification blocked for non-SUPER_ADMIN (returns 403)
+
 ## 🔧 Error Handling
 
 All API endpoints return consistent error responses:

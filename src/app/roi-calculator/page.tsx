@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import PublicPageLayout from '@/components/layout/PublicPageLayout';
 import {
   Calculator,
   ArrowRight,
@@ -52,20 +53,7 @@ export default function ROICalculatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Nav */}
-      <nav className="h-16 bg-white/80 backdrop-blur-md border-b border-gray-100/80 flex items-center justify-between px-6 sticky top-0 z-50">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-sm">
-            <span className="text-white font-bold text-sm">P</span>
-          </div>
-          <span className="text-lg font-bold text-gray-900 tracking-tight">Parichay</span>
-        </Link>
-        <Link href="/register" className="px-5 py-2.5 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white text-sm font-medium rounded-lg transition-all shadow-sm">
-          Start Free Trial
-        </Link>
-      </nav>
-
+    <PublicPageLayout>
       <div className="max-w-5xl mx-auto px-6 py-16">
         {/* Header */}
         <div className="text-center mb-12">
@@ -197,6 +185,6 @@ export default function ROICalculatorPage() {
           </div>
         </div>
       </div>
-    </div>
+    </PublicPageLayout>
   );
 }

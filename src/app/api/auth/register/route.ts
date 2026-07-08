@@ -123,13 +123,19 @@ export async function POST(request: NextRequest) {
       return { user, brand, emailVerificationToken };
     });
 
-    // Send verification email (in production, use email service)
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${result.emailVerificationToken}`;
+    // Send verification email
+    const { emailService } = await import('@/lib/email-service');
+    await emailService.sendVerificationEmail(
+      result.user.email,
+      result.emailVerificationToken,
+      result.user.firstName
+    );
 
     if (process.env.NODE_ENV === 'development') {
-      logger.info({ email: result.user.email, verificationUrl }, 'Verification email details (Dev only)');
+      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${result.emailVerificationToken}`;
+      logger.info({ email: result.user.email, verificationUrl }, 'Verification email sent (dev URL logged)');
     } else {
-      logger.info({ email: result.user.email }, 'Registration successful, verification pending');
+      logger.info({ email: result.user.email }, 'Registration successful, verification email sent');
     }
 
     // Generate tokens

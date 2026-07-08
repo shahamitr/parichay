@@ -256,4 +256,24 @@ The platform is production-ready with:
 
 ---
 
-**Last Updated**: November 26, 2025
+## 🏭 Industry Demo Samples (Added June 2026)
+
+| Feature | Status | Details |
+|---------|--------|---------|
+| 11 industry demo microsites | ✅ **DONE** | One per category, fully configured |
+| Demo Catalog page | ✅ **DONE** | `/demo/industries` with search filter |
+| Industry-specific content | ✅ **DONE** | Templates + placeholder for all 11 industries |
+| Unique visual theming per industry | ✅ **DONE** | Color themes + layout templates |
+| DemoBadge on demo microsites | ✅ **DONE** | Fixed banner with "Create Your Own" CTA |
+| Read-only protection | ✅ **DONE** | 403 for non-SUPER_ADMIN modifications |
+| Sample leads & analytics | ✅ **DONE** | 5 leads + 30 events per demo |
+| Idempotent seed script | ✅ **DONE** | `npx tsx prisma/seed-demo.ts` |
+| One-click demo access | ✅ **DONE** | demoUrl on all categories |
+| Demo API endpoint | ✅ **DONE** | `GET /api/demo/microsites` |
+| Property-based test suite | ✅ **DONE** | 8 properties, 100+ iterations each |
+
+See: [Industry Demo Samples Guide](../features/INDUSTRY_DEMO_SAMPLES.md)
+
+---
+
+**Last Updated**: June 2026

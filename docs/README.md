@@ -36,11 +36,13 @@ Welcome to the complete documentation for Parichay.io - the white-label digital 
 - [Builder Quick Start](features/BUILDER_QUICK_START.md) - Microsite builder
 - [Theme Customizer](features/THEME_CUSTOMIZER_GUIDE.md) - Branding and themes
 - [Festival Theming](features/FESTIVAL_THEMING_GUIDE.md) - Seasonal themes
+- [Industry Demo Samples](features/INDUSTRY_DEMO_SAMPLES.md) - 11 industry-specific demo microsites
 - [Verification System](features/VERIFICATION_SYSTEM_GUIDE.md) - Profile verification
 - [SMS Setup](features/SMS_SETUP_GUIDE.md) - SMS notifications
 
 ### 🧪 Testing & Demo
 - [Testing Guide](testing/TESTING_GUIDE.md) - How to test features
+- [Industry Demo Samples](features/INDUSTRY_DEMO_SAMPLES.md) - Demo microsites setup and testing
 - [Demo Setup](testing/DEMO_SETUP.md) - Demo data and accounts
 - [Demo Quick Start](testing/DEMO_QUICK_START.md) - Quick demo guide
 

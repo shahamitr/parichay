@@ -249,6 +249,77 @@ class EmailService {
       html,
     });
   }
+
+  async sendVerificationEmail(email: string, token: string, firstName: string): Promise<boolean> {
+    const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${token}`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <body style="font-family:system-ui,sans-serif;color:#1f2937;line-height:1.6;margin:0;padding:0;background:#f9fafb;">
+          <div style="max-width:520px;margin:40px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+            <div style="background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:32px;text-align:center;">
+              <h1 style="color:white;font-size:22px;margin:0;">Welcome to Parichay!</h1>
+            </div>
+            <div style="padding:32px;">
+              <p>Hi ${firstName},</p>
+              <p>Thanks for creating your Parichay account. Please verify your email to get started:</p>
+              <a href="${verifyUrl}" style="display:inline-block;padding:14px 28px;background:#4F46E5;color:white;text-decoration:none;border-radius:10px;font-weight:600;margin:20px 0;">Verify My Email</a>
+              <p style="font-size:13px;color:#6b7280;">This link expires in 24 hours. If you didn't create an account, ignore this email.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    return this.sendEmail({ to: email, subject: 'Verify your email — Parichay', html });
+  }
+
+  async sendTeamInvitationEmail(email: string, inviterName: string, brandName: string, inviteToken: string): Promise<boolean> {
+    const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/register?invite=${inviteToken}&email=${encodeURIComponent(email)}`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <body style="font-family:system-ui,sans-serif;color:#1f2937;line-height:1.6;margin:0;padding:0;background:#f9fafb;">
+          <div style="max-width:520px;margin:40px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+            <div style="background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:32px;text-align:center;">
+              <h1 style="color:white;font-size:22px;margin:0;">You're Invited!</h1>
+            </div>
+            <div style="padding:32px;">
+              <p>Hi there,</p>
+              <p><strong>${inviterName}</strong> has invited you to join <strong>${brandName}</strong> on Parichay.</p>
+              <p>Click below to create your account and start managing the business profile:</p>
+              <a href="${acceptUrl}" style="display:inline-block;padding:14px 28px;background:#4F46E5;color:white;text-decoration:none;border-radius:10px;font-weight:600;margin:20px 0;">Accept Invitation</a>
+              <p style="font-size:13px;color:#6b7280;">This invitation expires in 7 days.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    return this.sendEmail({ to: email, subject: `${inviterName} invited you to ${brandName} — Parichay`, html });
+  }
+
+  async sendLeadNotificationEmail(email: string, leadName: string, brandName: string, message?: string): Promise<boolean> {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <body style="font-family:system-ui,sans-serif;color:#1f2937;line-height:1.6;margin:0;padding:0;background:#f9fafb;">
+          <div style="max-width:520px;margin:40px auto;background:white;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+            <div style="background:#10B981;padding:24px;text-align:center;">
+              <h1 style="color:white;font-size:20px;margin:0;">New Lead Received! 🎉</h1>
+            </div>
+            <div style="padding:32px;">
+              <p>You have a new enquiry for <strong>${brandName}</strong>:</p>
+              <div style="background:#f3f4f6;padding:16px;border-radius:10px;margin:16px 0;">
+                <p style="margin:4px 0;"><strong>Name:</strong> ${leadName}</p>
+                ${message ? `<p style="margin:4px 0;"><strong>Message:</strong> ${message}</p>` : ''}
+              </div>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/admin/leads" style="display:inline-block;padding:12px 24px;background:#4F46E5;color:white;text-decoration:none;border-radius:10px;font-weight:600;">View All Leads</a>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    return this.sendEmail({ to: email, subject: `New lead from ${leadName} — ${brandName}`, html });
+  }
 }
 
 export const emailService = new EmailService();

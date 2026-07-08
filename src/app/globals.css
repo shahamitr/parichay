@@ -92,9 +92,9 @@ body {
     @apply border-neutral-200 dark:border-neutral-700;
   }
 
-  /* Typography base styles */
+  /* Typography base styles — scoped to avoid overriding component-level colors */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold text-neutral-900 dark:text-neutral-50 tracking-[-0.03em];
+    @apply font-bold tracking-[-0.03em];
     font-family: 'Satoshi', sans-serif;
   }
 
@@ -115,7 +115,7 @@ body {
   }
 
   p {
-    @apply text-body text-neutral-700 dark:text-neutral-300 leading-relaxed;
+    @apply leading-relaxed;
   }
 
   /* Focus styles for accessibility - Requirement 10.4 */
@@ -1079,68 +1079,68 @@ button, input, select, textarea, a {
 
 /* =============================================================================
    ADMIN PANEL LIGHT THEME OVERRIDE
-   Forces all admin pages to use the clean light design, overriding any
-   remaining dark-themed inline styles from legacy pages.
+   Forces admin pages to use clean light design.
+   Scoped to .admin-layout to avoid affecting landing/public pages.
    ============================================================================= */
 
 /* Force light backgrounds in admin */
-main [class*="bg-neutral-900"],
-main [class*="bg-neutral-950"] {
+.admin-layout [class*="bg-neutral-900"],
+.admin-layout [class*="bg-neutral-950"] {
   background-color: #ffffff !important;
   border-color: #f1f5f9 !important;
 }
 
-/* Fix text colors */
-main [class*="text-white"]:not(button):not(a):not([class*="bg-primary"]) {
+/* Fix text colors in admin */
+.admin-layout [class*="text-white"]:not(button):not(a):not([class*="bg-primary"]) {
   color: #111827 !important;
 }
 
-main [class*="text-neutral-400"],
-main [class*="text-neutral-500"] {
+.admin-layout [class*="text-neutral-400"],
+.admin-layout [class*="text-neutral-500"] {
   color: #6b7280 !important;
 }
 
-main [class*="text-neutral-600"],
-main [class*="text-neutral-700"] {
+.admin-layout [class*="text-neutral-600"],
+.admin-layout [class*="text-neutral-700"] {
   color: #4b5563 !important;
 }
 
-/* Fix borders */
-main [class*="border-neutral-800"],
-main [class*="border-neutral-700"] {
+/* Fix borders in admin */
+.admin-layout [class*="border-neutral-800"],
+.admin-layout [class*="border-neutral-700"] {
   border-color: #e5e7eb !important;
 }
 
 /* Fix inputs in admin */
-main input[class*="bg-neutral-950"],
-main input[class*="bg-neutral-900"],
-main select[class*="bg-neutral-900"],
-main textarea[class*="bg-neutral-950"],
-main textarea[class*="bg-neutral-900"] {
+.admin-layout input[class*="bg-neutral-950"],
+.admin-layout input[class*="bg-neutral-900"],
+.admin-layout select[class*="bg-neutral-900"],
+.admin-layout textarea[class*="bg-neutral-950"],
+.admin-layout textarea[class*="bg-neutral-900"] {
   background-color: #f9fafb !important;
   border-color: #e5e7eb !important;
   color: #111827 !important;
 }
 
-main input[class*="bg-neutral-950"]::placeholder,
-main input[class*="bg-neutral-900"]::placeholder {
+.admin-layout input[class*="bg-neutral-950"]::placeholder,
+.admin-layout input[class*="bg-neutral-900"]::placeholder {
   color: #9ca3af !important;
 }
 
-/* Fix loading skeletons */
-main .animate-pulse [class*="bg-neutral-900"],
-main .animate-pulse [class*="bg-neutral-800"] {
+/* Fix loading skeletons in admin */
+.admin-layout .animate-pulse [class*="bg-neutral-900"],
+.admin-layout .animate-pulse [class*="bg-neutral-800"] {
   background-color: #f3f4f6 !important;
   border-color: #e5e7eb !important;
 }
 
-/* Fix table headers */
-main [class*="bg-neutral-950\/50"] {
+/* Fix table headers in admin */
+.admin-layout [class*="bg-neutral-950\/50"] {
   background-color: #f9fafb !important;
 }
 
-/* Fix hover states */
-main [class*="hover\:bg-neutral-800"]:hover {
+/* Fix hover states in admin */
+.admin-layout [class*="hover\:bg-neutral-800"]:hover {
   background-color: #f3f4f6 !important;
 }
 

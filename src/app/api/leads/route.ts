@@ -213,6 +213,43 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Notify brand owner via email (non-blocking)
+    try {
+      const brand = await prisma.brand.findUnique({
+        where: { id: branch.brandId },
+        include: { users: { where: { role: 'BRAND_MANAGER' }, take: 1, select: { email: true } } },
+      });
+      if (brand?.users[0]?.email) {
+        const { emailService } = await import('@/lib/email-service');
+        emailService.sendLeadNotificationEmail(
+          brand.users[0].email,
+          data.name,
+          brand.name,
+          data.message || undefined
+        ).catch(() => {}); // Don't block response on email failure
+      }
+    } catch {} // Silent — notification is best-effort
+
+    // Notify brand owner via WhatsApp (instant, non-blocking)
+    try {
+      const { sendLeadWhatsAppNotification } = await import('@/lib/whatsapp-notify');
+      const brand = await prisma.brand.findUnique({
+        where: { id: branch.brandId },
+        select: { name: true, users: { where: { role: 'BRAND_MANAGER' }, take: 1, select: { phone: true } } },
+      });
+      const ownerPhone = brand?.users[0]?.phone;
+      if (ownerPhone && brand) {
+        sendLeadWhatsAppNotification({
+          to: ownerPhone,
+          leadName: data.name,
+          leadPhone: data.phone || undefined,
+          leadMessage: data.message || undefined,
+          brandName: brand.name,
+          source: data.source,
+        }).catch(() => {});
+      }
+    } catch {} // Silent
+
     return NextResponse.json({
       success: true,
       leadId: lead.id,

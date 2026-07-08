@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { getImageWithFallback } from '@/lib/placeholder-utils';
 import BusinessCardDownload from '../BusinessCardDownload';
 import ShareAction from '../ShareAction';
+import TrackedAction from '../TrackedAction';
 
 
 interface ProfileSectionProps {
@@ -129,25 +130,29 @@ export default function ProfileSection({ branch, brand }: ProfileSectionProps) {
           {/* Primary Actions Row */}
           <div className="flex gap-3">
             {contact.phone && (
-              <a
-                href={`tel:${contact.phone}`}
-                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl text-white font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-                style={{ backgroundColor: primaryColor }}
-              >
-                <Phone className="w-5 h-5" />
-                <span>Call Now</span>
-              </a>
+              <TrackedAction action="CALL" branchId={branch.id} brandId={brand.id} value={contact.phone} className="flex-1">
+                <a
+                  href={`tel:${contact.phone}`}
+                  className="flex items-center justify-center gap-2 py-4 rounded-2xl text-white font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  <Phone className="w-5 h-5" />
+                  <span>Call Now</span>
+                </a>
+              </TrackedAction>
             )}
             {contact.whatsapp && (
-              <a
-                href={`https://wa.me/${contact.whatsapp.replace(/[^0-9]/g, '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 py-4 bg-green-500 rounded-2xl text-white font-semibold shadow-lg hover:shadow-xl hover:bg-green-600 transform hover:-translate-y-0.5 transition-all duration-300"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span>WhatsApp</span>
-              </a>
+              <TrackedAction action="WHATSAPP" branchId={branch.id} brandId={brand.id} value={contact.whatsapp} className="flex-1">
+                <a
+                  href={`https://wa.me/${contact.whatsapp.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 py-4 bg-green-500 rounded-2xl text-white font-semibold shadow-lg hover:shadow-xl hover:bg-green-600 transform hover:-translate-y-0.5 transition-all duration-300"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span>WhatsApp</span>
+                </a>
+              </TrackedAction>
             )}
           </div>
 

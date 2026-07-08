@@ -1,318 +1,111 @@
-# 🚀 Quick Start Guide
+# Quick Start Guide
 
-## Prerequisites Checklist
+## Option 1: Docker (Recommended — Zero Setup)
 
-Before running the app, ensure you have:
+### Prerequisites
+- Docker Desktop installed and running
 
-- [ ] Node.js (v18 or higher) installed
-- [ ] Database (PostgreSQL or MySQL) installed and running
-- [ ] Git installed
-
-## Step-by-Step Setup
-
-### 1. Install Dependencies
+### Steps
 
 ```bash
-cd parichay
-npm install
+# Windows
+dev.bat
+
+# Mac/Linux
+chmod +x dev.sh
+./dev.sh
 ```
 
-### 2. Choose Your Database
+That's it. This:
+1. Builds the app container with all dependencies
+2. Starts MySQL 8 + Redis 7
+3. Creates the database and tables
+4. Starts Next.js with hot reload
 
-#### Option A: PostgreSQL (Recommended)
+**Open:** http://localhost:3000
 
-1. **Install PostgreSQL**
-   - Download from: https://www.postgresql.org/download/
-   - Run installer and remember the password
-   - Keep default port: 5432
-
-2. **Create Database**
-   ```bash
-   # Connect to PostgreSQL
-   psql -U postgres
-
-   # Create database
-   CREATE DATABASE parichay;
-
-   # Create user (optional)
-   CREATE USER parichay_user WITH PASSWORD 'your_password';
-   GRANT ALL PRIVILEGES ON DATABASE parichay TO parichay_user;
-
-   # Exit
-   \q
-   ```
-
-3. **Update .env**
-   ```env
-   DATABASE_URL="postgresql://postgres:your_password@localhost:5432/parichay"
-   ```
-
-#### Option B: MySQL (Good for XAMPP users)
-
-1. **Start MySQL in XAMPP**
-   - Open XAMPP Control Panel
-   - Click "Start" next to MySQL
-   - Wait for it to turn green
-
-2. **Create Database**
-   - Click "Admin" next to MySQL (opens phpMyAdmin)
-   - Click "New" in left sidebar
-   - Database name: `parichay`
-   - Click "Create"
-
-3. **Update Prisma Schema**
-   - Open `prisma/schema.prisma`
-   - Change `provider = "postgresql"` to `provider = "mysql"`
-
-4. **Update .env**
-   ```env
-   DATABASE_URL="mysql://root@localhost:3306/parichay"
-   ```
-
-### 3. Configure Environment Variables
-
-Update your `.env` file:
-
-```env
-# Database (choose one)
-DATABASE_URL="postgresql://postgres:password@localhost:5432/parichay"
-# OR
-DATABASE_URL="mysql://root@localhost:3306/parichay"
-
-# Authentication
-NEXTAUTH_SECRET="your-super-secret-jwt-key-change-this"
-NEXTAUTH_URL="http://localhost:3000"
-
-# Application
-NODE_ENV="development"
-APP_URL="http://localhost:3000"
-
-# Optional: Email Service
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT="587"
-SMTP_USER="your-email@gmail.com"
-SMTP_PASS="your-app-password"
-
-# Optional: SMS Service (Twilio)
-TWILIO_ACCOUNT_SID="your-account-sid"
-TWILIO_AUTH_TOKEN="your-auth-token"
-TWILIO_PHONE_NUMBER="+1234567890"
-
-# Optional: Payment Gateways
-STRIPE_PUBLIC_KEY="pk_test_..."
-STRIPE_SECRET_KEY="sk_test_..."
-RAZORPAY_KEY_ID="rzp_test_..."
-RAZORPAY_KEY_SECRET="your-razorpay-secret"
-
-# Optional: Redis (for caching)
-REDIS_URL="redis://localhost:6379"
-
-# Optional: AWS S3 (for file storage)
-AWS_ACCESS_KEY_ID="your-aws-access-key"
-AWS_SECRET_ACCESS_KEY="your-aws-secret-key"
-AWS_REGION="us-east-1"
-AWS_S3_BUCKET="parichay-assets"
-```
-
-### 4. Set Up Database
+### Stopping
 
 ```bash
-# Generate Prisma client
-npm run prisma:generate
-
-# Run migrations
-npm run prisma:migrate
-
-# (Optional) Seed with sample data
-npm run prisma:seed
+dev-stop.bat                                    # Windows
+docker compose -f docker-compose.dev.yml down   # Any OS
 ```
 
-### 5. Start the Development Server
+### Resetting (wipe database)
 
 ```bash
-npm run dev
+docker compose -f docker-compose.dev.yml down -v
+dev.bat   # Starts fresh
 ```
-
-The app should now be running at: **http://localhost:3000**
-
-## Setup Checklist
-
-Use this checklist to verify your setup:
-
-### Database Setup
-- [ ] Database service is running
-- [ ] Database `parichay` exists
-- [ ] DATABASE_URL in .env is correct
-- [ ] Prisma client generated
-- [ ] Migrations completed
-
-### Application Setup
-- [ ] Dependencies installed (`npm install`)
-- [ ] Environment variables configured
-- [ ] Development server starts without errors
-- [ ] Can access http://localhost:3000
-- [ ] Landing page loads correctly
-
-### Optional Services
-- [ ] Email service configured (if needed)
-- [ ] SMS service configured (if needed)
-- [ ] Payment gateways configured (if needed)
-- [ ] File storage configured (if needed)
-
-## First Time Access
-
-After starting the app:
-
-1. Go to http://localhost:3000
-2. You should see the Parichay landing page
-3. Register a new account or use seeded data
-4. Default admin credentials (if seeded):
-   - Email: admin@example.com
-   - Password: Check the seed script for password
-
-## Troubleshooting
-
-### Issue: "Can't reach database server"
-
-**Solution:**
-1. Check if database service is running:
-   - PostgreSQL: Check Services (services.msc) for PostgreSQL
-   - MySQL: Check XAMPP Control Panel
-2. Verify database credentials in `.env`
-3. Test connection:
-   ```bash
-   # PostgreSQL
-   psql -U postgres -h localhost -p 5432
-
-   # MySQL
-   mysql -u root -p -h localhost -P 3306
-   ```
-
-### Issue: "Port 3000 is already in use"
-
-**Solution:**
-1. Kill the process using port 3000:
-   ```bash
-   # Windows
-   netstat -ano | findstr :3000
-   taskkill /PID <PID> /F
-   ```
-2. Or use a different port:
-   ```bash
-   npm run dev -- -p 3001
-   ```
-
-### Issue: "Module not found" errors
-
-**Solution:**
-```bash
-# Clear node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### Issue: Prisma migration fails
-
-**Solution:**
-1. Reset the database (WARNING: This deletes all data):
-   ```bash
-   npx prisma migrate reset
-   ```
-2. Or manually drop and recreate:
-   ```sql
-   -- PostgreSQL
-   DROP DATABASE parichay;
-   CREATE DATABASE parichay;
-
-   -- MySQL
-   DROP DATABASE parichay;
-   CREATE DATABASE parichay CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   ```
-3. Then run migrations again:
-   ```bash
-   npm run prisma:migrate
-   ```
-
-### Issue: Redis connection errors
-
-**Solution:**
-Redis is optional. If you don't have it installed:
-1. Comment out Redis-related code, or
-2. Install Redis:
-   - Windows: Use WSL or Docker: `docker run -d -p 6379:6379 redis`
-
-## Minimal Setup (Without Optional Services)
-
-If you want to run the app with minimal configuration:
-
-1. **Required:**
-   - Database (PostgreSQL or MySQL)
-   - Basic `.env` with DATABASE_URL and NEXTAUTH_SECRET
-
-2. **Optional (can skip for now):**
-   - Email service (SMTP)
-   - SMS service (Twilio)
-   - Payment gateways (Stripe/Razorpay)
-   - Redis caching
-   - AWS S3 storage
-
-The app will work without optional services, but some features will be disabled.
-
-## Quick Commands Reference
-
-```bash
-# Install dependencies
-npm install
-
-# Generate Prisma client
-npm run prisma:generate
-
-# Run migrations
-npm run prisma:migrate
-
-# Seed database
-npm run prisma:seed
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-
-# Run tests
-npm test
-
-# Lint code
-npm run lint
-```
-
-## Default Ports
-
-- **Next.js App**: http://localhost:3000
-- **PostgreSQL**: localhost:5432
-- **MySQL**: localhost:3306
-- **Redis**: localhost:6379
-
-## Next Steps
-
-1. ✅ Get the app running
-2. Create your first brand
-3. Add branches
-4. Create microsites
-5. Generate QR codes
-6. Test lead capture
-7. Configure optional services (Email, SMS, Payments)
-
-## Need Help?
-
-- Check the main README.md for detailed documentation
-- Review `/docs` folder for feature-specific guides
-- Check installation guide for detailed setup
-- Review deployment guide for production setup
 
 ---
 
-**Happy coding! 🚀**
+## Option 2: Manual (XAMPP + Local Node)
+
+### Prerequisites
+- Node.js 20+
+- pnpm (`npm install -g pnpm`)
+- XAMPP (MySQL 8) running
+- Redis (optional — app works without it)
+
+### Steps
+
+```bash
+# 1. Install dependencies
+pnpm install
+
+# 2. Create database
+# Open phpMyAdmin (http://localhost/phpmyadmin) and run:
+CREATE DATABASE parichay CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+# 3. Configure environment
+cp .env.example .env
+# Edit .env — set DATABASE_URL=mysql://root@localhost:3306/parichay
+
+# 4. Generate Prisma client and push schema
+pnpm prisma:generate
+pnpm prisma:push
+
+# 5. (Optional) Seed demo data
+pnpm seed:demo
+
+# 6. Start dev server
+pnpm dev
+```
+
+**Open:** http://localhost:3000
+
+---
+
+## First Login
+
+After setup, create a super admin:
+
+```bash
+# Via Docker
+docker compose -f docker-compose.dev.yml exec app npx ts-node scripts/create-admin.ts
+
+# Without Docker
+npx ts-node scripts/create-admin.ts
+```
+
+Or register at http://localhost:3000/register — the first user gets BRAND_MANAGER role.
+
+---
+
+## Common Issues
+
+### "Please make sure your database server is running"
+- **Docker:** Run `dev.bat` — it handles everything
+- **Manual:** Start MySQL in XAMPP Control Panel, then ensure `parichay` database exists
+
+### Pages show "Service Temporarily Unavailable"
+- Database tables haven't been created yet. Run `pnpm prisma:push`
+
+### Port 3306 already in use
+- Stop XAMPP MySQL if using Docker (both use port 3306)
+- Or change the port in `docker-compose.dev.yml`
+
+### Hot reload not working in Docker
+- `WATCHPACK_POLLING=true` is set in docker-compose.dev.yml
+- If still not working, restart: `docker compose -f docker-compose.dev.yml restart app`

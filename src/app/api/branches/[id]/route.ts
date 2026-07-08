@@ -1,201 +1,120 @@
+/**
+ * Branch API — Individual branch operations
+ * GET /api/branches/[id] — Get branch details
+ * PATCH /api/branches/[id] — Update branch (including feature toggles)
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/lib/auth-utils';
-import { branchUpdateSchema } from '@/lib/validations';
-import { generateSlug } from '@/lib/utils';
+import { z } from 'zod';
 
-// GET /api/branches/[id] - Get branch details
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { id } = await params;
-
     const branch = await prisma.branch.findUnique({
       where: { id },
-      include: {
-        brand: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            colorTheme: true
-          }
-        },
-        leads: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            source: true,
-            createdAt: true
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 10
-        },
-        _count: {
-          select: { leads: true }
-        }
-      }
+      include: { brand: { select: { id: true, name: true, slug: true, ownerId: true } } },
     });
 
     if (!branch) {
       return NextResponse.json({ error: 'Branch not found' }, { status: 404 });
     }
 
-    // Check permissions
-    const hasAccess =
-      user.role === 'SUPER_ADMIN' ||
-      user.role === 'EXECUTIVE' ||
-      (user.role === 'BRAND_MANAGER' && user.brandId === branch.brandId) ||
-      (user.role === 'BRANCH_ADMIN' && user.branches?.some(b => b.id === id));
-
-    if (!hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    return NextResponse.json({ branch });
+    return NextResponse.json(branch);
   } catch (error) {
-    console.error('Error fetching branch:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch branch' }, { status: 500 });
   }
 }
 
-// PUT /api/branches/[id] - Update branch
-export async function PUT(
+const updateBranchSchema = z.object({
+  name: z.string().min(1).optional(),
+  address: z.any().optional(),
+  contact: z.any().optional(),
+  businessHours: z.any().optional(),
+  micrositeConfig: z.any().optional(),
+  sectionOrder: z.array(z.object({ id: z.string(), enabled: z.boolean() })).optional(),
+  isActive: z.boolean().optional(),
+}).passthrough();
+
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getAuthenticatedUser(request);
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const { id } = await params;
 
-    // Get current branch to check permissions
-    const currentBranch = await prisma.branch.findUnique({
+    // Verify ownership
+    const branch = await prisma.branch.findUnique({
       where: { id },
-      select: { brandId: true }
+      include: { brand: { select: { ownerId: true } } },
     });
 
-    if (!currentBranch) {
+    if (!branch) {
       return NextResponse.json({ error: 'Branch not found' }, { status: 404 });
     }
 
-    // Check permissions
-    const hasAccess =
-      user.role === 'SUPER_ADMIN' ||
-      user.role === 'EXECUTIVE' ||
-      (user.role === 'BRAND_MANAGER' && user.brandId === currentBranch.brandId) ||
-      (user.role === 'BRANCH_ADMIN' && user.branches?.some(b => b.id === id));
-
-    if (!hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (user.role !== 'SUPER_ADMIN' && branch.brand.ownerId !== user.id) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
     const body = await request.json();
-    const validatedData = branchUpdateSchema.parse(body);
+    const data = updateBranchSchema.parse(body);
 
-    // Handle slug update if name changed
-    let updateData: any = { ...validatedData };
-    if (validatedData.name) {
-      const baseSlug = generateSlug(validatedData.name);
-      let slug = baseSlug;
-      let counter = 1;
+    // If sectionOrder is provided, merge it into micrositeConfig
+    if (data.sectionOrder) {
+      const currentConfig = (branch.micrositeConfig as Record<string, any>) || {};
+      const updatedConfig = {
+        ...currentConfig,
+        sectionOrder: data.sectionOrder,
+        // Also update individual section enabled states
+        sections: {
+          ...(currentConfig.sections || {}),
+        },
+      };
 
-      // Ensure slug uniqueness within brand (excluding current branch)
-      while (await prisma.branch.findFirst({
-        where: {
-          brandId: currentBranch.brandId,
-          slug,
-          NOT: { id }
+      // Sync enabled state into sections
+      for (const item of data.sectionOrder) {
+        if (updatedConfig.sections[item.id]) {
+          updatedConfig.sections[item.id].enabled = item.enabled;
+        } else {
+          updatedConfig.sections[item.id] = { enabled: item.enabled };
         }
-      })) {
-        slug = `${baseSlug}-${counter}`;
-        counter++;
       }
-      updateData.slug = slug;
+
+      const updated = await prisma.branch.update({
+        where: { id },
+        data: { micrositeConfig: updatedConfig },
+      });
+
+      return NextResponse.json({ success: true, branch: updated });
     }
 
-    const branch = await prisma.branch.update({
+    // General update
+    const updateData: any = {};
+    if (data.name) updateData.name = data.name;
+    if (data.address) updateData.address = data.address;
+    if (data.contact) updateData.contact = data.contact;
+    if (data.businessHours) updateData.businessHours = data.businessHours;
+    if (data.micrositeConfig) updateData.micrositeConfig = data.micrositeConfig;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+
+    const updated = await prisma.branch.update({
       where: { id },
       data: updateData,
-      include: {
-        brand: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            colorTheme: true
-          }
-        }
-      }
     });
 
-    return NextResponse.json({ branch });
+    return NextResponse.json({ success: true, branch: updated });
   } catch (error) {
-    console.error('Error updating branch:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE /api/branches/[id] - Delete branch
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const user = await getAuthenticatedUser(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { id } = await params;
-
-    // Get current branch to check permissions
-    const currentBranch = await prisma.branch.findUnique({
-      where: { id },
-      select: { brandId: true }
-    });
-
-    if (!currentBranch) {
-      return NextResponse.json({ error: 'Branch not found' }, { status: 404 });
-    }
-
-    // Check permissions (only Super Admin and Brand Manager can delete)
-    const hasAccess =
-      user.role === 'SUPER_ADMIN' ||
-      (user.role === 'BRAND_MANAGER' && user.brandId === currentBranch.brandId);
-
-    if (!hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    await prisma.branch.delete({
-      where: { id }
-    });
-
-    return NextResponse.json({ message: 'Branch deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting branch:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Branch update error:', error);
+    return NextResponse.json({ error: 'Failed to update branch' }, { status: 500 });
   }
 }

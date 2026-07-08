@@ -182,12 +182,70 @@ async function main() {
     },
   });
 
+  // Create sample leads
+  const sampleLeads = [
+    {
+      name: 'John Smith',
+      email: 'john.smith@email.com',
+      phone: '+91-9876543211',
+      message: 'Interested in your consulting services. Please contact me.',
+      status: 'NEW' as const,
+      source: 'Website',
+      branchId: demoBranch.id,
+    },
+    {
+      name: 'Sarah Johnson',
+      email: 'sarah.j@company.com',
+      phone: '+91-9876543212',
+      message: 'Looking for business partnership opportunities.',
+      status: 'CONTACTED' as const,
+      source: 'Social Media',
+      branchId: demoBranch.id,
+    },
+    {
+      name: 'Mike Wilson',
+      email: 'mike.wilson@business.com',
+      phone: '+91-9876543213',
+      message: 'Need support services for our company.',
+      status: 'QUALIFIED' as const,
+      source: 'Referral',
+      branchId: demoBranch.id,
+    },
+    {
+      name: 'Emily Davis',
+      email: 'emily.davis@startup.com',
+      phone: '+91-9876543214',
+      message: 'Interested in your premium consulting package.',
+      status: 'CONVERTED' as const,
+      source: 'Google Ads',
+      branchId: demoBranch.id,
+    },
+    {
+      name: 'Robert Brown',
+      email: 'robert.brown@email.com',
+      phone: '+91-9876543215',
+      message: 'Checking pricing for your services.',
+      status: 'LOST' as const,
+      source: 'Website',
+      branchId: demoBranch.id,
+    },
+  ];
+
+  const createdLeads = [];
+  for (const leadData of sampleLeads) {
+    const lead = await prisma.lead.create({
+      data: leadData,
+    });
+    createdLeads.push(lead);
+  }
+
   console.log('✅ Database seeded successfully!');
   console.log('📊 Created:');
   console.log(`  - ${3} subscription plans`);
   console.log(`  - ${1} super admin user`);
   console.log(`  - ${1} demo brand`);
   console.log(`  - ${1} demo branch`);
+  console.log(`  - ${createdLeads.length} sample leads`);
 }
 
 main()

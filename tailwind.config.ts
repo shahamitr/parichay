@@ -23,30 +23,42 @@ export default {
       colors: {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
-        // Design system colors
+        // Google-inspired clean color palette
         primary: {
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#7b61ff',
-          600: '#6d4aff',
-          700: '#5b3fd9',
-          800: '#4c34b3',
-          900: '#4c1d95',
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
         },
         accent: {
-          50: '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          300: '#fdba74',
-          400: '#fb923c',
-          500: '#ff7b00',
-          600: '#ff9f45',
-          700: '#ea580c',
-          800: '#c2410c',
-          900: '#7c2d12',
+          50: '#fdf4ff',
+          100: '#fae8ff',
+          200: '#f5d0fe',
+          300: '#f0abfc',
+          400: '#e879f9',
+          500: '#d946ef',
+          600: '#c026d3',
+          700: '#a21caf',
+          800: '#86198f',
+          900: '#701a75',
+        },
+        secondary: {
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#475569',
+          700: '#334155',
+          800: '#1e293b',
+          900: '#0f172a',
         },
         neutral: {
           50: '#fafafa',
@@ -83,7 +95,22 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        // Main font stack with Indian language support
+        // Browser auto-selects correct font based on character Unicode range
+        sans: [
+          'var(--font-inter)',
+          'var(--font-devanagari)',  // Hindi, Marathi
+          'var(--font-gujarati)',    // Gujarati
+          'Inter',
+          'Noto Sans Devanagari',
+          'Noto Sans Gujarati',
+          'system-ui',
+          '-apple-system',
+          'sans-serif',
+        ],
+        // Specific language fonts for explicit use
+        devanagari: ['var(--font-devanagari)', 'Noto Sans Devanagari', 'sans-serif'],
+        gujarati: ['var(--font-gujarati)', 'Noto Sans Gujarati', 'sans-serif'],
         display: ['Cal Sans', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['var(--font-jetbrains-mono)', 'JetBrains Mono', 'Menlo', 'Monaco', 'monospace'],
       },
@@ -142,6 +169,95 @@ export default {
         tooltip: '1600',
       },
       keyframes: {
+        // Modern animations
+        'gradient-shift': {
+          '0%, 100%': {
+            'background-size': '200% 200%',
+            'background-position': 'left center'
+          },
+          '50%': {
+            'background-size': '200% 200%',
+            'background-position': 'right center'
+          },
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        'glow': {
+          '0%, 100%': {
+            'box-shadow': '0 0 20px rgba(59, 130, 246, 0.5)',
+            transform: 'scale(1)'
+          },
+          '50%': {
+            'box-shadow': '0 0 40px rgba(59, 130, 246, 0.8)',
+            transform: 'scale(1.05)'
+          },
+        },
+        'slide-up-fade': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(30px)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)'
+          },
+        },
+        'slide-down-fade': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(-30px)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)'
+          },
+        },
+        'slide-left-fade': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateX(30px)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateX(0)'
+          },
+        },
+        'slide-right-fade': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateX(-30px)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateX(0)'
+          },
+        },
+        'zoom-in': {
+          '0%': {
+            opacity: '0',
+            transform: 'scale(0.8)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'scale(1)'
+          },
+        },
+        'bounce-in': {
+          '0%': {
+            opacity: '0',
+            transform: 'scale(0.3)'
+          },
+          '50%': {
+            opacity: '1',
+            transform: 'scale(1.1)'
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'scale(1)'
+          },
+        },
         ripple: {
           '0%': { width: '0', height: '0', opacity: '0.5' },
           '100%': { width: '500px', height: '500px', opacity: '0' },
@@ -176,6 +292,16 @@ export default {
         },
       },
       animation: {
+        // Modern animations
+        'gradient-shift': 'gradient-shift 3s ease-in-out infinite',
+        'float': 'float 3s ease-in-out infinite',
+        'glow': 'glow 2s ease-in-out infinite',
+        'slide-up-fade': 'slide-up-fade 0.6s ease-out',
+        'slide-down-fade': 'slide-down-fade 0.6s ease-out',
+        'slide-left-fade': 'slide-left-fade 0.6s ease-out',
+        'slide-right-fade': 'slide-right-fade 0.6s ease-out',
+        'zoom-in': 'zoom-in 0.6s ease-out',
+        'bounce-in': 'bounce-in 0.8s ease-out',
         ripple: 'ripple 600ms ease-out',
         shimmer: 'shimmer 2s infinite',
         'fade-in': 'fade-in 200ms ease-out',

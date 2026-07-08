@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect fill="#f0fdf4" width="800" height="600"/>
+  <rect fill="#22c55e" x="0" y="0" width="800" height="90" opacity="0.8"/>
+  <circle cx="400" cy="300" r="72" fill="#22c55e" opacity="0.15"/>
+  <text x="400" y="305" font-family="system-ui,sans-serif" font-size="13" fill="#22c55e" text-anchor="middle" opacity="0.7">Templates/Retail Modern Previe</text>
+</svg>

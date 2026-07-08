@@ -1,124 +1,27 @@
 'use client';
 
+import { cn } from '@/lib/cn';
 import { ReactNode } from 'react';
-import { LucideIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
-  icon: LucideIcon;
+  icon?: ReactNode;
   title: string;
-  description: string;
-  action?: {
-    label: string;
-    onClick: () => void;
-    icon?: LucideIcon;
-  };
-  secondaryAction?: {
-    label: string;
-    onClick: () => void;
-  };
-  illustration?: ReactNode;
+  description?: string;
+  action?: ReactNode;
   className?: string;
 }
 
-export default function EmptyState({
-  icon: Icon,
-  title,
-  description,
-  action,
-  secondaryAction,
-  illustration,
-  className,
-}: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
-    <div className={cn('flex flex-col items-center justify-center py-12 px-4', className)}>
-      {/* Illustration or Icon */}
-      {illustration ? (
-        <div className="mb-6">{illustration}</div>
-      ) : (
-        <div className="relative mb-6">
-          {/* Animated background circles */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-32 h-32 bg-primary-100 dark:bg-primary-900/20 rounded-full animate-pulse" />
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-24 h-24 bg-accent-100 dark:bg-accent-900/20 rounded-full animate-pulse delay-75" />
-          </div>
-
-          {/* Icon */}
-          <div className="relative z-10 w-20 h-20 mx-auto flex items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-accent-600 text-white shadow-xl">
-            <Icon className="w-10 h-10" />
-          </div>
+    <div className={cn('flex flex-col items-center justify-center py-16 text-center', className)}>
+      {icon && (
+        <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mb-4 text-gray-400">
+          {icon}
         </div>
       )}
-
-      {/* Content */}
-      <div className="text-center max-w-md">
-        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
-          {title}
-        </h3>
-        <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-          {description}
-        </p>
-
-        {/* Actions */}
-        {(action || secondaryAction) && (
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            {action && (
-              <button
-                onClick={action.onClick}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-accent-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
-              >
-                {action.icon && <action.icon className="w-5 h-5" />}
-                {action.label}
-              </button>
-            )}
-            {secondaryAction && (
-              <button
-                onClick={secondaryAction.onClick}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-xl font-medium border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
-              >
-                {secondaryAction.label}
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
+      {description && <p className="text-sm text-gray-500 max-w-sm mb-4">{description}</p>}
+      {action}
     </div>
-  );
-}
-
-// Preset empty states
-export function NoDataEmptyState({ onRefresh }: { onRefresh?: () => void }) {
-  return (
-    <EmptyState
-      icon={require('lucide-react').Database}
-      title="No Data Available"
-      description="There's no data to display yet. Start by adding some content."
-      action={
-        onRefresh
-          ? {
-              label: 'Refresh',
-              onClick: onRefresh,
-              icon: require('lucide-react').RefreshCw,
-            }
-          : undefined
-      }
-    />
-  );
-}
-
-export function SearchEmptyState({ query, onClear }: { query: string; onClear: () => void }) {
-  return (
-    <EmptyState
-      icon={require('lucide-react').Search}
-      title="No Results Found"
-      description={`We couldn't find anything matching "${query}". Try adjusting your search.`}
-      action={{
-        label: 'Clear Search',
-        onClick: onClear,
-        icon: require('lucide-react').X,
-      }}
-    />
   );
 }

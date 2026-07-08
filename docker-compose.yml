@@ -1,45 +1,36 @@
 version: '3.8'
 
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - NEXTAUTH_URL=${NEXTAUTH_URL}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - JWT_SECRET=${JWT_SECRET}
-      - REDIS_URL=redis://redis:6379
-      - NODE_ENV=production
-    depends_on:
-      - postgres
-      - redis
-    restart: unless-stopped
+# =============================================================================
+# Local Development Stack (PostgreSQL + Redis)
+# Run: docker compose up -d
+# Then: pnpm dev
+# =============================================================================
 
-  postgres:
+services:
+  db:
     image: postgres:16-alpine
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=onetouch
-      - POSTGRES_PASSWORD=onetouch_password
-      - POSTGRES_DB=onetouch_bizcard
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: parichay
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
     command: redis-server --appendonly yes
+    volumes:
+      - redis_dev:/data
 
 volumes:
-  postgres_data:
-  redis_data:
+  pgdata_dev:
+  redis_dev:

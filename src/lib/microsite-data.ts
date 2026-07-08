@@ -9,9 +9,11 @@ export async function getMicrositeData(
   brandSlug: string,
   branchSlug: string
 ): Promise<MicrositeData | null> {
-  // Use cache with 5 minute TTL
+  // Use cache with 5 minute TTL — don't cache null results
+  const cacheKey = `microsite-${brandSlug}-${branchSlug}`;
+
   return withCache(
-    `microsite-${brandSlug}-${branchSlug}`,
+    cacheKey,
     async () => {
       try {
         const brand = await prisma.brand.findUnique({
@@ -57,6 +59,6 @@ export async function getMicrositeData(
         return null;
       }
     },
-    300 // 5 minutes TTL
+    60 // 1 minute TTL (reduced from 5 for faster iteration)
   );
 }

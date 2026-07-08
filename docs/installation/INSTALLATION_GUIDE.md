@@ -170,6 +170,15 @@ node scripts/create-admin.js
 npm run prisma:seed
 ```
 
+### 3. Seed Industry Demo Microsites (Optional)
+
+Creates 11 industry-specific demo microsites with realistic content, sample leads, and analytics:
+```bash
+npx tsx prisma/seed-demo.ts
+```
+
+This creates demo brands at `/demo-{industry}/main` for all industries (healthcare, restaurant, legal, fitness, etc.). Visit `/demo/industries` to see the full catalog. See [Industry Demo Samples Guide](../features/INDUSTRY_DEMO_SAMPLES.md) for details.
+
 ### 3. Start Development Server
 ```bash
 npm run dev

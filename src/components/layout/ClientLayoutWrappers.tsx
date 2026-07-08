@@ -5,6 +5,7 @@ import { HelpProvider } from '@/contexts/HelpContext';
 import { I18nProvider } from '@/lib/i18n/context';
 
 const HelpSystem = dynamic(() => import('@/components/ui/HelpSystem'), { ssr: false });
+const PWAInstallPrompt = dynamic(() => import('@/components/PWAInstallPrompt'), { ssr: false });
 
 export function ClientLayoutWrappers({ children }: { children: React.ReactNode }) {
   return (
@@ -12,6 +13,7 @@ export function ClientLayoutWrappers({ children }: { children: React.ReactNode }
       <HelpProvider>
         {children}
         <HelpSystem />
+        <PWAInstallPrompt />
       </HelpProvider>
     </I18nProvider>
   );

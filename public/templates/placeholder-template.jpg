@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect fill="#f1f5f9" width="400" height="300"/>
+  <rect fill="#6366f1" x="0" y="0" width="400" height="80"/>
+  <circle cx="60" cy="40" r="20" fill="#ffffff" opacity="0.3"/>
+  <rect fill="#e2e8f0" x="30" y="100" width="340" height="12" rx="6"/>
+  <rect fill="#e2e8f0" x="30" y="125" width="260" height="10" rx="5"/>
+  <rect fill="#e2e8f0" x="30" y="155" width="160" height="60" rx="8"/>
+  <rect fill="#e2e8f0" x="210" y="155" width="160" height="60" rx="8"/>
+  <rect fill="#e2e8f0" x="30" y="235" width="340" height="40" rx="8"/>
+  <text x="200" y="260" font-family="system-ui" font-size="11" fill="#94a3b8" text-anchor="middle">Template Preview</text>
+</svg>

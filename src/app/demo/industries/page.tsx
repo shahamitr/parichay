@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma';
 import { industryCategories } from '@/data/categories';
 import { getCategoryFromDemoSlug } from '@/lib/demo-utils';
 import IndustryCatalogGrid from '@/components/demo/IndustryCatalogGrid';
@@ -21,11 +20,19 @@ export const metadata = {
 };
 
 export default async function DemoIndustriesPage() {
-  const demoBrands = await prisma.brand.findMany({
-    where: { slug: { startsWith: 'demo-' } },
-    include: { branches: { where: { isActive: true }, take: 1 } },
-    orderBy: { name: 'asc' },
-  });
+  // Try to fetch demo brands from DB; fall back gracefully if DB is unavailable
+  let demoBrands: any[] = [];
+  try {
+    const { prisma } = await import('@/lib/prisma');
+    demoBrands = await prisma.brand.findMany({
+      where: { slug: { startsWith: 'demo-' } },
+      include: { branches: { where: { isActive: true }, take: 1 } },
+      orderBy: { name: 'asc' },
+    });
+  } catch (error) {
+    // DB unavailable — show categories with static demo URLs from config
+    console.error('Database unavailable for demo industries page:', (error as Error).message);
+  }
 
   // Index demo brands by category slug for fast lookup
   const brandByCategory = new Map<string, (typeof demoBrands)[number]>();
@@ -39,7 +46,8 @@ export default async function DemoIndustriesPage() {
   const categories: IndustryCategoryCard[] = industryCategories.map((cat) => {
     const brand = brandByCategory.get(cat.slug);
     const branch = brand?.branches[0];
-    const demoUrl = branch ? `/${brand.slug}/${branch.slug}` : null;
+    // Use DB URL if brand exists, fall back to static demoUrl for resilience
+    const demoUrl = branch ? `/${brand.slug}/${branch.slug}` : (cat.demoUrl || null);
 
     return {
       categoryId: cat.id,

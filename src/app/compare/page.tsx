@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { CheckCircle, X, ArrowRight } from 'lucide-react';
+import PublicPageLayout from '@/components/layout/PublicPageLayout';
 
 interface ComparisonRow {
   feature: string;
@@ -44,25 +45,12 @@ function CellValue({ value }: { value: boolean | string }) {
 
 export default function ComparePage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Nav */}
-      <nav className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-50">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">P</span>
-          </div>
-          <span className="text-lg font-bold text-gray-900">Parichay</span>
-        </Link>
-        <Link href="/register" className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors">
-          Start Free Trial
-        </Link>
-      </nav>
-
+    <PublicPageLayout>
       <div className="max-w-6xl mx-auto px-6 py-16">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-            Parichay vs Digital Business Cards & Listing Sites
+            How Parichay compares
           </h1>
           <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
             Blinq and DBC give you a digital visiting card. Justdial gives you a listing. Parichay gives you a complete microwebsite — with services, lead capture, analytics, and your own URL.
@@ -138,6 +126,6 @@ export default function ComparePage() {
           </div>
         </div>
       </div>
-    </div>
+    </PublicPageLayout>
   );
 }

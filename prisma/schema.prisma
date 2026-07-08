@@ -1,4 +1,4 @@
-// OneTouch BizCard Database Schema
+// Parichay Database Schema
 // This schema defines the data models for the multi-tenant microsite platform
 
 generator client {
@@ -7,26 +7,33 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 // User model for authentication and role management
 model User {
   id           String   @id @default(cuid())
-  email        String   @unique
+  email        String   @unique @db.VarChar(191)
   passwordHash String
   firstName    String
   lastName     String
   role         UserRole @default(BRANCH_ADMIN)
   isActive     Boolean  @default(true)
   lastLoginAt  DateTime?
+  lastLogoutAt DateTime?
+  deletedAt    DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Password reset
-  resetToken       String?   @unique
+  resetToken       String?   @unique @db.VarChar(191)
   resetTokenExpiry DateTime?
+
+  // Email verification
+  emailVerified           Boolean   @default(false)
+  emailVerificationToken  String?   @unique @db.VarChar(191)
+  emailVerificationExpiry DateTime?
 
   // SMS notifications
   phone            String?
@@ -40,6 +47,16 @@ model User {
   // Industry Category
   industryCategory String?   // Industry category ID for personalized experience
 
+  // Onboarding
+  onboardingCompletedAt DateTime?  // When user completed onboarding wizard
+
+  // User Preferences
+  themePreference String? @default("system") // light, dark, system
+
+  // Account lockout
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
   // Relationships
   brandId   String?
   brand     Brand?   @relation(fields: [brandId], references: [id], onDelete: SetNull)
@@ -50,6 +67,11 @@ model User {
   tenant    Tenant?  @relation("TenantUsers", fields: [tenantId], references: [id], onDelete: SetNull)
   tenantInvitations TenantInvitation[] @relation("TenantInvitations")
 
+  @@index([brandId])
+  @@index([role, deletedAt])
+  @@index([isActive, deletedAt])
+  @@index([deletedAt])
+  @@index([email])
   @@map("users")
 }
 
@@ -57,10 +79,10 @@ model User {
 model Brand {
   id           String  @id @default(cuid())
   name         String
-  slug         String  @unique
+  slug         String  @unique @db.VarChar(191)
   logo         String?
   tagline      String?
-  customDomain String? @unique
+  customDomain String? @unique @db.VarChar(191)
   sslEnabled   Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -68,6 +90,10 @@ model Brand {
   // Brand theming
   colorTheme Json // {primary: string, secondary: string, accent: string}
   customization Json? // BrandCustomization structure for advanced theming
+  layoutId String @db.VarChar(36) @default("modern-business") // Layout template ID from layout-options.ts
+
+  // Festival theming
+  festivalSettings Json? // {enabled: boolean, festivalType: string, startDate: datetime, endDate: datetime, customBanner?: string, customMessage?: string, position: string, overlayOpacity: number}
 
   // Verification
   isVerified        Boolean   @default(false)
@@ -76,7 +102,7 @@ model Brand {
 
   // Relationships
   ownerId        String
-  subscriptionId String?      @unique
+  subscriptionId String? @db.VarChar(191) @unique
   users          User[]
   branches       Branch[]
   subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
@@ -99,13 +125,27 @@ model Brand {
 model Branch {
   id        String   @id @default(cuid())
   name      String
-  slug      String
+  slug      String   @db.VarChar(100)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Address information
   address Json // {street: string, city: string, state: string, zipCode: string, country: string}
+
+  // Geolocation for "Near Me" search
+  latitude  Float?
+  longitude Float?
+
+  // Service categories for filtering
+  serviceCategories Json? // Array of service categories: ["plumbing", "electrical", "beauty", "restaurant"]
+
+  // Business type for marketplace
+  businessType String? // "service", "retail", "restaurant", "professional", "healthcare"
+
+  // Pricing information for comparison
+  priceRange String? // "budget", "moderate", "premium"
+  avgServicePrice Float? // Average service price for comparison
 
   // Contact information
   contact Json // {phone: string, whatsapp?: string, email: string}
@@ -129,7 +169,7 @@ model Branch {
   // Privacy settings
   visibility     String?   @default("public") // public, private, unlisted
   accessPassword String?   // Hashed password for private branches
-  accessToken    String?   @unique // Token for private link access
+  accessToken    String? @db.VarChar(191) @unique // Token for private link access
   tokenExpiresAt DateTime? // Token expiration date
 
   // Verification
@@ -140,7 +180,7 @@ model Branch {
   completionScore   Int       @default(0)
 
   // Relationships
-  brandId String
+  brandId String   @db.VarChar(36)
   brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
   admins  User[] @relation("BranchAdmins")
   leads   Lead[]
@@ -155,8 +195,30 @@ model Branch {
   offers         Offer[]
   voiceIntro     VoiceIntro?
   whatsappCatalogue WhatsAppCatalogue?
+  birthdayTemplate  BirthdayTemplate?
+  appointments      Appointment[]
+  serviceSlots      ServiceSlot[]
+
+  // CRM & Invoicing relations
+  customers          Customer[]
+  businessInvoices   BusinessInvoice[]
+  invoiceSettings    InvoiceSettings?
+  reusableLineItems  ReusableLineItem[]
+  expenses           Expense[]
+  expenseCategories  ExpenseCategory[]
+  customerReminders  CustomerReminder[]
+  reminderConfig     ReminderConfig?
+  greetingTemplates  GreetingTemplate[]
+  customerSegments   CustomerSegment[]
+  reviewRequests     ReviewRequest[]
+  reviewRequestConfig ReviewRequestConfig?
+  recurringInvoices  RecurringInvoice[]
+  invoiceSequences   InvoiceSequence[]
 
   @@unique([brandId, slug])
+  @@index([latitude, longitude]) // For geospatial queries
+  @@index([businessType])
+  @@index([isActive])
   @@map("branches")
 }
 
@@ -184,9 +246,11 @@ model Subscription {
   startDate              DateTime
   endDate                DateTime
   autoRenew              Boolean            @default(true)
-  licenseKey             String             @unique
+  licenseKey             String @db.VarChar(191) @unique
   paymentGateway         PaymentGateway
   externalSubscriptionId String?
+  isTrial                Boolean            @default(false)
+  trialEndsAt            DateTime?
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
@@ -223,7 +287,7 @@ model Payment {
 // Invoice generation
 model Invoice {
   id            String        @id @default(cuid())
-  invoiceNumber String        @unique
+  invoiceNumber String @db.VarChar(191) @unique
   amount        Float
   currency      String        @default("INR")
   status        InvoiceStatus @default(DRAFT)
@@ -236,7 +300,7 @@ model Invoice {
   // Relationships
   subscriptionId String
   subscription   Subscription @relation(fields: [subscriptionId], references: [id])
-  paymentId      String?      @unique
+  paymentId      String? @db.VarChar(191) @unique
   payment        Payment?     @relation(fields: [paymentId], references: [id])
 
   @@map("invoices")
@@ -244,21 +308,101 @@ model Invoice {
 
 // Lead capture and management
 model Lead {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
   email     String?
   phone     String?
   message   String?
-  source    String   // 'qr_code', 'direct_visit', 'social_share'
-  status    String   @default("NEW") // NEW, CONTACTED, CONVERTED, ARCHIVED
-  metadata  Json?    // Additional form fields
+  source    String     // 'qr_code', 'direct_visit', 'social_share'
+  status    LeadStatus @default(NEW)
+  priority  LeadPriority @default(MEDIUM)
+  metadata  Json?      // Additional form fields
+  tags      Json?      // Array of string tags for categorization
+  notes     String?    @db.Text // Internal notes about the lead
+
+  // Birthday tracking for auto-email feature
+  birthday      DateTime?  // Full birthday date (for display)
+  birthdayMonth Int?       // 1-12 for easy querying
+  birthdayDay   Int?       // 1-31 for easy querying
+
+  // Follow-up tracking
+  lastContactedAt  DateTime?
+  nextFollowUpAt   DateTime?
+  assignedToId     String? @db.VarChar(36)    // User ID of assigned sales person
+
+  // Timestamps
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   // Relationships
-  branchId String
-  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  branchId     String
+  branch       Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  activities   LeadActivity[]
+  birthdayLogs BirthdayLog[]
+  appointments Appointment[]
+  customer     Customer?
 
+  @@index([branchId])
+  @@index([status])
+  @@index([priority])
+  @@index([nextFollowUpAt])
+  @@index([birthdayMonth, birthdayDay])
   @@map("leads")
+}
+
+// Lead Activity tracking for audit trail
+model LeadActivity {
+  id          String           @id @default(cuid())
+  type        LeadActivityType
+  description String           @db.Text
+  metadata    Json?            // Additional activity data
+  createdAt   DateTime         @default(now())
+
+  // Who performed this activity
+  performedById   String?
+  performedByName String?      // Store name for historical reference
+
+  // Relationships
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([createdAt])
+  @@map("lead_activities")
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  CONVERTED
+  LOST
+  ARCHIVED
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum LeadActivityType {
+  CREATED
+  STATUS_CHANGED
+  NOTE_ADDED
+  CALL_MADE
+  EMAIL_SENT
+  WHATSAPP_SENT
+  MEETING_SCHEDULED
+  FOLLOW_UP_SET
+  ASSIGNED
+  TAG_ADDED
+  TAG_REMOVED
+  CONVERTED
+  ARCHIVED
 }
 
 // QR Code generation and tracking
@@ -316,12 +460,98 @@ model Notification {
   @@map("notifications")
 }
 
+// Audit log for compliance and security tracking
+model AuditLog {
+  id           String   @id @default(cuid())
+  eventType    String   // e.g. USER_LOGIN, USER_DELETED, PASSWORD_CHANGED
+  userId       String?  // Who performed the action (null for system events)
+  resourceId   String?  // What was acted upon
+  resourceType String?  // e.g. User, Brand, Subscription
+  ipAddress    String?
+  userAgent    String?
+  metadata     Json?    // Additional context
+  correlationId String? // Request correlation ID
+  createdAt    DateTime @default(now())
+
+  @@index([eventType])
+  @@index([userId])
+  @@index([resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// Voucher/Coupon system for discounts
+model Voucher {
+  id              String    @id @default(cuid())
+  code            String    @unique @db.VarChar(50)
+  description     String?
+  discountType    DiscountType @default(PERCENTAGE)
+  discountValue   Float     // Percentage (e.g. 20) or flat amount (e.g. 500)
+  maxUses         Int?      // Null = unlimited
+  usedCount       Int       @default(0)
+  minOrderAmount  Float?    // Minimum order to apply voucher
+  maxDiscount     Float?    // Cap on discount amount (for percentage type)
+  validFrom       DateTime  @default(now())
+  validUntil      DateTime?
+  isActive        Boolean   @default(true)
+  applicablePlans Json?     // Array of plan IDs this voucher applies to, null = all
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  redemptions VoucherRedemption[]
+
+  @@index([code])
+  @@index([isActive, validUntil])
+  @@map("vouchers")
+}
+
+// Track voucher usage
+model VoucherRedemption {
+  id          String   @id @default(cuid())
+  voucherId   String
+  voucher     Voucher  @relation(fields: [voucherId], references: [id])
+  userId      String
+  brandId     String?
+  paymentId   String?
+  discount    Float    // Actual discount applied
+  createdAt   DateTime @default(now())
+
+  @@index([voucherId])
+  @@index([userId])
+  @@map("voucher_redemptions")
+}
+
+// Feature flags for gradual rollouts
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique @db.VarChar(100)
+  name        String
+  description String?
+  isEnabled   Boolean  @default(false)
+  rules       Json?    // {roles: [], plans: [], userIds: [], percentage: number}
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("feature_flags")
+}
+
 // Enums
 enum UserRole {
   SUPER_ADMIN
   BRAND_MANAGER
   BRANCH_ADMIN
   EXECUTIVE
+  BUSINESS_OWNER
+  CUSTOMER
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FLAT
+  FIXED_AMOUNT
+  BUY_ONE_GET_ONE
+  FREE_SHIPPING
 }
 
 enum SubscriptionStatus {
@@ -362,8 +592,13 @@ enum AnalyticsEventType {
   QR_SCAN
   LEAD_SUBMIT
   VCARD_DOWNLOAD
+  BUSINESS_CARD_DOWNLOAD
   SHORT_LINK_CLICK
   QR_DOWNLOAD
+  APPOINTMENT_BOOKED
+  BIRTHDAY_EMAIL_SENT
+  SCROLL_DEPTH
+  HEATMAP_CLICKS
 }
 
 enum NotificationType {
@@ -385,7 +620,7 @@ enum BranchVisibility {
 // Short Links for URL shortening
 model ShortLink {
   id         String    @id
-  code       String    @unique
+  code       String @db.VarChar(191) @unique
   targetUrl  String    @db.Text
   clicks     Int       @default(0)
   isActive   Boolean   @default(true)
@@ -435,7 +670,7 @@ model VideoTestimonial {
   id          String   @id @default(cuid())
   title       String
   description String?  @db.Text
-  videoUrl    String   // YouTube, Vimeo, or direct video URL
+  videoUrl    String @db.VarChar(36)   // YouTube, Vimeo, or direct video URL
   thumbnailUrl String?
   customerName String
   customerTitle String? // e.g., "CEO at Company"
@@ -513,6 +748,7 @@ model PortfolioItem {
   tags        Json?    // Array of tags
   order       Int      @default(0)
   isPublished Boolean  @default(true)
+  featured    Boolean  @default(false)
   viewCount   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -543,6 +779,7 @@ model Offer {
   startDate   DateTime
   endDate     DateTime
   isActive    Boolean   @default(true)
+  featured    Boolean   @default(false)
   usageLimit  Int?
   usageCount  Int       @default(0)
   terms       String?   @db.Text
@@ -562,13 +799,6 @@ model Offer {
   @@map("offers")
 }
 
-enum DiscountType {
-  PERCENTAGE
-  FIXED_AMOUNT
-  BUY_ONE_GET_ONE
-  FREE_SHIPPING
-}
-
 // Voice Intro for profiles
 model VoiceIntro {
   id          String   @id @default(cuid())
@@ -581,7 +811,7 @@ model VoiceIntro {
   updatedAt   DateTime @updatedAt
 
   // Relationships
-  branchId String   @unique
+  branchId String @db.VarChar(191) @unique
   branch   Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   @@map("voice_intros")
@@ -590,7 +820,7 @@ model VoiceIntro {
 // WhatsApp Catalogue Sync
 model WhatsAppCatalogue {
   id              String   @id @default(cuid())
-  catalogueId     String?  // WhatsApp Business Catalogue ID
+  catalogueId     String? @db.VarChar(36)  // WhatsApp Business Catalogue ID
   phoneNumber     String
   businessName    String
   lastSyncedAt    DateTime?
@@ -603,7 +833,7 @@ model WhatsAppCatalogue {
   updatedAt       DateTime @updatedAt
 
   // Relationships
-  branchId String   @unique
+  branchId String @db.VarChar(191) @unique
   branch   Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
   items    WhatsAppCatalogueItem[]
 
@@ -618,7 +848,7 @@ model WhatsAppCatalogueItem {
   currency    String   @default("INR")
   imageUrl    String?
   availability String  @default("in_stock")
-  retailerId  String?  // External product ID
+  retailerId  String? @db.VarChar(36)  // External product ID
   url         String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -642,7 +872,7 @@ enum SyncStatus {
 model IndustryCategory {
   id          String   @id @default(cuid())
   name        String
-  slug        String   @unique
+  slug        String @db.VarChar(191) @unique
   description String   @db.Text
   icon        String
   enabled     Boolean  @default(true)
@@ -661,9 +891,9 @@ model IndustryCategory {
 model Tenant {
   id             String   @id @default(cuid())
   name           String
-  slug           String   @unique
-  domain         String?  @unique
-  customDomain   String?  @unique
+  slug           String @db.VarChar(191) @unique
+  domain         String? @db.VarChar(191) @unique
+  customDomain   String? @db.VarChar(191) @unique
 
   // Branding
   logo           String?
@@ -714,7 +944,7 @@ model TenantInvitation {
   email      String
   role       String   @default("CLIENT")
   status     String   @default("PENDING")
-  token      String   @unique
+  token      String @db.VarChar(191) @unique
   expiresAt  DateTime
 
   // Relations
@@ -772,9 +1002,9 @@ model TenantBilling {
 
 model TenantClient {
   id           String   @id @default(cuid())
-  tenantId     String
+  tenantId     String   @db.VarChar(36)
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  brandId      String   @unique
+  brandId      String   @db.VarChar(36) @unique
   brand        Brand    @relation("TenantClientBrand", fields: [brandId], references: [id], onDelete: Cascade)
 
   // Client info
@@ -802,4 +1032,742 @@ model TenantClient {
   @@index([tenantId])
   @@index([brandId])
   @@map("tenant_clients")
+}
+
+// Platform-level testimonials for landing page
+model LandingTestimonial {
+  id            String   @id @default(cuid())
+  name          String
+  role          String   // e.g., "CEO & Founder"
+  company       String
+  avatar        String?  // Image URL
+  content       String   @db.Text
+  rating        Int      @default(5) // 1-5 stars
+  isPublished   Boolean  @default(false)
+  displayOrder  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("landing_testimonials")
+}
+
+// Platform-level client logos for landing page
+model LandingClientLogo {
+  id            String   @id @default(cuid())
+  name          String
+  logoUrl       String
+  websiteUrl    String?
+  isPublished   Boolean  @default(true)
+  displayOrder  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("landing_client_logos")
+}
+
+// Platform configuration for dynamic content
+model PlatformConfig {
+  id            String   @id @default(cuid())
+  key           String @db.VarChar(191) @unique
+  value         Json
+  description   String?
+  updatedAt     DateTime @updatedAt
+
+  @@map("platform_config")
+}
+
+// Webhooks for event notifications
+model Webhook {
+  id            String   @id @default(cuid())
+  name          String
+  url           String
+  secret        String   // For signing payloads
+  events        Json     // Array of event types to listen for
+  isActive      Boolean  @default(true)
+  headers       Json?    // Custom headers to include
+  retryCount    Int      @default(3)
+  timeoutMs     Int      @default(30000)
+
+  // Statistics
+  totalDeliveries   Int      @default(0)
+  successfulDeliveries Int   @default(0)
+  failedDeliveries  Int      @default(0)
+  lastDeliveryAt    DateTime?
+  lastSuccessAt     DateTime?
+  lastFailureAt     DateTime?
+
+  // Ownership
+  brandId       String?
+  branchId      String?
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  deliveries    WebhookDelivery[]
+
+  @@index([brandId])
+  @@index([branchId])
+  @@map("webhooks")
+}
+
+// Webhook delivery attempts for debugging
+model WebhookDelivery {
+  id            String   @id @default(cuid())
+  webhookId     String
+  webhook       Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  eventType     String
+  payload       Json
+  status        WebhookDeliveryStatus @default(PENDING)
+  responseCode  Int?
+  responseBody  String?  @db.Text
+  errorMessage  String?  @db.Text
+  attemptNumber Int      @default(1)
+  deliveredAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([webhookId])
+  @@index([eventType])
+  @@index([status])
+  @@map("webhook_deliveries")
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  RETRYING
+}
+
+// Help Content CMS
+model HelpCategory {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String @db.VarChar(191) @unique
+  description   String?
+  icon          String?  // Icon name (e.g., 'book', 'settings')
+  displayOrder  Int      @default(0)
+  isPublished   Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  articles      HelpArticle[]
+
+  @@map("help_categories")
+}
+
+model HelpArticle {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String @db.VarChar(191) @unique
+  content       String   @db.Text  // Markdown or HTML content
+  excerpt       String?  @db.Text  // Short description for listings
+  type          HelpArticleType @default(GUIDE)
+  tags          Json?    // Array of tags for search
+  videoUrl      String? @db.VarChar(36)  // For video tutorials
+  videoDuration String? @db.VarChar(36)  // e.g., "5:32"
+  isPublished   Boolean  @default(false)
+  isFeatured    Boolean  @default(false)
+  viewCount     Int      @default(0)
+  displayOrder  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  categoryId    String?
+  category      HelpCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([categoryId])
+  @@index([type])
+  @@index([isPublished])
+  @@map("help_articles")
+}
+
+enum HelpArticleType {
+  FAQ
+  GUIDE
+  TUTORIAL
+  VIDEO
+}
+
+// Landing page features for admin configuration
+model LandingFeature {
+  id            String   @id @default(cuid())
+  title         String
+  description   String   @db.Text
+  icon          String   // Icon name (e.g., 'smartphone', 'zap')
+  gradient      String   @default("from-primary-500 to-primary-600")
+  displayOrder  Int      @default(0)
+  isPublished   Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("landing_features")
+}
+
+// Landing page "How It Works" steps
+model HowItWorksStep {
+  id            String   @id @default(cuid())
+  title         String
+  description   String   @db.Text
+  icon          String   // Icon name (e.g., 'userPlus', 'edit3', 'share2', 'trendingUp')
+  gradient      String   @default("from-primary-500 to-primary-600")
+  displayOrder  Int      @default(0)
+  isPublished   Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("how_it_works_steps")
+}
+
+// ============================================
+// BIRTHDAY AUTO-EMAIL FEATURE
+// ============================================
+
+// Birthday email template per branch
+model BirthdayTemplate {
+  id              String   @id @default(cuid())
+  branchId        String @db.VarChar(191) @unique
+  branch          Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  // Template content
+  subject         String   @default("Happy Birthday! 🎂")
+  message         String   @db.Text  // Supports {{name}}, {{discount}}, {{businessName}} placeholders
+
+  // Discount configuration
+  discountCode    String?
+  discountPercent Int?
+  discountValidDays Int    @default(7)  // How many days the discount is valid
+
+  // Settings
+  isActive        Boolean  @default(true)
+  sendVia         String   @default("email")  // email, whatsapp, both
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("birthday_templates")
+}
+
+// Track sent birthday greetings to avoid duplicates
+model BirthdayLog {
+  id        String   @id @default(cuid())
+  leadId    String   @db.VarChar(36)
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  branchId  String   @db.VarChar(36)
+  year      Int      // Track which year we sent the greeting
+  channel   String   // 'email', 'whatsapp', 'sms'
+  status    String   @default("sent")  // sent, failed, bounced
+  sentAt    DateTime @default(now())
+  metadata  Json?    // Additional info like discount code used
+
+  @@unique([leadId, year])
+  @@index([branchId, sentAt])
+  @@map("birthday_logs")
+}
+
+// ============================================
+// APPOINTMENT BOOKING SYSTEM
+// ============================================
+
+// Service types offered by the branch
+model ServiceSlot {
+  id          String   @id @default(cuid())
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  name        String   // "Haircut", "Plumbing Visit", "Consultation"
+  description String?  @db.Text
+  duration    Int      // Duration in minutes
+  price       Decimal? @db.Decimal(10,2)
+  currency    String   @default("INR")
+
+  // Availability
+  isActive    Boolean  @default(true)
+  maxPerDay   Int?     // Maximum appointments per day for this service
+
+  // Display
+  displayOrder Int     @default(0)
+  color       String?  // Color for calendar display
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  appointments Appointment[]
+
+  @@index([branchId])
+  @@map("service_slots")
+}
+
+// Appointment bookings
+model Appointment {
+  id            String   @id @default(cuid())
+  branchId      String
+  branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  // Service reference (optional - can be custom service)
+  serviceSlotId String?
+  serviceSlot   ServiceSlot? @relation(fields: [serviceSlotId], references: [id], onDelete: SetNull)
+  serviceName   String   // Store service name for historical reference
+
+  // Customer info (can link to Lead)
+  leadId        String?
+  lead          Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  customerName  String
+  customerPhone String
+  customerEmail String?
+
+  // Appointment details
+  date          DateTime @db.Date
+  startTime     String   // "09:00" format
+  endTime       String   // "10:00" format
+  duration      Int      // Duration in minutes
+
+  // Status
+  status        AppointmentStatus @default(PENDING)
+  notes         String?  @db.Text  // Customer notes
+  internalNotes String?  @db.Text  // Internal staff notes
+
+  // Reminders
+  reminderSent  Boolean  @default(false)
+  confirmedAt   DateTime?
+  cancelledAt   DateTime?
+  cancelReason  String?
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([branchId, date])
+  @@index([status])
+  @@index([customerPhone])
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  RESCHEDULED
+}
+
+// Referral system — users earn credits for inviting others
+model Referral {
+  id              String   @id @default(cuid())
+  referrerUserId  String   // User who shared the referral
+  referredEmail   String   // Email of the person invited
+  referredUserId  String?  // Set when the invited person signs up
+  referralCode    String   @unique @db.VarChar(20)
+  status          ReferralStatus @default(PENDING)
+  rewardType      DiscountType @default(PERCENTAGE)
+  rewardValue     Float    @default(10) // e.g. 10% off next payment
+  rewardClaimed   Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  convertedAt     DateTime?
+
+  @@index([referrerUserId])
+  @@index([referralCode])
+  @@index([referredEmail])
+  @@map("referrals")
+}
+
+enum ReferralStatus {
+  PENDING
+  SIGNED_UP
+  CONVERTED  // Referred user made a payment
+  EXPIRED
+}
+
+// ============================================
+// BUSINESS CRM & INVOICING MODULE
+// ============================================
+
+// === CRM Models ===
+
+model Customer {
+  id            String    @id @default(cuid())
+  name          String
+  phone         String?
+  email         String?
+  address       String?   @db.Text
+  companyName   String?
+  tags          Json?     // string[] - max 20 tags
+  customFields  Json?     // Record<string, string>
+  notes         String?   @db.Text
+  birthday      DateTime?
+  anniversary   DateTime?
+  deletedAt     DateTime?
+  totalInvoiceValue  Float   @default(0)
+  lastInteractionAt  DateTime?
+  branchId      String
+  branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  leadId        String?   @unique
+  lead          Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  interactions  CustomerInteraction[]
+  invoices      BusinessInvoice[]
+  reminders     CustomerReminder[]
+  greetingLogs  GreetingLog[]
+  reviewRequests ReviewRequest[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  @@index([branchId, deletedAt])
+  @@index([name])
+  @@index([phone])
+  @@index([email])
+  @@index([lastInteractionAt])
+  @@map("customers")
+}
+
+model CustomerInteraction {
+  id          String   @id @default(cuid())
+  type        InteractionType
+  summary     String?  @db.Text
+  duration    Int?
+  attachments Json?
+  metadata    Json?
+  loggedById  String?
+  loggedByName String?
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  @@index([customerId, createdAt])
+  @@map("customer_interactions")
+}
+
+enum InteractionType {
+  PHONE_CALL
+  WHATSAPP
+  EMAIL
+  IN_PERSON
+  SMS
+  CUSTOM
+  APPOINTMENT_BOOKED
+  INVOICE_SENT
+  PAYMENT_RECEIVED
+}
+
+// === Invoice Models ===
+
+model BusinessInvoice {
+  id              String    @id @default(cuid())
+  invoiceNumber   String    @unique @db.VarChar(50)
+  status          BusinessInvoiceStatus @default(DRAFT)
+  invoiceDate     DateTime
+  dueDate         DateTime
+  lineItems       Json
+  subtotal        Float
+  discountType    String?
+  discountValue   Float?
+  discountAmount  Float     @default(0)
+  taxAmount       Float     @default(0)
+  grandTotal      Float
+  amountPaid      Float     @default(0)
+  balanceDue      Float
+  gstEnabled      Boolean   @default(false)
+  sellerGstin     String?
+  buyerGstin      String?
+  placeOfSupply   String?
+  cgstTotal       Float?
+  sgstTotal       Float?
+  igstTotal       Float?
+  notes           String?   @db.Text
+  pdfUrl          String?
+  pdfGeneratedAt  DateTime?
+  currency        String    @default("INR")
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  branchId        String
+  branch          Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  payments        InvoicePayment[]
+  paymentLinks    InvoicePaymentLink[]
+  recurringConfig RecurringInvoice?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  @@index([branchId, status])
+  @@index([customerId])
+  @@index([dueDate, status])
+  @@index([invoiceNumber])
+  @@map("business_invoices")
+}
+
+enum BusinessInvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model InvoicePayment {
+  id              String   @id @default(cuid())
+  amount          Float
+  method          String
+  reference       String?
+  notes           String?
+  invoiceId       String
+  invoice         BusinessInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  @@index([invoiceId])
+  @@map("invoice_payments")
+}
+
+model InvoicePaymentLink {
+  id              String   @id @default(cuid())
+  linkCode        String   @unique @db.VarChar(36)
+  amount          Float
+  currency        String   @default("INR")
+  status          PaymentLinkStatus @default(ACTIVE)
+  gateway         PaymentGateway
+  externalOrderId String?
+  expiresAt       DateTime
+  paidAt          DateTime?
+  invoiceId       String
+  invoice         BusinessInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([linkCode])
+  @@index([invoiceId])
+  @@map("invoice_payment_links")
+}
+
+enum PaymentLinkStatus {
+  ACTIVE
+  PAID
+  EXPIRED
+  FAILED
+}
+
+model RecurringInvoice {
+  id              String   @id @default(cuid())
+  frequency       RecurringFrequency
+  nextGenerateAt  DateTime
+  endDate         DateTime?
+  maxOccurrences  Int?
+  occurrenceCount Int      @default(0)
+  isPaused        Boolean  @default(false)
+  autoSend        Boolean  @default(false)
+  invoiceId       String   @unique
+  invoice         BusinessInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  branchId        String
+  branch          Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([nextGenerateAt, isPaused])
+  @@index([branchId])
+  @@map("recurring_invoices")
+}
+
+enum RecurringFrequency {
+  WEEKLY
+  BI_WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+// === Invoice Settings ===
+
+model InvoiceSettings {
+  id              String   @id @default(cuid())
+  businessName    String
+  businessAddress String?  @db.Text
+  phone           String?
+  email           String?
+  logoUrl         String?
+  signatureUrl    String?
+  gstin           String?
+  bankName        String?
+  accountNumber   String?
+  ifscCode        String?
+  upiId           String?
+  defaultPaymentTerms String? @db.Text
+  footerNote      String?  @db.Text
+  colorAccent     String?  @default("#3B82F6")
+  templateStyle   String   @default("MODERN")
+  invoicePrefix   String   @default("INV")
+  branchId        String   @unique
+  branch          Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@map("invoice_settings")
+}
+
+model ReusableLineItem {
+  id          String   @id @default(cuid())
+  description String
+  unitPrice   Float
+  taxRate     Float    @default(18)
+  hsnSacCode  String?
+  unit        String?
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([branchId])
+  @@map("reusable_line_items")
+}
+
+// === Expense Tracking ===
+
+model Expense {
+  id          String   @id @default(cuid())
+  amount      Float
+  date        DateTime
+  category    String
+  description String?  @db.Text
+  vendorName  String?
+  receiptUrl  String?
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([branchId, date])
+  @@index([category])
+  @@map("expenses")
+}
+
+model ExpenseCategory {
+  id          String   @id @default(cuid())
+  name        String
+  isDefault   Boolean  @default(false)
+  branchId    String?
+  branch      Branch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  @@unique([branchId, name])
+  @@map("expense_categories")
+}
+
+// === Reminders & Greetings ===
+
+model CustomerReminder {
+  id          String   @id @default(cuid())
+  reminderDate DateTime
+  message     String   @db.Text
+  channel     String
+  status      String   @default("PENDING")
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  @@index([reminderDate, status])
+  @@index([customerId])
+  @@map("customer_reminders")
+}
+
+model ReminderConfig {
+  id                    String  @id @default(cuid())
+  autoRemindersEnabled  Boolean @default(true)
+  beforeDueDays         Int     @default(3)
+  onDueDateEnabled      Boolean @default(true)
+  afterDueDays          Int     @default(7)
+  maxReminders          Int     @default(4)
+  intervalDays          Int     @default(7)
+  channels              Json
+  branchId              String  @unique
+  branch                Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  updatedAt             DateTime @updatedAt
+  @@map("reminder_configs")
+}
+
+model GreetingTemplate {
+  id          String   @id @default(cuid())
+  type        String
+  channel     String
+  subject     String?
+  body        String   @db.Text
+  includeDiscount Boolean @default(false)
+  discountDays    Int?
+  sendTime    String   @default("09:00")
+  isActive    Boolean  @default(true)
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([branchId, type])
+  @@map("greeting_templates")
+}
+
+model GreetingLog {
+  id          String   @id @default(cuid())
+  type        String
+  year        Int
+  channel     String
+  status      String   @default("SENT")
+  discountCode String?
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  sentAt      DateTime @default(now())
+  @@unique([customerId, type, year])
+  @@map("greeting_logs")
+}
+
+// === Customer Segments ===
+
+model CustomerSegment {
+  id          String   @id @default(cuid())
+  name        String
+  criteria    Json
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([branchId])
+  @@map("customer_segments")
+}
+
+// === Review Requests ===
+
+model ReviewRequest {
+  id              String   @id @default(cuid())
+  status          String   @default("PENDING")
+  scheduledFor    DateTime
+  sentAt          DateTime?
+  clickedAt       DateTime?
+  channel         String
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  invoiceId       String?
+  branchId        String
+  branch          Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  @@index([scheduledFor, status])
+  @@index([customerId])
+  @@map("review_requests")
+}
+
+model ReviewRequestConfig {
+  id                String  @id @default(cuid())
+  isEnabled         Boolean @default(true)
+  delayDays         Int     @default(2)
+  googleReviewLink  String?
+  messageTemplate   String? @db.Text
+  channel           String  @default("email")
+  cooldownDays      Int     @default(90)
+  branchId          String  @unique
+  branch            Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  updatedAt         DateTime @updatedAt
+  @@map("review_request_configs")
+}
+
+// === Invoice Number Sequence ===
+
+model InvoiceSequence {
+  id          String   @id @default(cuid())
+  prefix      String
+  financialYear String
+  lastNumber  Int      @default(0)
+  branchId    String
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  @@unique([branchId, prefix, financialYear])
+  @@map("invoice_sequences")
 }

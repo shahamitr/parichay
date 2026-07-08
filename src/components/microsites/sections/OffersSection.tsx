@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { Tag, Clock, Copy, Check, Gift, Percent, Truck, ShoppingBag } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { Tag, Clock, Copy, Check, Gift, Percent, Truck, ShoppingBag, AlertCircle } from 'lucide-react';
 import { Brand, Branch } from '@/generated/prisma';
 import { OffersSection as OffersConfig, Offer } from '@/types/microsite';
+import toast from 'react-hot-toast';
 
 interface OffersSectionProps {
   config: OffersConfig;
@@ -19,19 +21,47 @@ const discountIcons: Record<string, React.ReactNode> = {
   custom: <ShoppingBag className="w-6 h-6" />,
 };
 
+function isOfferExpired(offer: Offer): boolean {
+  return new Date(offer.validUntil) < new Date();
+}
+
 export default function OffersSection({ config, brand, branch }: OffersSectionProps) {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [claimedOffers, setClaimedOffers] = useState<Set<string>>(new Set());
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: true, margin: '-50px' });
 
   if (!config.enabled || !config.offers || config.offers.length === 0) return null;
 
-  const activeOffers = config.offers.filter(offer => {
+  // Show both active and recently expired offers (expired get a visual state)
+  const visibleOffers = config.offers.filter(offer => {
     const now = new Date();
-    return offer.isActive &&
-           new Date(offer.validFrom) <= now &&
-           new Date(offer.validUntil) >= now;
+    return offer.isActive && new Date(offer.validFrom) <= now;
   });
 
-  if (activeOffers.length === 0) return null;
+  if (visibleOffers.length === 0) return null;
+
+  const activeOffers = visibleOffers.filter(o => !isOfferExpired(o));
+  const primaryColor = (brand as unknown as { primaryColor?: string })?.primaryColor || '#EF4444';
+
+  const handleClaimOffer = (offer: Offer) => {
+    if (isOfferExpired(offer)) return;
+
+    setClaimedOffers((prev) => new Set([...prev, offer.id]));
+    toast.success(`Offer "${offer.title}" claimed! Check your notifications.`);
+
+    // Track claim
+    fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventType: 'CLICK',
+        branchId: branch.id,
+        brandId: brand.id,
+        metadata: { action: 'claim_offer', offerId: offer.id, offerTitle: offer.title },
+      }),
+    }).catch(() => {});
+  };
 
   const copyCode = async (code: string) => {
     await navigator.clipboard.writeText(code);
@@ -48,7 +78,7 @@ export default function OffersSection({ config, brand, branch }: OffersSectionPr
         brandId: brand.id,
         metadata: { action: 'copy_offer_code', code },
       }),
-    });
+    }).catch(() => {});
   };
 
   const getTimeRemaining = (validUntil: string) => {
@@ -82,14 +112,23 @@ export default function OffersSection({ config, brand, branch }: OffersSectionPr
 
   const featuredOffers = activeOffers.filter(o => o.featured);
   const regularOffers = activeOffers.filter(o => !o.featured);
+  const expiredOffers = visibleOffers.filter(o => isOfferExpired(o));
 
   return (
-    <div className="py-12 px-4 bg-gradient-to-r from-orange-50 to-red-50">
+    <div ref={containerRef} className="py-12 px-4 bg-gradient-to-r from-orange-50 to-red-50">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-full mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-10"
+        >
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 text-sm font-semibold"
+            style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}
+          >
             <Tag className="w-5 h-5" />
-            <span className="font-semibold">Special Offers</span>
+            <span>Special Offers</span>
           </div>
           <h2 id="offers-heading" className="text-3xl font-bold text-gray-900 mb-3">
             Exclusive Deals & Discounts
@@ -97,17 +136,21 @@ export default function OffersSection({ config, brand, branch }: OffersSectionPr
           <p className="text-gray-600 max-w-2xl mx-auto">
             Don't miss out on these limited-time offers
           </p>
-        </div>
+        </motion.div>
 
         {/* Featured Offers */}
         {featuredOffers.length > 0 && (
           <div className="mb-8">
-            {featuredOffers.map((offer) => {
+            {featuredOffers.map((offer, index) => {
               const timeRemaining = getTimeRemaining(offer.validUntil);
               return (
-                <div
+                <motion.div
                   key={offer.id}
-                  className="bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl p-1 mb-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
+                  className="rounded-2xl p-1 mb-4"
+                  style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}AA)` }}
                 >
                   <div className="bg-white rounded-xl p-6 md:p-8">
                     <div className="flex flex-col md:flex-row gap-6">
@@ -172,10 +215,22 @@ export default function OffersSection({ config, brand, branch }: OffersSectionPr
                         {offer.termsAndConditions && (
                           <p className="text-xs text-gray-500 mt-3">*{offer.termsAndConditions}</p>
                         )}
+
+                        {/* Claim Offer Button */}
+                        <div className="mt-4">
+                          <button
+                            onClick={() => handleClaimOffer(offer)}
+                            disabled={claimedOffers.has(offer.id)}
+                            className="px-8 py-3 rounded-xl text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90 shadow-md"
+                            style={{ backgroundColor: primaryColor }}
+                          >
+                            {claimedOffers.has(offer.id) ? '✓ Offer Claimed' : 'Claim Offer'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -184,11 +239,14 @@ export default function OffersSection({ config, brand, branch }: OffersSectionPr
         {/* Regular Offers Grid */}
         {regularOffers.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {regularOffers.map((offer) => {
+            {regularOffers.map((offer, index) => {
               const timeRemaining = getTimeRemaining(offer.validUntil);
               return (
-                <div
+                <motion.div
                   key={offer.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
                   className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
                 >
                   {offer.imageUrl && (
@@ -216,7 +274,7 @@ export default function OffersSection({ config, brand, branch }: OffersSectionPr
                     {offer.code && (
                       <button
                         onClick={() => copyCode(offer.code!)}
-                        className="w-full py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 flex items-center justify-center gap-2 transition-colors"
+                        className="w-full py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 flex items-center justify-center gap-2 transition-colors mb-3"
                       >
                         {copiedCode === offer.code ? (
                           <>
@@ -231,11 +289,62 @@ export default function OffersSection({ config, brand, branch }: OffersSectionPr
                         )}
                       </button>
                     )}
+
+                    {/* Claim Offer Button */}
+                    <button
+                      onClick={() => handleClaimOffer(offer)}
+                      disabled={claimedOffers.has(offer.id)}
+                      className="w-full py-2.5 rounded-lg text-white text-sm font-semibold transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      {claimedOffers.has(offer.id) ? '✓ Claimed' : 'Claim Offer'}
+                    </button>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
+        )}
+
+        {/* Expired Offers */}
+        {expiredOffers.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="mt-8"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <AlertCircle className="w-4 h-4 text-gray-400" />
+              <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Expired Offers</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {expiredOffers.map((offer) => (
+                <div
+                  key={offer.id}
+                  className="relative bg-white/60 rounded-xl border border-gray-200 overflow-hidden opacity-60 grayscale"
+                >
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <span className="bg-gray-900/80 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider rotate-[-5deg]">
+                      Expired
+                    </span>
+                  </div>
+                  {offer.imageUrl && (
+                    <img src={offer.imageUrl} alt={offer.title} className="w-full h-32 object-cover" />
+                  )}
+                  <div className="p-4">
+                    <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-500 px-2 py-1 rounded-full text-xs font-semibold mb-2">
+                      {getDiscountDisplay(offer)}
+                    </span>
+                    <h3 className="font-semibold text-gray-600 text-sm">{offer.title}</h3>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Ended {new Date(offer.validUntil).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         )}
       </div>
     </div>

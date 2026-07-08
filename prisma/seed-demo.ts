@@ -1,653 +1,478 @@
 /**
  * Demo Data Seed Script
  *
- * This script creates comprehensive demo data for showcasing the platform:
- * - Multiple brands with different industries
- * - Executives with performance data
- * - Branches with complete microsite configurations
- * - Sample leads and analytics
+ * Creates a dedicated demo microsite for each of the 11 industry categories.
+ * Each demo includes: Brand, Branch, User, sample Leads, Analytics Events, and QR Code.
+ *
+ * Idempotent: safely re-runnable — deletes all existing demo data before re-creating.
  *
  * Usage: npx tsx prisma/seed-demo.ts
  */
 
-import { PrismaClient } from '../src/generated/prisma/index.js';
-import bcrypt from 'bcryptjs';
+import { industryCategories } from '../src/data/categories.js';
+import { buildDemoSlug, buildDemoEmail } from '../src/lib/demo-utils.js';
 
-const prisma = new PrismaClient();
+// Lazy-loaded dependencies — only initialised when the seed script actually runs,
+// so that test files can import the static maps/constants without triggering
+// PrismaClient instantiation or database connections.
+let _prisma: any = null;
+
+function getPrisma() {
+  if (!_prisma) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { PrismaClient } = require('../src/generated/prisma/index.js');
+    _prisma = new PrismaClient();
+  }
+  return _prisma;
+}
+
+// Lazy-loaded content generator
+let _generateMicrositeContent: ((
+  categorySlug: string,
+  businessName: string,
+  tagline: string,
+) => Record<string, unknown>) | null = null;
+
+function getGenerateMicrositeContent() {
+  if (!_generateMicrositeContent) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const mod = require('./demo-content');
+      _generateMicrositeContent = mod.generateMicrositeContent;
+    } catch {
+      _generateMicrositeContent = (
+        _categorySlug: string,
+        businessName: string,
+        tagline: string,
+      ) => buildFallbackContent(businessName, tagline);
+    }
+  }
+  return _generateMicrositeContent!;
+}
+
+// ---------------------------------------------------------------------------
+// Static maps from the design document
+// ---------------------------------------------------------------------------
+
+/** Maps each category slug to a unique layout ID from layout-options.ts */
+const INDUSTRY_LAYOUT_MAP: Record<string, string> = {
+  'business-owners': 'modern-business',
+  'corporate-professionals': 'corporate-professional',
+  'event-planners': 'event-venue',
+  'freelancers-consultants': 'consulting-firm',
+  'educational-institutions': 'nordic-simple',
+  'creatives-designers': 'creative-portfolio',
+  'real-estate-agents': 'startup-dynamic',
+  'healthcare-professionals': 'zen-spa',
+  'restaurants-cafes': 'restaurant-hospitality',
+  'fitness-wellness': 'fitness-energy',
+  'legal-services': 'luxury-boutique',
+};
+
+/** Maps each category slug to a demo business name and tagline */
+const INDUSTRY_DEMO_NAMES: Record<string, { name: string; tagline: string }> = {
+  'business-owners': { name: 'Pinnacle Enterprises', tagline: 'Building Success Together' },
+  'corporate-professionals': { name: 'Apex Corporate Solutions', tagline: 'Excellence in Every Engagement' },
+  'event-planners': { name: 'Stellar Events Co.', tagline: 'Creating Unforgettable Moments' },
+  'freelancers-consultants': { name: 'ProConsult Hub', tagline: 'Expert Solutions On Demand' },
+  'educational-institutions': { name: 'Bright Horizons Academy', tagline: 'Shaping Future Leaders' },
+  'creatives-designers': { name: 'Artisan Design Studio', tagline: 'Where Creativity Meets Craft' },
+  'real-estate-agents': { name: 'Prime Realty Group', tagline: 'Your Dream Property Awaits' },
+  'healthcare-professionals': { name: 'CareFirst Medical Center', tagline: 'Your Health, Our Priority' },
+  'restaurants-cafes': { name: 'The Golden Spoon', tagline: 'A Culinary Journey Awaits' },
+  'fitness-wellness': { name: 'VitalFit Studio', tagline: 'Transform Your Body & Mind' },
+  'legal-services': { name: 'Sterling Law Associates', tagline: 'Justice With Integrity' },
+};
+
+// ---------------------------------------------------------------------------
+// Lead statuses & analytics event types used for sample data
+// ---------------------------------------------------------------------------
+
+const LEAD_STATUSES = ['NEW', 'CONTACTED', 'QUALIFIED', 'CONVERTED'] as const;
+const LEAD_SOURCES = ['qr_code', 'direct_visit', 'social_share'] as const;
+const EVENT_TYPES = ['PAGE_VIEW', 'CLICK', 'QR_SCAN', 'LEAD_SUBMIT', 'VCARD_DOWNLOAD'] as const;
+
+// ---------------------------------------------------------------------------
+// Seed result tracking
+// ---------------------------------------------------------------------------
+
+interface SeedResult {
+  brandsCreated: number;
+  branchesCreated: number;
+  usersCreated: number;
+  leadsCreated: number;
+  eventsCreated: number;
+  qrCodesCreated: number;
+  errors: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Fallback content generator (used until prisma/demo-content.ts exists)
+// ---------------------------------------------------------------------------
+
+function buildFallbackContent(
+  businessName: string,
+  tagline: string,
+): Record<string, unknown> {
+  return {
+    templateId: 'modern-business',
+    seoSettings: {
+      title: `${businessName} — ${tagline}`,
+      description: `Welcome to ${businessName}. ${tagline}.`,
+      keywords: [businessName.toLowerCase()],
+    },
+    sections: {
+      hero: {
+        enabled: true,
+        title: businessName,
+        subtitle: tagline,
+        backgroundType: 'gradient',
+        animationEnabled: true,
+      },
+      about: {
+        enabled: true,
+        content: `${businessName} is a leading provider in its industry. We are committed to delivering exceptional quality and service to all our clients. ${tagline}.`,
+      },
+      services: {
+        enabled: true,
+        items: [
+          { id: 's1', name: 'Core Service', description: 'Our flagship offering', price: 5000, category: 'primary', availability: 'available', features: ['Professional', 'Reliable', 'Affordable'] },
+          { id: 's2', name: 'Premium Service', description: 'Enhanced experience', price: 10000, category: 'premium', availability: 'available', features: ['Priority support', 'Custom solutions', 'Dedicated team'] },
+          { id: 's3', name: 'Consultation', description: 'Expert guidance', price: 2000, category: 'advisory', availability: 'available', features: ['1-on-1 session', 'Action plan', 'Follow-up'] },
+        ],
+      },
+      gallery: {
+        enabled: true,
+        images: [
+          'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80',
+          'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800&q=80',
+          'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80',
+          'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80',
+        ],
+      },
+      team: {
+        enabled: true,
+        title: 'Our Team',
+        subtitle: 'Meet the experts',
+        members: [
+          { id: 't1', name: 'Alex Johnson', role: 'Founder & CEO', bio: 'Visionary leader with 15+ years of experience', photo: 'https://ui-avatars.com/api/?name=Alex+Johnson&size=200' },
+          { id: 't2', name: 'Priya Sharma', role: 'Operations Head', bio: 'Expert in streamlining business processes', photo: 'https://ui-avatars.com/api/?name=Priya+Sharma&size=200' },
+        ],
+      },
+      testimonials: {
+        enabled: true,
+        items: [
+          { id: 'r1', name: 'Rahul Verma', role: 'Client', content: 'Outstanding service and professionalism. Highly recommended!', rating: 5 },
+          { id: 'r2', name: 'Anita Desai', role: 'Partner', content: 'A pleasure to work with. They truly understand our needs.', rating: 5 },
+        ],
+      },
+      booking: {
+        enabled: true,
+        title: 'Book an Appointment',
+        subtitle: 'Schedule a session with us',
+      },
+      contact: {
+        enabled: true,
+        showMap: true,
+        leadForm: {
+          enabled: true,
+          fields: ['name', 'email', 'phone', 'message'],
+        },
+      },
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Helper: random date within the last N days
+// ---------------------------------------------------------------------------
+
+function randomDateWithinDays(days: number): Date {
+  const now = Date.now();
+  return new Date(now - Math.random() * days * 24 * 60 * 60 * 1000);
+}
+
+// ---------------------------------------------------------------------------
+// Idempotent cleanup
+// ---------------------------------------------------------------------------
+
+async function cleanupDemoData(): Promise<void> {
+  const prisma = getPrisma();
+  console.log('🗑️  Cleaning up existing demo data...');
+
+  // Find all demo brands
+  const demoBrands = await prisma.brand.findMany({
+    where: { slug: { startsWith: 'demo-' } },
+    select: { id: true },
+  });
+
+  const brandIds = demoBrands.map((b) => b.id);
+
+  if (brandIds.length > 0) {
+    // Delete cascading data tied to demo brands
+    await prisma.lead.deleteMany({ where: { branch: { brandId: { in: brandIds } } } });
+    await prisma.analyticsEvent.deleteMany({ where: { brandId: { in: brandIds } } });
+    await prisma.qRCode.deleteMany({ where: { brandId: { in: brandIds } } });
+    await prisma.branch.deleteMany({ where: { brandId: { in: brandIds } } });
+    await prisma.brand.deleteMany({ where: { id: { in: brandIds } } });
+  }
+
+  // Delete demo users
+  await prisma.user.deleteMany({ where: { email: { endsWith: '@demo.parichay.io' } } });
+
+  console.log(`   Removed ${brandIds.length} demo brand(s) and associated data.`);
+}
+
+// ---------------------------------------------------------------------------
+// Create sample leads for a branch
+// ---------------------------------------------------------------------------
+
+async function createSampleLeads(branchId: string, count: number): Promise<number> {
+  const prisma = getPrisma();
+  const firstNames = ['Aarav', 'Vivaan', 'Aditya', 'Vihaan', 'Arjun', 'Sai', 'Reyansh', 'Ayaan', 'Krishna', 'Ishaan'];
+  const lastNames = ['Sharma', 'Patel', 'Gupta', 'Singh', 'Kumar', 'Verma', 'Mehta', 'Joshi', 'Reddy', 'Nair'];
+
+  for (let i = 0; i < count; i++) {
+    const firstName = firstNames[i % firstNames.length];
+    const lastName = lastNames[i % lastNames.length];
+    await prisma.lead.create({
+      data: {
+        branchId,
+        name: `${firstName} ${lastName}`,
+        email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@example.com`,
+        phone: `+91 98765 ${String(10000 + i).slice(-5)}`,
+        message: 'Interested in your services. Please share more details.',
+        source: LEAD_SOURCES[i % LEAD_SOURCES.length],
+        status: LEAD_STATUSES[i % LEAD_STATUSES.length],
+        createdAt: randomDateWithinDays(30),
+      },
+    });
+  }
+  return count;
+}
+
+// ---------------------------------------------------------------------------
+// Create analytics events for a branch
+// ---------------------------------------------------------------------------
+
+async function createAnalyticsEvents(
+  branchId: string,
+  brandId: string,
+  count: number,
+): Promise<number> {
+  const prisma = getPrisma();
+  for (let i = 0; i < count; i++) {
+    await prisma.analyticsEvent.create({
+      data: {
+        branchId,
+        brandId,
+        eventType: EVENT_TYPES[i % EVENT_TYPES.length] as never,
+        metadata: { page: '/microsites', action: 'view' },
+        createdAt: randomDateWithinDays(30),
+      },
+    });
+  }
+  return count;
+}
+
+// ---------------------------------------------------------------------------
+// Create a QR code for a branch
+// ---------------------------------------------------------------------------
+
+async function createQRCode(branchId: string, brandId: string, brandSlug: string): Promise<void> {
+  const prisma = getPrisma();
+  await prisma.qRCode.create({
+    data: {
+      branchId,
+      brandId,
+      url: `/${brandSlug}/main`,
+      qrData: `data:image/png;base64,placeholder-${brandSlug}`,
+      format: 'PNG',
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Main seed function
+// ---------------------------------------------------------------------------
+
+async function seedDemoData(): Promise<SeedResult> {
+  const prisma = getPrisma();
+  const generateMicrositeContent = getGenerateMicrositeContent();
+  const result: SeedResult = {
+    brandsCreated: 0,
+    branchesCreated: 0,
+    usersCreated: 0,
+    leadsCreated: 0,
+    eventsCreated: 0,
+    qrCodesCreated: 0,
+    errors: [],
+  };
+
+  // Step 1: Idempotent cleanup
+  await cleanupDemoData();
+
+  // Step 2: Hash the shared demo password once
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const bcrypt = require('bcryptjs');
+  const hashedPassword = await bcrypt.hash('Demo@123', 10);
+
+  console.log('\n🏗️  Creating demo microsites for 11 industry categories...\n');
+
+  // Step 3: Iterate over every industry category
+  for (const category of industryCategories) {
+    try {
+      const slug = category.slug;
+      const brandSlug = buildDemoSlug(slug);
+      const demoInfo = INDUSTRY_DEMO_NAMES[slug] ?? { name: category.name, tagline: category.description };
+      const layoutId = INDUSTRY_LAYOUT_MAP[slug] ?? 'modern-business';
+
+      // --- Brand ---
+      const brand = await prisma.brand.create({
+        data: {
+          name: demoInfo.name,
+          slug: brandSlug,
+          logo: `https://ui-avatars.com/api/?name=${encodeURIComponent(demoInfo.name)}&size=200&background=${category.colorScheme.primary.replace('#', '')}&color=FFFFFF&bold=true`,
+          tagline: demoInfo.tagline,
+          colorTheme: {
+            primary: category.colorScheme.primary,
+            secondary: category.colorScheme.secondary,
+            accent: category.colorScheme.accent,
+          },
+          layoutId,
+          ownerId: `demo-owner-${slug}`,
+        },
+      });
+      result.brandsCreated++;
+
+      // --- Branch ---
+      const micrositeConfig = generateMicrositeContent(slug, demoInfo.name, demoInfo.tagline);
+
+      const branch = await prisma.branch.create({
+        data: {
+          name: `${demoInfo.name} — Main`,
+          slug: 'main',
+          brandId: brand.id,
+          isActive: true,
+          address: {
+            street: '123 Demo Street',
+            city: 'Mumbai',
+            state: 'Maharashtra',
+            zipCode: '400001',
+            country: 'India',
+          },
+          contact: {
+            phone: '+91 22 1234 5678',
+            whatsapp: '+91 98765 00000',
+            email: `contact@${slug}.demo`,
+          },
+          businessHours: {
+            monday: { open: '09:00', close: '18:00', closed: false },
+            tuesday: { open: '09:00', close: '18:00', closed: false },
+            wednesday: { open: '09:00', close: '18:00', closed: false },
+            thursday: { open: '09:00', close: '18:00', closed: false },
+            friday: { open: '09:00', close: '18:00', closed: false },
+            saturday: { open: '10:00', close: '14:00', closed: false },
+            sunday: { open: '00:00', close: '00:00', closed: true },
+          },
+          micrositeConfig,
+        },
+      });
+      result.branchesCreated++;
+
+      // --- User ---
+      await prisma.user.create({
+        data: {
+          email: buildDemoEmail(slug),
+          passwordHash: hashedPassword,
+          firstName: demoInfo.name.split(' ')[0],
+          lastName: demoInfo.name.split(' ').slice(1).join(' ') || 'Demo',
+          role: 'BRANCH_ADMIN',
+          isActive: true,
+          industryCategory: category.id,
+          brandId: brand.id,
+        },
+      });
+      result.usersCreated++;
+
+      // --- Leads (5 per branch) ---
+      const leadsCreated = await createSampleLeads(branch.id, 5);
+      result.leadsCreated += leadsCreated;
+
+      // --- Analytics Events (30 per branch) ---
+      const eventsCreated = await createAnalyticsEvents(branch.id, brand.id, 30);
+      result.eventsCreated += eventsCreated;
+
+      // --- QR Code (1 per branch) ---
+      await createQRCode(branch.id, brand.id, brandSlug);
+      result.qrCodesCreated++;
+
+      console.log(`   ✅ ${category.name} → ${brandSlug}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`   ❌ ${category.name}: ${message}`);
+      result.errors.push(`${category.name}: ${message}`);
+    }
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Entry point
+// ---------------------------------------------------------------------------
 
 async function main() {
   console.log('🌱 Starting demo data seeding...\n');
 
-  // Clear existing data (optional - comment out if you want to keep existing data)
-  console.log('🗑️  Clearing existing demo data...');
-  await prisma.lead.deleteMany({});
-  await prisma.analyticsEvent.deleteMany({});
-  await prisma.qRCode.deleteMany({});
-  await prisma.branch.deleteMany({});
-  await prisma.user.deleteMany({ where: { email: { contains: '@demo.' } } });
-  await prisma.brand.deleteMany({ where: { slug: { contains: 'demo-' } } });
+  const result = await seedDemoData();
 
-  // Create Demo Brands
-  console.log('\n🏢 Creating demo brands...');
+  console.log('\n📊 Seed Summary:');
+  console.log(`   Brands created:  ${result.brandsCreated}`);
+  console.log(`   Branches created: ${result.branchesCreated}`);
+  console.log(`   Users created:   ${result.usersCreated}`);
+  console.log(`   Leads generated: ${result.leadsCreated}`);
+  console.log(`   Events generated: ${result.eventsCreated}`);
+  console.log(`   QR codes created: ${result.qrCodesCreated}`);
 
-  const brands = await Promise.all([
-    // 1. Tech Startup
-    prisma.brand.create({
-      data: {
-        name: 'TechVision Solutions',
-        slug: 'demo-techvision',
-        logo: 'https://ui-avatars.com/api/?name=TechVision+Solutions&size=200&background=3B82F6&color=FFFFFF&bold=true',
-        tagline: 'Innovating Tomorrow, Today',
-        colorTheme: {
-          primary: '#3B82F6',
-          secondary: '#1E40AF',
-          accent: '#F59E0B',
-        },
-        ownerId: 'demo-owner-1',
-      },
-    }),
-
-    // 2. Restaurant Chain
-    prisma.brand.create({
-      data: {
-        name: 'Spice Garden Restaurant',
-        slug: 'demo-spicegarden',
-        logo: 'https://ui-avatars.com/api/?name=Spice+Garden&size=200&background=EF4444&color=FFFFFF&bold=true',
-        tagline: 'Authentic Flavors, Memorable Moments',
-        colorTheme: {
-          primary: '#EF4444',
-          secondary: '#DC2626',
-          accent: '#F59E0B',
-        },
-        ownerId: 'demo-owner-2',
-      },
-    }),
-
-    // 3. Fitness Center
-    prisma.brand.create({
-      data: {
-        name: 'FitLife Gym & Wellness',
-        slug: 'demo-fitlife',
-        logo: 'https://ui-avatars.com/api/?name=FitLife+Gym&size=200&background=10B981&color=FFFFFF&bold=true',
-        tagline: 'Transform Your Life',
-        colorTheme: {
-          primary: '#10B981',
-          secondary: '#059669',
-          accent: '#F59E0B',
-        },
-        ownerId: 'demo-owner-3',
-      },
-    }),
-
-    // 4. Real Estate
-    prisma.brand.create({
-      data: {
-        name: 'Prime Properties Group',
-        slug: 'demo-primeproperties',
-        logo: 'https://ui-avatars.com/api/?name=Prime+Properties&size=200&background=8B5CF6&color=FFFFFF&bold=true',
-        tagline: 'Your Dream Home Awaits',
-        colorTheme: {
-          primary: '#8B5CF6',
-          secondary: '#7C3AED',
-          accent: '#F59E0B',
-        },
-        ownerId: 'demo-owner-4',
-      },
-    }),
-
-    // 5. Medical Clinic
-    prisma.brand.create({
-      data: {
-        name: 'HealthCare Plus Clinic',
-        slug: 'demo-healthcareplus',
-        logo: 'https://ui-avatars.com/api/?name=HealthCare+Plus&size=200&background=06B6D4&color=FFFFFF&bold=true',
-        tagline: 'Your Health, Our Priority',
-        colorTheme: {
-          primary: '#06B6D4',
-          secondary: '#0891B2',
-          accent: '#F59E0B',
-        },
-        ownerId: 'demo-owner-5',
-      },
-    }),
-  ]);
-
-  console.log(`✅ Created ${brands.length} demo brands`);
-
-  // Create Demo Executives
-  console.log('\n👥 Creating demo executives...');
-
-  const hashedPassword = await bcrypt.hash('Demo@123', 10);
-
-  const executives = await Promise.all([
-    prisma.user.create({
-      data: {
-        email: 'john.smith@demo.executive',
-        passwordHash: hashedPassword,
-        firstName: 'John',
-        lastName: 'Smith',
-        role: 'EXECUTIVE',
-        phone: '+91 98765 43210',
-        isActive: true,
-      },
-    }),
-
-    prisma.user.create({
-      data: {
-        email: 'sarah.johnson@demo.executive',
-        passwordHash: hashedPassword,
-        firstName: 'Sarah',
-        lastName: 'Johnson',
-        role: 'EXECUTIVE',
-        phone: '+91 98765 43211',
-        isActive: true,
-      },
-    }),
-
-    prisma.user.create({
-      data: {
-        email: 'michael.chen@demo.executive',
-        passwordHash: hashedPassword,
-        firstName: 'Michael',
-        lastName: 'Chen',
-        role: 'EXECUTIVE',
-        phone: '+91 98765 43212',
-        isActive: true,
-      },
-    }),
-
-    prisma.user.create({
-      data: {
-        email: 'priya.patel@demo.executive',
-        passwordHash: hashedPassword,
-        firstName: 'Priya',
-        lastName: 'Patel',
-        role: 'EXECUTIVE',
-        phone: '+91 98765 43213',
-        isActive: true,
-      },
-    }),
-
-    prisma.user.create({
-      data: {
-        email: 'david.kumar@demo.executive',
-        passwordHash: hashedPassword,
-        firstName: 'David',
-        lastName: 'Kumar',
-        role: 'EXECUTIVE',
-        phone: '+91 98765 43214',
-        isActive: true,
-      },
-    }),
-  ]);
-
-  console.log(`✅ Created ${executives.length} demo executives`);
-
-  // Create Demo Branches with Complete Microsite Configurations
-  console.log('\n🏪 Creating demo branches...');
-
-  const branches = [];
-
-  // TechVision Branches
-  branches.push(
-    await prisma.branch.create({
-      data: {
-        name: 'TechVision Mumbai HQ',
-        slug: 'mumbai-hq',
-        brandId: brands[0].id,
-        isActive: true,
-        onboardedBy: executives[0].id,
-        onboardedAt: new Date('2024-01-15'),
-        address: {
-          street: '123 Business Park, Andheri East',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          zipCode: '400069',
-          country: 'India',
-        },
-        contact: {
-          phone: '+91 22 1234 5678',
-          whatsapp: '+91 98765 00001',
-          email: 'mumbai@techvision.demo',
-        },
-        socialMedia: {
-          facebook: 'https://facebook.com/techvision',
-          instagram: 'https://instagram.com/techvision',
-          linkedin: 'https://linkedin.com/company/techvision',
-          twitter: 'https://twitter.com/techvision',
-        },
-        businessHours: {
-          monday: { open: '09:00 AM', close: '06:00 PM', closed: false },
-          tuesday: { open: '09:00 AM', close: '06:00 PM', closed: false },
-          wednesday: { open: '09:00 AM', close: '06:00 PM', closed: false },
-          thursday: { open: '09:00 AM', close: '06:00 PM', closed: false },
-          friday: { open: '09:00 AM', close: '06:00 PM', closed: false },
-          saturday: { open: '10:00 AM', close: '02:00 PM', closed: false },
-          sunday: { open: '00:00 AM', close: '00:00 PM', closed: true },
-        },
-        micrositeConfig: {
-          templateId: 'modern-business',
-          sections: {
-            hero: {
-              enabled: true,
-              title: 'Welcome to TechVision Solutions',
-              subtitle: 'Transforming businesses through innovative technology',
-              backgroundType: 'gradient',
-              animationEnabled: true,
-            },
-            about: {
-              enabled: true,
-              content: 'TechVision Solutions is a leading technology company specializing in custom software development, cloud solutions, and digital transformation. With over 10 years of experience, we help businesses leverage technology to achieve their goals.',
-            },
-            services: {
-              enabled: true,
-              items: [
-                {
-                  id: 'service-1',
-                  name: 'Custom Software Development',
-                  description: 'Tailored software solutions built to meet your specific business needs',
-                  price: 150000,
-                  category: 'development',
-                  availability: 'available',
-                  features: [
-                    'Full-stack development',
-                    'Agile methodology',
-                    'Quality assurance',
-                    'Post-launch support',
-                  ],
-                },
-                {
-                  id: 'service-2',
-                  name: 'Cloud Migration Services',
-                  description: 'Seamlessly migrate your infrastructure to the cloud',
-                  price: 200000,
-                  category: 'cloud',
-                  availability: 'available',
-                  features: [
-                    'AWS/Azure/GCP expertise',
-                    'Zero downtime migration',
-                    'Cost optimization',
-                    '24/7 monitoring',
-                  ],
-                },
-                {
-                  id: 'service-3',
-                  name: 'Mobile App Development',
-                  description: 'Native and cross-platform mobile applications',
-                  price: 180000,
-                  category: 'development',
-                  availability: 'available',
-                  features: [
-                    'iOS & Android',
-                    'React Native/Flutter',
-                    'App Store optimization',
-                    'Maintenance & updates',
-                  ],
-                },
-              ],
-            },
-            gallery: {
-              enabled: true,
-              images: [
-                'https://picsum.photos/800/600?random=1',
-                'https://picsum.photos/800/600?random=2',
-                'https://picsum.photos/800/600?random=3',
-              ],
-            },
-            contact: {
-              enabled: true,
-              showMap: true,
-              leadForm: {
-                enabled: true,
-                fields: ['name', 'email', 'phone', 'company', 'message'],
-              },
-              appointmentBooking: {
-                enabled: true,
-                provider: 'custom',
-                availableSlots: [
-                  { day: 'monday', slots: ['10:00 AM', '02:00 PM', '04:00 PM'] },
-                  { day: 'tuesday', slots: ['10:00 AM', '02:00 PM', '04:00 PM'] },
-                  { day: 'wednesday', slots: ['10:00 AM', '02:00 PM', '04:00 PM'] },
-                  { day: 'thursday', slots: ['10:00 AM', '02:00 PM', '04:00 PM'] },
-                  { day: 'friday', slots: ['10:00 AM', '02:00 PM'] },
-                ],
-              },
-              liveChatEnabled: false,
-            },
-          },
-          seoSettings: {
-            title: 'TechVision Solutions Mumbai - Custom Software Development',
-            description: 'Leading technology company in Mumbai offering custom software development, cloud solutions, and digital transformation services.',
-            keywords: ['software development', 'cloud migration', 'mobile apps', 'Mumbai'],
-          },
-        },
-      },
-    })
-  );
-
-  // Spice Garden Branches
-  branches.push(
-    await prisma.branch.create({
-      data: {
-        name: 'Spice Garden Bandra',
-        slug: 'bandra',
-        brandId: brands[1].id,
-        isActive: true,
-        onboardedBy: executives[1].id,
-        onboardedAt: new Date('2024-02-10'),
-        address: {
-          street: '456 Linking Road, Bandra West',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          zipCode: '400050',
-          country: 'India',
-        },
-        contact: {
-          phone: '+91 22 2345 6789',
-          whatsapp: '+91 98765 00002',
-          email: 'bandra@spicegarden.demo',
-        },
-        socialMedia: {
-          facebook: 'https://facebook.com/spicegarden',
-          instagram: 'https://instagram.com/spicegarden',
-        },
-        businessHours: {
-          monday: { open: '11:00 AM', close: '11:00 PM', closed: false },
-          tuesday: { open: '11:00 AM', close: '11:00 PM', closed: false },
-          wednesday: { open: '11:00 AM', close: '11:00 PM', closed: false },
-          thursday: { open: '11:00 AM', close: '11:00 PM', closed: false },
-          friday: { open: '11:00 AM', close: '11:00 PM', closed: false },
-          saturday: { open: '11:00 AM', close: '11:00 PM', closed: false },
-          sunday: { open: '11:00 AM', close: '11:00 PM', closed: false },
-        },
-        micrositeConfig: {
-          templateId: 'modern-business',
-          sections: {
-            hero: {
-              enabled: true,
-              title: 'Welcome to Spice Garden',
-              subtitle: 'Experience authentic Indian cuisine',
-              backgroundType: 'image',
-              backgroundImage: 'https://picsum.photos/1920/1080?random=restaurant',
-              animationEnabled: true,
-            },
-            about: {
-              enabled: true,
-              content: 'Spice Garden brings you the finest authentic Indian cuisine with recipes passed down through generations. Our chefs use only the freshest ingredients and traditional cooking methods to create unforgettable dining experiences.',
-            },
-            services: {
-              enabled: true,
-              items: [
-                {
-                  id: 'menu-1',
-                  name: 'Butter Chicken',
-                  description: 'Tender chicken in rich tomato and butter gravy',
-                  price: 450,
-                  category: 'main-course',
-                  availability: 'available',
-                  features: ['Chef Special', 'Most Popular', 'Mild Spice'],
-                },
-                {
-                  id: 'menu-2',
-                  name: 'Biryani Special',
-                  description: 'Aromatic basmati rice with choice of meat or vegetables',
-                  price: 380,
-                  category: 'main-course',
-                  availability: 'available',
-                  features: ['Signature Dish', 'Medium Spice', 'Serves 1-2'],
-                },
-                {
-                  id: 'menu-3',
-                  name: 'Paneer Tikka',
-                  description: 'Grilled cottage cheese with Indian spices',
-                  price: 320,
-                  category: 'appetizer',
-                  availability: 'available',
-                  features: ['Vegetarian', 'Tandoor Cooked', 'Mild Spice'],
-                },
-              ],
-            },
-            gallery: {
-              enabled: true,
-              images: [
-                'https://picsum.photos/800/600?random=10',
-                'https://picsum.photos/800/600?random=11',
-                'https://picsum.photos/800/600?random=12',
-              ],
-            },
-            contact: {
-              enabled: true,
-              showMap: true,
-              leadForm: {
-                enabled: true,
-                fields: ['name', 'phone', 'date', 'guests', 'message'],
-              },
-              appointmentBooking: {
-                enabled: true,
-                provider: 'custom',
-                availableSlots: [
-                  { day: 'monday', slots: ['12:00 PM', '01:00 PM', '07:00 PM', '08:00 PM'] },
-                  { day: 'tuesday', slots: ['12:00 PM', '01:00 PM', '07:00 PM', '08:00 PM'] },
-                  { day: 'wednesday', slots: ['12:00 PM', '01:00 PM', '07:00 PM', '08:00 PM'] },
-                  { day: 'thursday', slots: ['12:00 PM', '01:00 PM', '07:00 PM', '08:00 PM'] },
-                  { day: 'friday', slots: ['12:00 PM', '01:00 PM', '07:00 PM', '08:00 PM', '09:00 PM'] },
-                  { day: 'saturday', slots: ['12:00 PM', '01:00 PM', '07:00 PM', '08:00 PM', '09:00 PM'] },
-                  { day: 'sunday', slots: ['12:00 PM', '01:00 PM', '07:00 PM', '08:00 PM'] },
-                ],
-              },
-            },
-          },
-          seoSettings: {
-            title: 'Spice Garden Bandra - Authentic Indian Restaurant',
-            description: 'Experience the finest authentic Indian cuisine at Spice Garden Bandra. Book your table today!',
-            keywords: ['Indian restaurant', 'Bandra', 'authentic cuisine', 'fine dining'],
-          },
-        },
-      },
-    })
-  );
-
-  // FitLife Branches
-  branches.push(
-    await prisma.branch.create({
-      data: {
-        name: 'FitLife Powai',
-        slug: 'powai',
-        brandId: brands[2].id,
-        isActive: true,
-        onboardedBy: executives[2].id,
-        onboardedAt: new Date('2024-02-20'),
-        address: {
-          street: '789 Hiranandani Gardens',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          zipCode: '400076',
-          country: 'India',
-        },
-        contact: {
-          phone: '+91 22 3456 7890',
-          whatsapp: '+91 98765 00003',
-          email: 'powai@fitlife.demo',
-        },
-        socialMedia: {
-          facebook: 'https://facebook.com/fitlifegym',
-          instagram: 'https://instagram.com/fitlifegym',
-          youtube: 'https://youtube.com/fitlifegym',
-        },
-        businessHours: {
-          monday: { open: '06:00 AM', close: '10:00 PM', closed: false },
-          tuesday: { open: '06:00 AM', close: '10:00 PM', closed: false },
-          wednesday: { open: '06:00 AM', close: '10:00 PM', closed: false },
-          thursday: { open: '06:00 AM', close: '10:00 PM', closed: false },
-          friday: { open: '06:00 AM', close: '10:00 PM', closed: false },
-          saturday: { open: '07:00 AM', close: '09:00 PM', closed: false },
-          sunday: { open: '07:00 AM', close: '09:00 PM', closed: false },
-        },
-        micrositeConfig: {
-          templateId: 'modern-business',
-          sections: {
-            hero: {
-              enabled: true,
-              title: 'Transform Your Life at FitLife',
-              subtitle: 'State-of-the-art gym and wellness center',
-              backgroundType: 'gradient',
-              animationEnabled: true,
-            },
-            about: {
-              enabled: true,
-              content: 'FitLife Gym & Wellness is your partner in achieving your fitness goals. With state-of-the-art equipment, expert trainers, and a supportive community, we help you transform your life one workout at a time.',
-            },
-            services: {
-              enabled: true,
-              items: [
-                {
-                  id: 'membership-1',
-                  name: 'Monthly Membership',
-                  description: 'Full access to gym and group classes',
-                  price: 2500,
-                  category: 'membership',
-                  availability: 'available',
-                  features: [
-                    'Unlimited gym access',
-                    'Group fitness classes',
-                    'Locker facility',
-                    'Free fitness assessment',
-                  ],
-                },
-                {
-                  id: 'membership-2',
-                  name: 'Personal Training Package',
-                  description: '12 sessions with certified personal trainer',
-                  price: 15000,
-                  category: 'training',
-                  availability: 'available',
-                  features: [
-                    '12 one-on-one sessions',
-                    'Customized workout plan',
-                    'Nutrition guidance',
-                    'Progress tracking',
-                  ],
-                },
-                {
-                  id: 'membership-3',
-                  name: 'Yoga & Wellness',
-                  description: 'Monthly yoga and meditation classes',
-                  price: 3000,
-                  category: 'wellness',
-                  availability: 'available',
-                  features: [
-                    'Daily yoga classes',
-                    'Meditation sessions',
-                    'Breathing exercises',
-                    'Stress management',
-                  ],
-                },
-              ],
-            },
-            gallery: {
-              enabled: true,
-              images: [
-                'https://picsum.photos/800/600?random=20',
-                'https://picsum.photos/800/600?random=21',
-                'https://picsum.photos/800/600?random=22',
-              ],
-            },
-            contact: {
-              enabled: true,
-              showMap: true,
-              leadForm: {
-                enabled: true,
-                fields: ['name', 'email', 'phone', 'message'],
-              },
-              appointmentBooking: {
-                enabled: true,
-                provider: 'custom',
-                availableSlots: [
-                  { day: 'monday', slots: ['09:00 AM', '11:00 AM', '04:00 PM', '06:00 PM'] },
-                  { day: 'tuesday', slots: ['09:00 AM', '11:00 AM', '04:00 PM', '06:00 PM'] },
-                  { day: 'wednesday', slots: ['09:00 AM', '11:00 AM', '04:00 PM', '06:00 PM'] },
-                  { day: 'thursday', slots: ['09:00 AM', '11:00 AM', '04:00 PM', '06:00 PM'] },
-                  { day: 'friday', slots: ['09:00 AM', '11:00 AM', '04:00 PM', '06:00 PM'] },
-                  { day: 'saturday', slots: ['10:00 AM', '12:00 PM', '04:00 PM'] },
-                ],
-              },
-            },
-          },
-          seoSettings: {
-            title: 'FitLife Gym Powai - Transform Your Life',
-            description: 'Join FitLife Gym in Powai for state-of-the-art fitness facilities, expert trainers, and a supportive community.',
-            keywords: ['gym', 'fitness', 'Powai', 'personal training', 'yoga'],
-          },
-        },
-      },
-    })
-  );
-
-  // Add more branches for other brands...
-  // (Continuing with Prime Properties and HealthCare Plus)
-
-  console.log(`✅ Created ${branches.length} demo branches`);
-
-  // Create Sample Leads
-  console.log('\n📧 Creating sample leads...');
-
-  const leads = [];
-  for (let i = 0; i < 20; i++) {
-    leads.push(
-      await prisma.lead.create({
-        data: {
-          branchId: branches[i % branches.length].id,
-          name: `Lead ${i + 1}`,
-          email: `lead${i + 1}@demo.com`,
-          phone: `+91 98765 ${String(i).padStart(5, '0')}`,
-          message: 'Interested in your services. Please contact me.',
-          source: i % 3 === 0 ? 'qr_code' : i % 3 === 1 ? 'direct_visit' : 'social_share',
-          createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-        },
-      })
-    );
+  if (result.errors.length > 0) {
+    console.log(`\n⚠️  Errors (${result.errors.length}):`);
+    result.errors.forEach((e) => console.log(`   - ${e}`));
   }
 
-  console.log(`✅ Created ${leads.length} sample leads`);
-
-  // Create Analytics Events
-  console.log('\n📊 Creating analytics events...');
-
-  const events = [];
-  for (let i = 0; i < 100; i++) {
-    const branch = branches[i % branches.length];
-    events.push(
-      await prisma.analyticsEvent.create({
-        data: {
-          branchId: branch.id,
-          brandId: branch.brandId,
-          eventType: ['PAGE_VIEW', 'CLICK', 'QR_SCAN', 'LEAD_SUBMIT', 'VCARD_DOWNLOAD'][i % 5] as any,
-          metadata: {
-            page: '/microsites',
-            action: 'view',
-          },
-          createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-        },
-      })
-    );
-  }
-
-  console.log(`✅ Created ${events.length} analytics events`);
-
-  console.log('\n✨ Demo data seeding completed successfully!\n');
+  console.log('\n✨ Demo data seeding completed!\n');
   console.log('📝 Demo Credentials:');
-  console.log('   Executives:');
-  executives.forEach((exec) => {
-    console.log(`   - ${exec.email} / Demo@123`);
+  industryCategories.forEach((cat) => {
+    console.log(`   - ${buildDemoEmail(cat.slug)} / Demo@123`);
   });
-  console.log('\n🎉 You can now showcase the platform with realistic demo data!');
+  console.log('');
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Error seeding demo data:', e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// Only run main() when executed directly (not when imported by tests)
+const isDirectExecution =
+  typeof process !== 'undefined' &&
+  process.argv[1] &&
+  (process.argv[1].endsWith('seed-demo.ts') || process.argv[1].endsWith('seed-demo.js'));
+
+if (isDirectExecution) {
+  main()
+    .catch((e) => {
+      console.error('❌ Error seeding demo data:', e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await getPrisma().$disconnect();
+    });
+}
+
+// Export for testing
+export {
+  INDUSTRY_LAYOUT_MAP,
+  INDUSTRY_DEMO_NAMES,
+  LEAD_STATUSES,
+  EVENT_TYPES,
+  randomDateWithinDays,
+  buildFallbackContent,
+  seedDemoData,
+  cleanupDemoData,
+};

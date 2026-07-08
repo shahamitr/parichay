@@ -1,180 +1,189 @@
-# Testing Guide - Quick Feature Tests
+# Testing Guide
 
-## 🧪 Feature Testing Checklist
+## Overview
 
-### 1. Executive Login & Dashboard ✅
+Parichay uses a 3-layer testing strategy:
 
-**Steps:**
-1. Go to http://localhost:3000/login
-2. Login with: `john.smith@demo.executive` / `Demo@123`
-3. Should redirect to `/executive`
-4. Check dashboard shows:
-   - Total Onboarded count
-   - Active Branches count
-   - This Month count
-   - Last Month count
-   - Success rate progress bar
-   - Monthly progress bar
-
-**Expected Result:** Dashboard loads with statistics
+| Layer | Tool | Location | Command |
+|-------|------|----------|---------|
+| Unit Tests | Vitest | `src/__tests__/` | `pnpm test` |
+| Component Tests | Vitest + Testing Library | `src/__tests__/components/` | `pnpm test` |
+| E2E Tests | Playwright | `e2e/` | `pnpm test:e2e` |
 
 ---
 
-### 2. My Branches - Preview Feature ✅
+## Running Tests
 
-**Steps:**
-1. Click "My Branches" tab
-2. You should see 2-3 branch cards
-3. Click "Preview" button on any branch
-4. Preview modal opens
-5. Try switching device modes:
-   - Click Desktop icon (🖥️)
-   - Click Tablet icon (📱)
-   - Click Mobile icon (📱)
-6. Click "Open Live" to see actual microsite
+### All Unit + Component Tests
+```bash
+pnpm test           # Run once
+pnpm test:watch     # Watch mode (re-runs on save)
+```
 
-**Expected Result:** Preview works in all device modes
+### Single Test File
+```bash
+npx vitest run src/__tests__/lib/encryption.test.ts
+```
 
----
+### E2E Tests
+```bash
+# Start the app first (in another terminal)
+pnpm dev
 
-### 3. Onboard New - Manual Entry ✅
+# Run E2E tests
+pnpm test:e2e
 
-**Steps:**
-1. Click "Onboard New" tab
-2. Ensure "Manual Entry" is selected
-3. Fill in the form:
-   - Select Brand: TechVision Solutions
-   - Branch Name: Test Branch
-   - Address: 123 Test Street
-   - City: Mumbai
-   - State: Maharashtra
-   - ZIP: 400001
-   - Phone: +91 98765 43210
-   - Email: test@example.com
-4. Click "Preview Microsite" button
-5. Preview modal opens with temporary data
-6. Switch device modes to test
-7. Close preview
-8. Click "Create Branch"
+# Run with UI (visual debugger)
+pnpm test:e2e:ui
+```
 
-**Expected Result:** Branch created successfully
+### Type Checking (no tests, just validates types)
+```bash
+pnpm type-check
+```
 
 ---
 
-### 4. Onboard New - Google Import ✅
+## Test Structure
 
-**Steps:**
-1. Click "Onboard New" tab
-2. Click "Import from Google" button
-3. Enter any text in Business ID field
-4. Click "Fetch" button
-5. Mock data appears
-6. Review the imported data
-7. Click "Preview Microsite"
-8. See how imported data looks
-9. Close preview
-10. Click "Import & Create"
+```
+src/__tests__/
+├── lib/                      # Backend utility tests
+│   ├── encryption.test.ts    # AES-256-GCM encryption module
+│   ├── bot-protection.test.ts # Bot detection & honeypot
+│   ├── rate-limiter.test.ts  # Rate limiting logic
+│   ├── subscription-utils.test.ts # Subscription lifecycle
+│   ├── auth.test.ts          # Password hashing & JWT
+│   ├── feature-registry.test.ts # Feature toggle config
+│   ├── sanitization.test.ts  # Input sanitization & XSS
+│   ├── audit-trail.test.ts   # Data integrity hashing
+│   └── request-signing.test.ts # HMAC request signing
+├── components/               # UI component tests
+│   ├── MathCaptcha.test.tsx
+│   ├── HoneypotField.test.tsx
+│   └── Badge.test.tsx
+└── demo/                     # Demo data tests
+    ├── seed-data.test.ts
+    ├── demo-utils.test.ts
+    └── ...
 
-**Expected Result:** Branch created from imported data
-
----
-
-### 5. Device Mode Preview ✅
-
-**Steps:**
-1. Go to "My Branches"
-2. Click "Preview" on any branch
-3. Test each device mode:
-   - **Desktop**: Should show full width
-   - **Tablet**: Should show 768px width
-   - **Mobile**: Should show 375px width (iPhone size)
-4. Click "Refresh" button
-5. Click "Open in New Tab"
-
-**Expected Result:** All device modes work correctly
-
----
-
-### 6. Performance Statistics ✅
-
-**Steps:**
-1. Go to "Dashboard" tab
-2. Check statistics:
-   - Total Onboarded: Should show 2-3
-   - Active Branches: Should show 2-3
-   - This Month: Should show count
-   - Success Rate: Should show percentage
-3. Check trend indicators (↑ or ↓)
-4. Click "Refresh Stats" button
-
-**Expected Result:** Stats update correctly
+e2e/                          # End-to-end browser tests
+├── landing-page.spec.ts      # Homepage & landing sections
+├── auth-flow.spec.ts         # Login, registration, OTP
+├── microsite.spec.ts         # Demo microsites & error pages
+├── search-directory.spec.ts  # Search & SEO city pages
+├── onboarding.spec.ts        # Quick card wizard
+├── api-health.spec.ts        # API endpoint validation
+├── admin-panel.spec.ts       # Admin panel flows
+├── payment-flow.spec.ts      # Subscription & payment
+└── security.spec.ts          # Security headers & CORS
+```
 
 ---
 
-### 7. Logout ✅
+## Writing New Tests
 
-**Steps:**
-1. Click logout button (top right)
-2. Should redirect to login page
-3. Try accessing `/executive` directly
-4. Should redirect back to login
+### Unit Test Template
+```typescript
+import { describe, it, expect } from 'vitest';
+import { myFunction } from '@/lib/my-module';
 
-**Expected Result:** Logout works, routes protected
+describe('Module Name', () => {
+  describe('myFunction', () => {
+    it('should do X when given Y', () => {
+      const result = myFunction(input);
+      expect(result).toBe(expected);
+    });
 
----
+    it('should handle edge case', () => {
+      expect(myFunction(null)).toBe(null);
+    });
+  });
+});
+```
 
-## 🔍 What to Look For
+### Component Test Template
+```tsx
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import MyComponent from '@/components/MyComponent';
 
-### Visual Elements
-- ✅ Colors match brand themes
-- ✅ Icons display correctly
-- ✅ Buttons have hover effects
-- ✅ Cards have shadows
-- ✅ Status badges show (Active/Inactive)
-- ✅ Trend arrows display (↑/↓)
+describe('MyComponent', () => {
+  it('should render content', () => {
+    render(<MyComponent title="Test" />);
+    expect(screen.getByText('Test')).toBeInTheDocument();
+  });
 
-### Functionality
-- ✅ Forms validate input
-- ✅ Preview modal opens/closes
-- ✅ Device modes switch smoothly
-- ✅ Data loads correctly
-- ✅ Navigation works
-- ✅ Buttons are clickable
+  it('should handle click', () => {
+    const onClick = vi.fn();
+    render(<MyComponent onClick={onClick} />);
+    fireEvent.click(screen.getByRole('button'));
+    expect(onClick).toHaveBeenCalled();
+  });
+});
+```
 
-### Responsiveness
-- ✅ Works on desktop
-- ✅ Works on tablet
-- ✅ Works on mobile
-- ✅ Preview shows different sizes
+### E2E Test Template
+```typescript
+import { test, expect } from '@playwright/test';
 
----
-
-## 🐛 Common Issues & Fixes
-
-### Issue: Preview not loading
-**Fix:** Refresh the page, check console for errors
-
-### Issue: Stats showing 0
-**Fix:** Make sure demo data was seeded
-
-### Issue: Can't login
-**Fix:** Check email/password, ensure database is running
-
-### Issue: Device modes not switching
-**Fix:** Close and reopen preview modal
-
----
-
-## ✅ Quick Test (5 minutes)
-
-1. **Login** ✓
-2. **View Dashboard** ✓
-3. **Preview a Branch** ✓
-4. **Switch Device Modes** ✓
-5. **Try Onboarding** ✓
-6. **Check Stats** ✓
-7. **Logout** ✓
+test.describe('Feature Name', () => {
+  test('should do X', async ({ page }) => {
+    await page.goto('/path');
+    await expect(page.locator('text=Expected')).toBeVisible();
+  });
+});
+```
 
 ---
 
-**All features working?** 🎉 You're ready to demo!
+## Coverage Goals
+
+| Area | Target | Current |
+|------|--------|---------|
+| Security modules | 95% | ~95% |
+| Business logic | 85% | ~85% |
+| API endpoints (E2E) | 80% | ~80% |
+| UI components | 60% | ~40% (growing) |
+
+---
+
+## CI/CD Integration
+
+Tests run automatically on every `git push` via GitHub Actions:
+
+```yaml
+# .github/workflows/test.yml
+- pnpm test (unit + component)
+- pnpm type-check
+- pnpm lint
+```
+
+E2E tests run on PR creation (not every push, to save CI minutes).
+
+---
+
+## Debugging Failed Tests
+
+### Unit Test Fails
+```bash
+# Run with verbose output
+npx vitest run --reporter=verbose path/to/test.ts
+
+# Run single test
+npx vitest run -t "should do X"
+```
+
+### E2E Test Fails
+```bash
+# Run with headed browser (see what's happening)
+npx playwright test --headed e2e/auth-flow.spec.ts
+
+# Show trace after failure
+npx playwright show-trace test-results/auth-flow-spec-ts/trace.zip
+```
+
+### Common Issues
+- **"Cannot find module"** → Run `pnpm prisma generate` (regenerates Prisma client)
+- **"ECONNREFUSED"** → Start Docker containers: `docker compose -f docker-compose.dev.yml up -d`
+- **E2E timeout** → Increase timeout in `playwright.config.ts` or check if dev server is running

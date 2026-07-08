@@ -26,7 +26,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   }, [toggleSidebar, toggleCommandPalette]);
 
   return (
-    <div className="flex flex-col h-screen bg-[#fafbfc] overflow-hidden">
+    <div className="admin-layout flex flex-col h-screen bg-[#fafbfc] overflow-hidden">
       <AdminHeader />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <ModernSidebar />

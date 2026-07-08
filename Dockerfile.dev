@@ -1,0 +1,32 @@
+# =============================================================================
+# Development Dockerfile — Hot Reload
+# Source code mounted as volume, node_modules built inside container
+# =============================================================================
+
+FROM node:20-alpine
+
+# Install system deps needed for native modules (bcrypt, prisma)
+RUN apk add --no-cache libc6-compat openssl python3 make g++
+
+WORKDIR /app
+
+# Enable pnpm
+RUN corepack enable && corepack prepare pnpm@10.14.0 --activate
+
+# Copy package files first (layer caching)
+COPY package.json pnpm-lock.yaml ./
+
+# Install ALL dependencies (including devDeps for hot reload)
+RUN pnpm install --frozen-lockfile
+
+# Copy prisma schema for client generation
+COPY prisma ./prisma
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Expose Next.js dev port
+EXPOSE 3000
+
+# Start Next.js in dev mode with hot reload
+CMD ["pnpm", "dev"]

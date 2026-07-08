@@ -188,6 +188,18 @@ export default function LoginPage() {
             Create one
           </Link>
         </p>
+
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100" /></div>
+          <div className="relative flex justify-center"><span className="bg-white px-3 text-[12px] text-gray-400">or</span></div>
+        </div>
+
+        <Link
+          href="/login/phone"
+          className="w-full h-10 flex items-center justify-center gap-2 border border-gray-200 hover:border-gray-300 text-[13px] font-medium text-gray-600 hover:text-gray-900 rounded-xl transition-all"
+        >
+          📱 Sign in with Phone OTP
+        </Link>
       </form>
     </AuthLayout>
   );

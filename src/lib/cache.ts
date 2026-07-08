@@ -148,6 +148,7 @@ export async function cacheDelPattern(pattern: string): Promise<void> {
 /**
  * Cache-through helper: returns cached data if available, otherwise
  * executes `fn`, caches the result, and returns it.
+ * Does NOT cache null/undefined results to prevent stale negative caching.
  */
 export async function withCache<T>(
   key: string,
@@ -158,7 +159,12 @@ export async function withCache<T>(
   if (cached !== null) return cached;
 
   const result = await fn();
-  await cacheSet(key, result, ttlSeconds);
+
+  // Only cache non-null results — don't cache failures/empty states
+  if (result !== null && result !== undefined) {
+    await cacheSet(key, result, ttlSeconds);
+  }
+
   return result;
 }
 
