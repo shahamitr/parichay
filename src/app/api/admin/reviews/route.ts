@@ -1,166 +1,128 @@
 /**
- * Admin Reviews Management API
- * GET /api/admin/reviews - Get all reviews (with moderation status)
- * PATCH /api/admin/reviews - Approve/reject reviews
+ * Admin Review Moderation API
+ * GET /api/admin/reviews — Get reviews pending moderation
+ * POST /api/admin/reviews — Approve or reject reviews
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth-utils';
+import { getAuthenticatedUser } from '@/lib/auth-utils';
 import { z } from 'zod';
 
-const updateReviewSchema = z.object({
-  reviewId: z.string(),
-  action: z.enum(['approve', 'reject', 'respond']),
-  response: z.string().optional(),
-});
-
+// GET — List reviews for moderation
 export async function GET(request: NextRequest) {
   try {
-    // Get token from cookies or Authorization header
-    const accessToken = request.cookies.get('accessToken')?.value ||
-      request.headers.get('authorization')?.replace('Bearer ', '');
-
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const user = await verifyToken(request);
-    if (!user || !['SUPER_ADMIN', 'BRAND_MANAGER'].includes(user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status'); // 'pending', 'approved', 'rejected'
-    const branchId = searchParams.get('branchId');
-    const brandId = searchParams.get('brandId');
+    const status = searchParams.get('status') || 'pending'; // pending, approved, rejected, all
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(50, parseInt(searchParams.get('limit') || '20'));
 
+    // Build where clause
     const where: any = {};
 
-    // Filter by user's brand if not super admin
+    // Non-SUPER_ADMIN can only see their own brand's reviews
     if (user.role !== 'SUPER_ADMIN') {
+      if (!user.brandId) return NextResponse.json({ reviews: [], total: 0 });
       where.brandId = user.brandId;
-    } else if (brandId != null) {
-      where.brandId = brandId;
     }
 
-    if (branchId) where.branchId = branchId;
+    if (status === 'pending') where.isPublished = false;
+    else if (status === 'approved') where.isPublished = true;
+    // 'all' — no filter on isPublished
 
-    if (status === 'pending') {
-      where.isPublished = false;
-    } else if (status === 'approved') {
-      where.isPublished = true;
-    }
-
-    const reviews = await prisma.review.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        branch: {
-          select: { id: true, name: true, slug: true },
+    const [reviews, total] = await Promise.all([
+      prisma.review.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          branch: { select: { id: true, name: true } },
+          brand: { select: { id: true, name: true } },
         },
-        brand: {
-          select: { id: true, name: true, slug: true },
-        },
-      },
-    });
-
-    // Get counts
-    const baseWhere = user.role !== 'SUPER_ADMIN' ? { brandId: user.brandId } : {};
-    const [pendingCount, approvedCount, totalCount] = await Promise.all([
-      prisma.review.count({ where: { ...baseWhere, isPublished: false } }),
-      prisma.review.count({ where: { ...baseWhere, isPublished: true } }),
-      prisma.review.count({ where: baseWhere }),
+      }),
+      prisma.review.count({ where }),
     ]);
 
     return NextResponse.json({
       reviews,
-      counts: {
-        pending: pendingCount,
-        approved: approvedCount,
-        total: totalCount,
-      },
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
-    console.error('Error fetching reviews:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch reviews' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
   }
 }
 
-export async function PATCH(request: NextRequest) {
+// POST — Approve/reject reviews
+const moderationSchema = z.object({
+  reviewIds: z.array(z.string()).min(1),
+  action: z.enum(['approve', 'reject', 'delete']),
+});
+
+export async function POST(request: NextRequest) {
   try {
-    const user = await verifyToken(request);
-    if (!user || !['SUPER_ADMIN', 'BRAND_MANAGER'].includes(user.role)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await getAuthenticatedUser(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { reviewId, action, response } = updateReviewSchema.parse(body);
+    const { reviewIds, action } = moderationSchema.parse(body);
 
-    // Get review and check authorization
-    const review = await prisma.review.findUnique({
-      where: { id: reviewId },
-    });
-
-    if (!review) {
-      return NextResponse.json({ error: 'Review not found' }, { status: 404 });
-    }
-
-    if (user.role !== 'SUPER_ADMIN' && user.brandId !== review.brandId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    let updateData: any = {};
+    let affected = 0;
 
     switch (action) {
       case 'approve':
-        updateData = { isPublished: true };
-        break;
-      case 'reject':
-        updateData = { isPublished: false };
-        break;
-      case 'respond':
-        if (!response) {
-          return NextResponse.json(
-            { error: 'Response text is required' },
-            { status: 400 }
-          );
-        }
-        // Store response in metadata or a separate field
-        updateData = {
-          metadata: {
-            response: {
-              content: response,
-              date: new Date().toISOString(),
-              respondedBy: user.id,
-            },
+        const approved = await prisma.review.updateMany({
+          where: {
+            id: { in: reviewIds },
+            ...(user.role !== 'SUPER_ADMIN' ? { brandId: user.brandId || '' } : {}),
           },
-        };
+          data: { isPublished: true },
+        });
+        affected = approved.count;
+        break;
+
+      case 'reject':
+        const rejected = await prisma.review.updateMany({
+          where: {
+            id: { in: reviewIds },
+            ...(user.role !== 'SUPER_ADMIN' ? { brandId: user.brandId || '' } : {}),
+          },
+          data: { isPublished: false },
+        });
+        affected = rejected.count;
+        break;
+
+      case 'delete':
+        // Only SUPER_ADMIN can permanently delete
+        if (user.role !== 'SUPER_ADMIN') {
+          return NextResponse.json({ error: 'Only admins can delete reviews' }, { status: 403 });
+        }
+        const deleted = await prisma.review.deleteMany({
+          where: { id: { in: reviewIds } },
+        });
+        affected = deleted.count;
         break;
     }
 
-    const updatedReview = await prisma.review.update({
-      where: { id: reviewId },
-      data: updateData,
+    return NextResponse.json({
+      success: true,
+      affected,
+      message: `${affected} review(s) ${action}ed`,
     });
-
-    return NextResponse.json({ review: updatedReview });
   } catch (error) {
-    console.error('Error updating review:', error);
-
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
-
-    return NextResponse.json(
-      { error: 'Failed to update review' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Moderation failed' }, { status: 500 });
   }
 }

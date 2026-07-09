@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Build, Push & Deploy
 
 on:
   push:
@@ -6,11 +6,84 @@ on:
   workflow_dispatch:
 
 env:
-  EC2_HOST: ${{ secrets.EC2_HOST }}
-  EC2_USER: ${{ secrets.EC2_USER }}
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # ─── Step 1: Run Tests ───
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Run unit tests
+        run: pnpm test
+
+  # ─── Step 2: Build & Push Docker Image ───
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ─── Step 3: Deploy to EC2 ───
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to EC2
@@ -20,9 +93,40 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -e
+
+            echo "=== Pulling latest image ==="
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker pull ghcr.io/${{ github.repository }}:latest
+
+            echo "=== Updating deployment ==="
             cd /opt/parichay
-            git pull origin main
-            docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
-            docker compose -f docker-compose.prod.yml exec -T app npx prisma migrate deploy
-            sleep 10
-            curl -sf http://localhost:3000/api/health && echo "✅ Deploy success" || echo "⚠️ Health check failed"
+
+            # Update docker-compose to use the pre-built image
+            cat > docker-compose.prod.override.yml << 'EOF'
+            version: '3.8'
+            services:
+              app:
+                image: ghcr.io/${{ github.repository }}:latest
+                build: !reset null
+            EOF
+
+            # Deploy with the new image
+            docker compose -f docker-compose.prod.yml -f docker-compose.prod.override.yml --env-file .env.production up -d
+
+            echo "=== Running migrations ==="
+            docker compose -f docker-compose.prod.yml -f docker-compose.prod.override.yml exec -T app npx prisma migrate deploy || true
+
+            echo "=== Health check ==="
+            sleep 15
+            if curl -sf http://localhost:3000/api/health > /dev/null; then
+              echo "✅ Deployment successful!"
+            else
+              echo "⚠️ Health check failed — rolling back"
+              docker compose -f docker-compose.prod.yml -f docker-compose.prod.override.yml --env-file .env.production down
+              docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+              exit 1
+            fi
+
+            echo "=== Cleaning old images ==="
+            docker image prune -f

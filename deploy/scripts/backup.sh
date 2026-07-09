@@ -1,19 +1,20 @@
 #!/bin/bash
 # =============================================================================
-# Database Backup Script
-# Run daily via cron: 0 2 * * * /opt/parichay/deploy/scripts/backup.sh
+# Database Backup Script (Weekly)
+# Run via cron: 0 2 * * 0 /opt/parichay/deploy/scripts/backup.sh
+# (Every Sunday at 2 AM)
 # =============================================================================
 
 set -euo pipefail
 
 BACKUP_DIR="/opt/parichay/backups"
-RETENTION_DAYS=14
+RETENTION_DAYS=30
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="$BACKUP_DIR/parichay_${TIMESTAMP}.sql.gz"
 
 mkdir -p $BACKUP_DIR
 
-echo "[$(date)] Starting backup..."
+echo "[$(date)] Starting weekly backup..."
 
 # Dump PostgreSQL via Docker
 docker compose -f /opt/parichay/docker-compose.prod.yml exec -T db \
@@ -30,7 +31,7 @@ else
     exit 1
 fi
 
-# Delete old backups
+# Delete old backups (keep 30 days = ~4 weekly backups)
 find $BACKUP_DIR -name "parichay_*.sql.gz" -mtime +$RETENTION_DAYS -delete
 echo "[$(date)] Cleaned backups older than $RETENTION_DAYS days"
 

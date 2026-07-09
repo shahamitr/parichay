@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-
-
 // Haversine formula to calculate distance between two points
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Earth's radius in kilometers
@@ -184,6 +182,23 @@ export async function GET(request: Request) {
           businessType: businessType,
           priceRange: priceRange
         };
+
+        // Track search query (fire-and-forget, non-blocking)
+        if (query.length >= 2) {
+          prisma.analyticsEvent.create({
+            data: {
+              eventType: 'SEARCH_QUERY',
+              metadata: {
+                query,
+                resultsCount: results.length,
+                city: lat && lng ? `${lat},${lng}` : undefined,
+                category: category || undefined,
+              },
+            },
+          }).catch((err) => {
+            console.error('Failed to log search query:', err);
+          });
+        }
 
         return NextResponse.json({
           results,

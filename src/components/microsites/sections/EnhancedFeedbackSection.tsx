@@ -13,6 +13,8 @@ interface FeedbackItem {
   date: string;
   helpful?: number;
   featured?: boolean;
+  businessReply?: string;
+  repliedAt?: string;
 }
 
 interface EnhancedFeedbackSectionProps {
@@ -175,6 +177,25 @@ function ReviewCard({ review, primaryColor }: { review: FeedbackItem; primaryCol
               Helpful ({helpful})
             </button>
           </div>
+
+          {/* Business Reply */}
+          {review.businessReply && (
+            <div className="mt-4 pl-4 border-l-2 border-blue-200 bg-blue-50/50 rounded-r-lg p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                  Business Owner
+                </span>
+                {review.repliedAt && (
+                  <span className="text-xs text-gray-400">
+                    {review.repliedAt}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {review.businessReply}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -225,6 +246,8 @@ export default function EnhancedFeedbackSection({
               date: formatTimeAgo(new Date(r.createdAt)),
               helpful: r.helpfulCount || 0,
               featured: r.isVerified,
+              businessReply: r.businessReply || undefined,
+              repliedAt: r.repliedAt ? formatTimeAgo(new Date(r.repliedAt)) : undefined,
             }));
             setReviews(formattedReviews);
           }

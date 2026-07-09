@@ -599,6 +599,7 @@ enum AnalyticsEventType {
   BIRTHDAY_EMAIL_SENT
   SCROLL_DEPTH
   HEATMAP_CLICKS
+  SEARCH_QUERY
 }
 
 enum NotificationType {
@@ -650,6 +651,10 @@ model Review {
   source      String?  // 'google', 'facebook', 'direct', 'imported'
   sourceUrl   String?  // Link to original review
   helpfulCount Int     @default(0)
+  photoUrl    String?  // Customer-uploaded review photo
+  businessReply String? @db.Text // Business owner reply
+  repliedAt   DateTime? // When business replied
+  metadata    Json?    // Additional review data
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
